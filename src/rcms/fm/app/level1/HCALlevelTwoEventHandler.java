@@ -471,6 +471,11 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("configuring")));
 
+      if (!functionManager.containerTTCciControl.isEmpty()) {
+        TTCciWatchThread ttcciwatchthread = new TTCciWatchThread(functionManager);
+        ttcciwatchthread.run();
+      }
+     
       String LVL1CfgScript            = "not set";
       String LVL1TTCciControlSequence = "not set";
       String LVL1LTCControlSequence   = "not set";

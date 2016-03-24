@@ -2229,6 +2229,7 @@ public class HCALEventHandler extends UserEventHandler {
     List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
     boolean somebodysHandlingTA = false;
     boolean itsThisLvl2 = false;
+    boolean itsAdummy = false;
     String allMaskedResources = "";
     String ruInstance = "";
     String lpmSupervisor = "";
@@ -2264,10 +2265,12 @@ public class HCALEventHandler extends UserEventHandler {
         for (Resource level2resource : fullconfigList) {
           logger.debug("[HCAL " + functionManager.FMname + "]: the FM with name: " + qr.getName() + " has a resource named " + level2resource.getName() );
           if (!MaskedFMs.contains(qr.getName())) { 
-            if (!allMaskedResources.contains(qr.getName()) && (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")))          {
-              if (somebodysHandlingTA) { 
-                if (level2resource.getName().contains("DummyTriggerAdapter") && !EvmTrigsApps.contains("DummyTriggerAdapter")) {
-                  logger.warn("[JohnLog] found a DummyTriggerAdapter after somebody else is already handling the TA.");
+            if (!allMaskedResources.contains(qr.getName()) && (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA"))) {
+              if (somebodysHandlingTA && !itsAdummy) { 
+                if (level2resource.getName().contains("DummyTriggerAdapter") ) {
+                  itsThisLvl2=true;
+                  itsAdummy=true;
+                  logger.warn("[JohnLog] found a DummyTriggerAdapter in " + qr.getName() + "after somebody else is already handling the TA.");
                   allMaskedResources += EvmTrigsApps;
                   qr.getResource().setRole("EvmTrig");
                   logger.warn("[JohnLog] just set the role EvmTrig for the FM with name: " + qr.getName());
@@ -2278,7 +2281,6 @@ public class HCALEventHandler extends UserEventHandler {
                     if (otherLevel2FM.getRole().toString().equals("EvmTrig") && !qr.getName().equals(otherLevel2FM.getName())) {
                        otherLevel2FM.getResource().setRole("HCAL");
                        logger.warn("[JohnLog] just reset the role HCAL for the FM with name: "  + otherLevel2FM.getName());
-		       itsThisLvl2=true;
                        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
                        logger.warn("[JohnLog] just reset the role EVM_TRIG_FM");
                     }
@@ -2295,6 +2297,9 @@ public class HCALEventHandler extends UserEventHandler {
                 logger.info("[HCAL " + functionManager.FMname + "]: The following FM is handling the trigger adapter: " + qr.getName());
                 somebodysHandlingTA=true;
                 itsThisLvl2=true;
+                if (qr.getName().contains("DummyTriggerAdapter")) {
+                  itsAdummy = true;
+                }
                 logger.debug("[HCAL " + functionManager.FMname + "]: About to set EVM_TRIG_FM.");
                 functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
                 logger.info("[HCAL " + functionManager.FMname + "]: Just set EVM_TRIG_FM.");
@@ -2307,8 +2312,8 @@ public class HCALEventHandler extends UserEventHandler {
                 allMaskedResources+=level2resource.getName()+";"; 
                 logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant TrivialFU " + level2resource.getName());
               }
-	      else if(somebodysHandlingTA && itsThisLvl2){
-		EvmTrigsApps += level2resource.getName()+";";
+              else {
+                EvmTrigsApps += level2resource.getName()+";";
               }
             }
             if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalEventBuilder"))          {
@@ -2316,10 +2321,8 @@ public class HCALEventHandler extends UserEventHandler {
                 allMaskedResources+=level2resource.getName()+";"; 
                 logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant EventBuilder " + level2resource.getName());
               }
-	      else if(somebodysHandlingTA && itsThisLvl2){
-		EvmTrigsApps += level2resource.getName()+";";
-              }
               else {
+                EvmTrigsApps += level2resource.getName()+";";
                 ruInstance=level2resource.getName();
                 logger.info("[HCAL " + functionManager.FMname + "]: Just found the remaining EventBuilder " + level2resource.getName());
               }
@@ -2327,6 +2330,10 @@ public class HCALEventHandler extends UserEventHandler {
             if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalSupervisor"))          {
               if (somebodysHandlingTA && !itsThisLvl2) { 
                 logger.debug("[HCAL " + functionManager.FMname + "]: Found a Supervisor who is not handling the LPM." + level2resource.getName());
+              }
+              else if (somebodysHandlingTA && itsThisLvl2) { 
+                logger.debug("[HCAL " + functionManager.FMname + "]: Found a Supervisor who is handling the LPM." + level2resource.getName());
+                lpmSupervisor=level2resource.getName();
               }
               else {
                 logger.info("[HCAL " + functionManager.FMname + "]: Found the Supervisor that is handling the LPM." + level2resource.getName());
@@ -2594,9 +2601,9 @@ public class HCALEventHandler extends UserEventHandler {
       if (hostName.equals("tcds-control-hcal.cms")) {
         usingTCDS = true;
         logger.info("[HCAL " + functionManager.FMname + "] initXDAQ() -- the TCDS executive on hostName " + hostName + " is being handled in a special way.");
-				qr.setInitialized(true);
-			}
-		}
+        qr.setInitialized(true);
+      }
+    }
 
     List<QualifiedResource> jobControlList = qg.seekQualifiedResourcesOfType(new JobControl());
     for (QualifiedResource qr: jobControlList) {
@@ -2630,34 +2637,34 @@ public class HCALEventHandler extends UserEventHandler {
     // fill applications for level one role
     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Retrieving the possible defined function managers for different HCAL partitions ...")));
 
-		functionManager.containerFMChildren = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager()));
-		// get the EvmTrig FM and handle it separately for sane state calculation
-		List<QualifiedResource> childFMs = qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager());
-		Iterator fmChItr = childFMs.iterator();
-		while (fmChItr.hasNext()) {
-			FunctionManager fmChild = (FunctionManager) fmChItr.next();
-			//logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-			// role is set at beginning of init() so it's already set here
-			if (fmChild.getRole().toString().equals("EvmTrig") || fmChild.getRole().toString().equals("Level2_TCDSLPM")) {
-				//logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: REMOVE FM named: " + fmChild.getName() + " with role name: " + fmChild.getRole());
-				fmChItr.remove();
-			}
-		}
-		functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM = new QualifiedResourceContainer(childFMs);
+    functionManager.containerFMChildren = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager()));
+    // get the EvmTrig FM and handle it separately for sane state calculation
+    List<QualifiedResource> childFMs = qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager());
+    Iterator fmChItr = childFMs.iterator();
+    while (fmChItr.hasNext()) {
+      FunctionManager fmChild = (FunctionManager) fmChItr.next();
+      //logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
+      // role is set at beginning of init() so it's already set here
+      if (fmChild.getRole().toString().equals("EvmTrig") || fmChild.getRole().toString().equals("Level2_TCDSLPM")) {
+        //logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: REMOVE FM named: " + fmChild.getName() + " with role name: " + fmChild.getRole());
+        fmChItr.remove();
+      }
+    }
+    functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM = new QualifiedResourceContainer(childFMs);
     functionManager.containerFMEvmTrig = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfRole("EvmTrig"));
     functionManager.containerFMTCDSLPM = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
     // get masked FMs and remove them from container
     //List<QualifiedResource> allChildFMs = qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager());
-		List<QualifiedResource> allChildFMs = functionManager.containerFMChildren.getQualifiedResourceList();
+    List<QualifiedResource> allChildFMs = functionManager.containerFMChildren.getQualifiedResourceList();
     fmChItr = allChildFMs.iterator();
     while (fmChItr.hasNext()) {
       FunctionManager fmChild = (FunctionManager) fmChItr.next();
-			if (!fmChild.isActive()) {
-				//logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-				// role is set at beginning of init() so it's already set here
-				logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: REMOVE masked FM named: " + fmChild.getName() + " with role name: " + fmChild.getRole());
-				fmChItr.remove();
-			}
+      if (!fmChild.isActive()) {
+        //logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
+        // role is set at beginning of init() so it's already set here
+        logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: REMOVE masked FM named: " + fmChild.getName() + " with role name: " + fmChild.getRole());
+        fmChItr.remove();
+      }
     }
 
     if (functionManager.containerFMChildren.isEmpty()) {
@@ -2666,40 +2673,40 @@ public class HCALEventHandler extends UserEventHandler {
     }
 
     // see if we have any "special" FMs
-		List<FunctionManager> l2LaserFMList = new ArrayList<FunctionManager>();
-		List<FunctionManager> l2Priority1List = new ArrayList<FunctionManager>();
-		List<FunctionManager> l2Priority2List = new ArrayList<FunctionManager>();
-		List<FunctionManager> evmTrigList = new ArrayList<FunctionManager>();
-		List<FunctionManager> normalList = new ArrayList<FunctionManager>();
+    List<FunctionManager> l2LaserFMList = new ArrayList<FunctionManager>();
+    List<FunctionManager> l2Priority1List = new ArrayList<FunctionManager>();
+    List<FunctionManager> l2Priority2List = new ArrayList<FunctionManager>();
+    List<FunctionManager> evmTrigList = new ArrayList<FunctionManager>();
+    List<FunctionManager> normalList = new ArrayList<FunctionManager>();
     // see if we have any "special" FMs; store them in containers
     {
       Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
       FunctionManager fmChild = null;
       while (it.hasNext()) {
         fmChild = (FunctionManager) it.next();
-				if (fmChild.getName().toString().equals("HCAL_Laser") || fmChild.getRole().toString().equals("Level2_Laser")) {
-					l2LaserFMList.add(fmChild);
+        if (fmChild.getName().toString().equals("HCAL_Laser") || fmChild.getRole().toString().equals("Level2_Laser")) {
+          l2LaserFMList.add(fmChild);
         }
-				else if (fmChild.getName().toString().equalsIgnoreCase("HCAL_RCTMaster") || fmChild.getName().toString().equalsIgnoreCase("HCAL_HCALMaster") ||
-						fmChild.getRole().toString().equals("Level2_Priority_1")) {
-					l2Priority1List.add(fmChild);
-				}
-				else if (fmChild.getRole().toString().equals("Level2_Priority_2")) {
-					l2Priority2List.add(fmChild);
-				}
-				else if (fmChild.getRole().toString().equals("EvmTrig")) {
-					evmTrigList.add(fmChild);
-				}
-				else {
-					normalList.add(fmChild);
-				}
-			}
-		}
-		functionManager.containerFMChildrenL2Laser = new QualifiedResourceContainer(l2LaserFMList);
-		functionManager.containerFMChildrenL2Priority1 = new QualifiedResourceContainer(l2Priority1List);
-		functionManager.containerFMChildrenL2Priority2 = new QualifiedResourceContainer(l2Priority2List);
-		functionManager.containerFMChildrenEvmTrig = new QualifiedResourceContainer(evmTrigList);
-		functionManager.containerFMChildrenNormal = new QualifiedResourceContainer(normalList);
+        else if (fmChild.getName().toString().equalsIgnoreCase("HCAL_RCTMaster") || fmChild.getName().toString().equalsIgnoreCase("HCAL_HCALMaster") ||
+            fmChild.getRole().toString().equals("Level2_Priority_1")) {
+          l2Priority1List.add(fmChild);
+        }
+        else if (fmChild.getRole().toString().equals("Level2_Priority_2")) {
+          l2Priority2List.add(fmChild);
+        }
+        else if (fmChild.getRole().toString().equals("EvmTrig")) {
+          evmTrigList.add(fmChild);
+        }
+        else {
+          normalList.add(fmChild);
+        }
+      }
+    }
+    functionManager.containerFMChildrenL2Laser = new QualifiedResourceContainer(l2LaserFMList);
+    functionManager.containerFMChildrenL2Priority1 = new QualifiedResourceContainer(l2Priority1List);
+    functionManager.containerFMChildrenL2Priority2 = new QualifiedResourceContainer(l2Priority2List);
+    functionManager.containerFMChildrenEvmTrig = new QualifiedResourceContainer(evmTrigList);
+    functionManager.containerFMChildrenNormal = new QualifiedResourceContainer(normalList);
 
 
     // fill applications for level two role
@@ -2708,12 +2715,12 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager.containerhcalSupervisor = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalSupervisor"));
     // TCDS apps
     List<XdaqApplication> lpmList = functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::lpm::LPMController");
-		functionManager.containerlpmController = new XdaqApplicationContainer(lpmList);
-		List<XdaqApplication> tcdsList = new ArrayList<XdaqApplication>();
-		tcdsList.addAll(lpmList);
-		tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::ici::ICIController"));
-		tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::pi::PIController"));
-		functionManager.containerTCDSControllers = new XdaqApplicationContainer(tcdsList);
+    functionManager.containerlpmController = new XdaqApplicationContainer(lpmList);
+    List<XdaqApplication> tcdsList = new ArrayList<XdaqApplication>();
+    tcdsList.addAll(lpmList);
+    tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::ici::ICIController"));
+    tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::pi::PIController"));
+    functionManager.containerTCDSControllers = new XdaqApplicationContainer(tcdsList);
 
     functionManager.containerhcalDCCManager = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalDCCManager"));
     functionManager.containerTTCciControl   = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("ttc::TTCciControl"));
@@ -2842,13 +2849,13 @@ public class HCALEventHandler extends UserEventHandler {
       Iterator it = functionManager.containerTCDSControllers.getQualifiedResourceList().iterator();
       XdaqApplication tcdsApp = null;
       while (it.hasNext()) {
-				tcdsApp = (XdaqApplication) it.next();
-				logger.warn("[HCAL " + functionManager.FMname + "] HALT TCDS application: " + tcdsApp.getName() + " class: " + tcdsApp.getClass() + " instance: " + tcdsApp.getInstance());
+        tcdsApp = (XdaqApplication) it.next();
+        logger.warn("[HCAL " + functionManager.FMname + "] HALT TCDS application: " + tcdsApp.getName() + " class: " + tcdsApp.getClass() + " instance: " + tcdsApp.getInstance());
         //SIC TODO FIXME: use real session ID (and possibly RCMS URL) here
         // SIC TODO XXX FIXME Why doesn't this work?
-				//tcdsApp.execute(HCALInputs.HALT,"test","http://dev.null:10000");
-				tcdsApp.execute(HCALInputs.HALT,"test","http://cmsrc-hcal.cms:16001/rcms");
-			}
+        //tcdsApp.execute(HCALInputs.HALT,"test","http://dev.null:10000");
+        tcdsApp.execute(HCALInputs.HALT,"test","http://cmsrc-hcal.cms:16001/rcms");
+      }
     }
     catch (Exception e) {
       // failed to halt
@@ -3507,15 +3514,15 @@ public class HCALEventHandler extends UserEventHandler {
     if (checkIfControlledResource(resource)) {
       // check if it's a tcds app
       for (QualifiedResource app : functionManager.containerTCDSControllers.getQualifiedResourceList()) {
-				if(app.getURL().equals(resource.getURL())) {
-					if(!functionManager.containerhcalSupervisor.isEmpty()) // we have a supervisor to listen to; ignore all TCDS notifications
-						return;
-					if(!functionManager.FMrole.equals("Level2_TCDSLPM")) { // no supervisor, but this is not a TCDS LPM FM: we are not expecting this to happen
-						logger.warn("[HCAL " + functionManager.FMname + "] Warning: Ignoring TCDS state notification, but this FM is not a TCDSLPM FM and does not have a supervisor either! This is unexpected.");
-						return; 
-					}
-				}
-			}
+        if(app.getURL().equals(resource.getURL())) {
+          if(!functionManager.containerhcalSupervisor.isEmpty()) // we have a supervisor to listen to; ignore all TCDS notifications
+            return;
+          if(!functionManager.FMrole.equals("Level2_TCDSLPM")) { // no supervisor, but this is not a TCDS LPM FM: we are not expecting this to happen
+            logger.warn("[HCAL " + functionManager.FMname + "] Warning: Ignoring TCDS state notification, but this FM is not a TCDSLPM FM and does not have a supervisor either! This is unexpected.");
+            return; 
+          }
+        }
+      }
       if (newState.getToState().equals(HCALStates.ERROR.getStateString()) || newState.getToState().equals(HCALStates.FAILED.getStateString())) {
 
         String errMessage = "[HCAL " + functionManager.FMname + "] Error! computeNewState() for FM\n@ URI: " + functionManager.getURI() + "\nthe Resource: " + newState.getIdentifier() + " reports an error state!";
@@ -3565,21 +3572,21 @@ public class HCALEventHandler extends UserEventHandler {
             }
             else if (toState.equals(HCALStates.HALTED.getStateString())) {
               if (actualState.equals(HCALStates.INITIALIZING.getStateString()))    {
-								if (!functionManager.containerFMChildren.isEmpty()) {
-									//logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in initializing and have no FM children so functionManager.fireEvent(HCALInputs.SETHALT)");
-									functionManager.fireEvent(HCALInputs.SETHALT);
-								}
+                if (!functionManager.containerFMChildren.isEmpty()) {
+                  //logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in initializing and have no FM children so functionManager.fireEvent(HCALInputs.SETHALT)");
+                  functionManager.fireEvent(HCALInputs.SETHALT);
+                }
                 functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("... task done.")));
               }
               else if (actualState.equals(HCALStates.HALTING.getStateString()))       {
-								logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in halting so functionManager.fireEvent(HCALInputs.SETHALT)");
-								functionManager.fireEvent(HCALInputs.SETHALT); }
+                logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in halting so functionManager.fireEvent(HCALInputs.SETHALT)");
+                functionManager.fireEvent(HCALInputs.SETHALT); }
               else if (actualState.equals(HCALStates.RECOVERING.getStateString()))    {
-								//logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in recovering so functionManager.fireEvent(HCALInputs.SETHALT)");
-								functionManager.fireEvent(HCALInputs.SETHALT); }
+                //logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in recovering so functionManager.fireEvent(HCALInputs.SETHALT)");
+                functionManager.fireEvent(HCALInputs.SETHALT); }
               else if (actualState.equals(HCALStates.RESETTING.getStateString()))     {
-								//logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in resetting so functionManager.fireEvent(HCALInputs.SETHALT)");
-								functionManager.fireEvent(HCALInputs.SETHALT); }
+                //logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in resetting so functionManager.fireEvent(HCALInputs.SETHALT)");
+                functionManager.fireEvent(HCALInputs.SETHALT); }
               else if (actualState.equals(HCALStates.CONFIGURING.getStateString()))   { /* do nothing */ }
               else if (actualState.equals(HCALStates.COLDRESETTING.getStateString())) { functionManager.fireEvent(HCALInputs.SETCOLDRESET); }
               else {
@@ -3592,8 +3599,8 @@ public class HCALEventHandler extends UserEventHandler {
             }
             else if (toState.equals(HCALStates.CONFIGURED.getStateString())) {
               if (actualState.equals(HCALStates.INITIALIZING.getStateString()) || actualState.equals(HCALStates.RECOVERING.getStateString()) ||
-									actualState.equals(HCALStates.RUNNING.getStateString()) || actualState.equals(HCALStates.RUNNINGDEGRADED.getStateString()) ||
-									actualState.equals(HCALStates.CONFIGURING.getStateString()) || actualState.equals(HCALStates.STOPPING.getStateString())) {
+                  actualState.equals(HCALStates.RUNNING.getStateString()) || actualState.equals(HCALStates.RUNNINGDEGRADED.getStateString()) ||
+                  actualState.equals(HCALStates.CONFIGURING.getStateString()) || actualState.equals(HCALStates.STOPPING.getStateString())) {
                 //logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is "+ actualState+", but SETCONFIGURE ...");
                 functionManager.fireEvent(HCALInputs.SETCONFIGURE);
               }
@@ -3617,8 +3624,8 @@ public class HCALEventHandler extends UserEventHandler {
               }
               else if (actualState.equals(HCALStates.CONFIGURING.getStateString())) { /* do nothing */ }
               else if (actualState.equals(HCALStates.STARTING.getStateString()))    {
-								//logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is "+actualState+", but SETSTART ...");
-								functionManager.fireEvent(HCALInputs.SETSTART);
+                //logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is "+actualState+", but SETSTART ...");
+                functionManager.fireEvent(HCALInputs.SETSTART);
               }
               else if (actualState.equals(HCALStates.RESUMING.getStateString()))   { functionManager.fireEvent(HCALInputs.SETRESUME); }
               else if (actualState.equals(HCALStates.HALTING.getStateString()))    { /* do nothing */ }
@@ -3652,7 +3659,7 @@ public class HCALEventHandler extends UserEventHandler {
                 if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
               }
             }
-						else {
+            else {
               String errMessage2 = "[HCAL " + functionManager.FMname + "] Error! transitional state not found in computeNewState() for FM\n@ URI: " + functionManager.getURI() + "\nthe Resource: " + newState.getIdentifier() + " reports an error state!\nFrom state: " + functionManager.getState().getStateString() + " \nstate: " + functionManager.calcState.getStateString();
               logger.error(errMessage2);
               functionManager.sendCMSError(errMessage2);
@@ -4265,47 +4272,47 @@ public class HCALEventHandler extends UserEventHandler {
   }
 
   // find out the state of a class of FMs with a role _not_ given and return true if this state is reached for all of them
-	protected Boolean waitforFMswithNotTheRole(String Role1 ,String Role2 ,String Role3 ,String Role4 ,String Role5 , String toState) {
+  protected Boolean waitforFMswithNotTheRole(String Role1 ,String Role2 ,String Role3 ,String Role4 ,String Role5 , String toState) {
 
-		Boolean OkToProceed = true;
+    Boolean OkToProceed = true;
 
-		Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
-		FunctionManager fmChild = null;
-		while (it.hasNext()) {
-			fmChild = (FunctionManager) it.next();
+    Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
+    FunctionManager fmChild = null;
+    while (it.hasNext()) {
+      fmChild = (FunctionManager) it.next();
 
-			if (fmChild.isActive()) {
-				// if FM is in an error state do not block ...
-				if ((fmChild!=null) && (fmChild.refreshState().equals(HCALStates.ERROR))) {
-					String errMessage = "[HCAL " + functionManager.FMname + "] Error! for FM with name: " + fmChild.getName() + "\nThe role of this FM is: " + fmChild.getRole().toString() + " when checking its state ...";
-					logger.error(errMessage);
-					functionManager.sendCMSError(errMessage);
-					functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-					functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-					if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-					break;
-				}
+      if (fmChild.isActive()) {
+        // if FM is in an error state do not block ...
+        if ((fmChild!=null) && (fmChild.refreshState().equals(HCALStates.ERROR))) {
+          String errMessage = "[HCAL " + functionManager.FMname + "] Error! for FM with name: " + fmChild.getName() + "\nThe role of this FM is: " + fmChild.getRole().toString() + " when checking its state ...";
+          logger.error(errMessage);
+          functionManager.sendCMSError(errMessage);
+          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+          break;
+        }
 
-				// check if FMs with not the role given have the desired state
-				if ((fmChild!=null) && (!(fmChild.getRole().toString().equals(Role1) || fmChild.getRole().toString().equals(Role2) || fmChild.getRole().toString().equals(Role3) || fmChild.getRole().toString().equals(Role4) || fmChild.getRole().toString().equals(Role5)))) {
-					// check if the given toState is reached
-					if ((fmChild!=null) && (!fmChild.refreshState().equals(HCALStates.ERROR)) && (!fmChild.refreshState().getStateString().equals(toState))) {
-						OkToProceed = false;
-					}
-					else if (fmChild.refreshState().equals(HCALStates.ERROR)) {
-						String errMessage = "[HCAL " + functionManager.FMname + "] Error! for FM with name: " + fmChild.getName() + "\nThe role of this FM is: " + fmChild.getRole().toString() + " when checking its state ...";
-						logger.error(errMessage);
-						functionManager.sendCMSError(errMessage);
-						functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-						functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-						if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-						break;
-					}
-				}
-			}
-		}
-		return OkToProceed;
-	}
+        // check if FMs with not the role given have the desired state
+        if ((fmChild!=null) && (!(fmChild.getRole().toString().equals(Role1) || fmChild.getRole().toString().equals(Role2) || fmChild.getRole().toString().equals(Role3) || fmChild.getRole().toString().equals(Role4) || fmChild.getRole().toString().equals(Role5)))) {
+          // check if the given toState is reached
+          if ((fmChild!=null) && (!fmChild.refreshState().equals(HCALStates.ERROR)) && (!fmChild.refreshState().getStateString().equals(toState))) {
+            OkToProceed = false;
+          }
+          else if (fmChild.refreshState().equals(HCALStates.ERROR)) {
+            String errMessage = "[HCAL " + functionManager.FMname + "] Error! for FM with name: " + fmChild.getName() + "\nThe role of this FM is: " + fmChild.getRole().toString() + " when checking its state ...";
+            logger.error(errMessage);
+            functionManager.sendCMSError(errMessage);
+            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+            break;
+          }
+        }
+      }
+    }
+    return OkToProceed;
+  }
 
   // find out the state of a class of FMs with a role substring _not_ given and return true if this state is reached for all of them
   protected Boolean waitforFMswithNotTheRoleMatch(String Role1 ,String Role2 ,String Role3 ,String Role4, String Role5 , String toState) {
@@ -5074,6 +5081,38 @@ public class HCALEventHandler extends UserEventHandler {
     }
   }
 
+  public class TTCciWatchThread extends Thread {
+    protected HCALFunctionManager functionManager = null;
+    RCMSLogger logger = null;
+    Boolean stopTTCciWatchThread = false;
 
+    public TTCciWatchThread(HCALFunctionManager parentFunctionManager) {
+      this.logger = new RCMSLogger(HCALFunctionManager.class);
+      logger.warn("Constructing TTCciWatchThread");
+      this.functionManager = parentFunctionManager;
+      logger.warn("Done construction TTCciWatchThread for " + functionManager.FMname + ".");
+    }
+    public void run() {
+      while (!stopTTCciWatchThread && !functionManager.isDestroyed() && functionManager != null) {
+        for (QualifiedResource ttcciControlResource : functionManager.containerTTCciControl.getApplications()) {
+          XdaqApplication ttcciControl = (XdaqApplication) ttcciControlResource;
+          logger.warn("[JohnLog] " + functionManager.FMname + ": " + ttcciControl.getName() + " has state: " + ttcciControl.refreshState().toString());
+          if (ttcciControl.refreshState().toString().equals("configured") | ttcciControl.refreshState().toString().equals("halted")) {
+            stopTTCciWatchThread = true;
+            functionManager.firePriorityEvent(HCALInputs.SETCONFIGURE);
+          }
+          else { 
+            try {
+              Thread.sleep(4000);
+            }
+            catch (Exception e) {
+              logger.error("[" + functionManager.FMname + "] Error during TTCciWatchThread.");
+            }
+            logger.warn("[JohnLog] " + functionManager.FMname + ": TTCciControl reached the configured state.");
+          }
+        }
+      }
+    }
+  }
 }
  
