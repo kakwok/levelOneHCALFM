@@ -183,7 +183,8 @@ public class HCALxmlHandler {
               lpmApplicationElement = (Element) currentApplicationNode.cloneNode(true);
               if (!functionManager.FMrole.equals("Level2_TCDSLPM")) currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
             }
-            if (xcApplicationClass.equals(ttcci)){
+            //  if (xcApplicationClass.equals(ttcci)){
+            if (!functionManager.FMname.equals("HCALFM_904Int_TTCci") && xcApplicationClass.equals(ttcci)){
               if (!functionManager.FMrole.equals("EvmTrig")) currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
             }
             if (xcApplicationClass.equals(ici)){

@@ -500,8 +500,11 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
      
       if (!functionManager.containerTTCciControl.isEmpty()) {
+        logger.info("[Martin log "+ functionManager.FMname + "] Enabling the TTCci watchthread");
         TTCciWatchThread ttcciwatchthread = new TTCciWatchThread(functionManager);
         ttcciwatchthread.run();
+      } else{
+        logger.warn("[Martin log "+ functionManager.FMname + "] containerTTCciControl is empty! ");
       }
      
       String CfgCVSBasePath           = "not set";
