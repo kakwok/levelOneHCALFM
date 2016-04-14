@@ -498,10 +498,11 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("configuring")));
 
-      //if (!functionManager.containerTTCciControl.isEmpty()) {
-      //  TTCciWatchThread ttcciwatchthread = new TTCciWatchThread(functionManager);
-      //  ttcciwatchthread.run();
-      //}
+     
+      if (!functionManager.containerTTCciControl.isEmpty()) {
+        TTCciWatchThread ttcciwatchthread = new TTCciWatchThread(functionManager);
+        ttcciwatchthread.run();
+      }
      
       String CfgCVSBasePath           = "not set";
       String LVL1CfgScript            = "not set";

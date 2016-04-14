@@ -3773,4 +3773,38 @@ public class HCALEventHandler extends UserEventHandler {
       TriggerAdapterWatchThreadList.remove(this);
     }
   }
+
+  public class TTCciWatchThread extends Thread {
+    protected HCALFunctionManager functionManager = null;
+    RCMSLogger logger = null;
+    Boolean stopTTCciWatchThread = false;
+
+    public TTCciWatchThread(HCALFunctionManager parentFunctionManager) {
+      this.logger = new RCMSLogger(HCALFunctionManager.class);
+      logger.warn("Constructing TTCciWatchThread");
+      this.functionManager = parentFunctionManager;
+      logger.warn("Done construction TTCciWatchThread for " + functionManager.FMname + ".");
+    }
+    public void run() {
+      while (!stopTTCciWatchThread && !functionManager.isDestroyed() && functionManager != null) {
+        for (QualifiedResource ttcciControlResource : functionManager.containerTTCciControl.getApplications()) {
+          XdaqApplication ttcciControl = (XdaqApplication) ttcciControlResource;
+          logger.warn("[JohnLog] " + functionManager.FMname + ": " + ttcciControl.getName() + " has state: " + ttcciControl.refreshState().toString());
+          if (ttcciControl.refreshState().toString().equals("configured") | ttcciControl.refreshState().toString().equals("halted")) {
+            stopTTCciWatchThread = true;
+            functionManager.firePriorityEvent(HCALInputs.SETCONFIGURE);
+          }
+          else { 
+            try {
+              Thread.sleep(4000);
+            }
+            catch (Exception e) {
+              logger.error("[" + functionManager.FMname + "] Error during TTCciWatchThread.");
+            }
+            logger.warn("[JohnLog] " + functionManager.FMname + ": TTCciControl reached the configured state.");
+          }
+        }
+      }
+    }
+  }
 }
