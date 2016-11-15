@@ -316,10 +316,12 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <!--Area for masking checkboxes-->
                                 <td class="label_center_black" colspan="3" id="masked_resourses_td">
                                   <div>
-                                    <input type="checkbox" onclick="toggle_visibility('masks');"><strong>Mask FMs</strong>
+                                     <input id="enableMasking" type="checkbox" onclick="toggle_visibility('masks');"><strong>Mask FMs</strong>
+                                    <input type="checkbox" onclick="$('#masks').hide(); toggle_visibility('singlePartitionSelection'); $('#enableMasking').toggle()"><strong>Single partition</strong>
                                     <br />
                                       Masked resources: <span id="maskTest"></span>
                                     <div id="masks" class="tbl"></div>
+                                    <div id="singlePartitionSelection" class="tbl"></div>
                                   </div>
                                 </td>
                               </tr>
