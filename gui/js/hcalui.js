@@ -151,13 +151,24 @@ function makecheckboxes() {
     param =  param.replace(/['"]+/g, '');
     var array = param.split(',');
     var maskDivContents = "<ul>";
+    var radioButtonDivContents = "<form action=''>";
     for (var i = 0, l = array.length; i < l; i++) {
         var option = array[i].split(':');
         var checkbox = "<li><input type='checkbox' onchange='fillMask();' value='" + option + "'>" + option + "</li>";
+        var radiobutton = "<input type='radio' name='singlePart' onchange='" + 'picksinglepartition("' + option +'");' + "' value='" + option + "'>" + option;
         maskDivContents += checkbox;
+        radioButtonDivContents += radiobutton;
     }
     maskDivContents += "</ul>";
+    radioButtonDivContents +="</form>";
     $('#masks').html(maskDivContents);
+    $('#singlePartitionSelection').html(radioButtonDivContents);
+}
+
+function picksinglepartition(option) {
+    $('#masks :input').not("[value='"+option+"']").prop('checked', true);
+    $("#masks :input[value='"+option+"']").prop('checked', false);
+    fillMask();
 }
 
 function hidecheckboxes() {
