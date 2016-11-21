@@ -139,11 +139,11 @@ function makedropdown(availableRunConfigs) {
 
 function fillMask() {
     var finalMasks=[];
-    $('#masks :checked').each(function () {
+    $('#multiPartitionSelection :checked').each(function () {
         finalMasks.push($(this).val());
     });
     $('#MASKED_RESOURCES').val(JSON.stringify(finalMasks));
-    $('#maskTest').html(JSON.stringify(finalMasks));
+    $('#maskTest').html($('#MASKED_RESOURCES').val());
 }
 
 function makecheckboxes() {
@@ -161,13 +161,13 @@ function makecheckboxes() {
     }
     maskDivContents += "</ul>";
     radioButtonDivContents +="</form>";
-    $('#masks').html(maskDivContents);
+    $('#multiPartitionSelection').html(maskDivContents);
     $('#singlePartitionSelection').html(radioButtonDivContents);
 }
 
 function picksinglepartition(option) {
-    $('#masks :input').not("[value='"+option+"']").prop('checked', true);
-    $("#masks :input[value='"+option+"']").prop('checked', false);
+    $('#multiPartitionSelection :input').not("[value='"+option+"']").prop('checked', true);
+    $("#multiPartitionSelection :input[value='"+option+"']").prop('checked', false);
     fillMask();
 }
 
@@ -268,4 +268,15 @@ function hcalOnLoad() {
     showsupervisorerror();
     moveversionnumber();
     onClickCommandParameterCheckBox();
+
+    $('.maskModes').css("style", "display: inline");
+    $('.maskModes').click(function () {
+       $(this).siblings().css('color', 'black');
+       $(this).css('color', 'blue');
+       panelId = "#".concat($(this).attr("id")).concat("Selection");
+       $(panelId).siblings().hide();
+       $(panelId).show();
+       $(panelId).parent().find("input").prop('checked', false);
+       fillMask();
+    });
 }
