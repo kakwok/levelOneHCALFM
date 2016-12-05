@@ -39,6 +39,7 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     addState(HCALStates.INITIALIZING);
     addState(HCALStates.CONFIGURING);
     addState(HCALStates.HALTING);
+    addState(HCALStates.EXITING);
     addState(HCALStates.STOPPING);
     addState(HCALStates.PAUSING);
     addState(HCALStates.RESUMING);
@@ -63,6 +64,7 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     addInput(HCALInputs.PAUSE);
     addInput(HCALInputs.RESUME);
     addInput(HCALInputs.HALT);
+    addInput(HCALInputs.EXIT);
     addInput(HCALInputs.STOP);
     addInput(HCALInputs.RECOVER);
     addInput(HCALInputs.RESET);
@@ -325,6 +327,12 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     addTransition(HCALInputs.HALT,    HCALStates.PAUSED, HCALStates.HALTING);
     addTransition(HCALInputs.HALT,    HCALStates.TTSTEST_MODE, HCALStates.HALTING);
 
+    // EXIT Command:
+    // The EXIT input is allowed in the CONFIGURED
+    // state, and destroys the FM, with a HALT issued first.
+    //
+    addTransition(HCALInputs.EXIT,    HCALStates.CONFIGURED, HCALStates.EXITING);
+
     // STOP Command:
     // The STOP input is allowed in the RUNNING and RUNNINGDEGRADED
     // states, and moves the FSM in the STOPPING state.
@@ -369,6 +377,7 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     addTransition(HCALInputs.SETHALT, HCALStates.HALTING, HCALStates.HALTED);
     addTransition(HCALInputs.SETHALT, HCALStates.RECOVERING, HCALStates.HALTED);
     addTransition(HCALInputs.SETHALT, HCALStates.RESETTING, HCALStates.HALTED);
+    addTransition(HCALInputs.SETHALT, HCALStates.EXITING, HCALStates.HALTED);
 
     // Reach the CONFIGURED State
     addTransition(HCALInputs.SETCONFIGURE, HCALStates.INITIALIZING, HCALStates.CONFIGURED);

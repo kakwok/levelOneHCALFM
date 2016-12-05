@@ -7,6 +7,8 @@ import java.io.StringReader;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.HashMap;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -48,6 +50,15 @@ import rcms.fm.fw.parameter.type.StructT;
 import rcms.fm.fw.parameter.type.UnsignedIntegerT;
 import rcms.fm.fw.parameter.type.UnsignedShortT;
 import rcms.fm.fw.parameter.type.VectorT;
+import rcms.fm.fw.parameter.type.ByteT;
+import rcms.fm.fw.parameter.type.DateT;
+import rcms.fm.fw.parameter.type.DoubleT;
+import rcms.fm.fw.parameter.type.FloatT;
+import rcms.fm.fw.parameter.type.LongT;
+import rcms.fm.fw.parameter.type.ShortT;
+import rcms.fm.fw.parameter.type.UnsignedIntegerT;
+import rcms.fm.fw.parameter.type.UnsignedShortT;
+import rcms.fm.fw.parameter.type.MapT;
 
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.util.logger.RCMSLogger;
@@ -250,7 +261,8 @@ public class HCALxmlHandler {
               if (!functionManager.FMrole.equals("Level2_TCDSLPM")) currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
             }
             if (xcApplicationClass.equals(ttcci)){
-              if (!functionManager.FMrole.equals("EvmTrig") && !functionManager.FMname.contains("HCALFM_904Int_TTCci")) {
+              //if (!functionManager.FMrole.equals("EvmTrig") && !functionManager.FMname.contains("HCALFM_904Int_TTCci")) {
+              if (!functionManager.FMrole.equals("EvmTrig") && !functionManager.FMname.contains("TTCci")) {
                 currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
                 logger.warn("[JohnLog3] " + functionManager.FMname + ": just removed the ttcci context in an executive.");
               }

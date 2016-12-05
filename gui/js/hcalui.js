@@ -45,16 +45,24 @@ function showsupervisorerror() {
 $(document).ready(function () {
     var initcolor = $('#currentState').text();
     $('#currentState').attr("class", "hcal_control_" + initcolor);
+    if ($('#currentState').text() == "Configured") {$('#Destroy').hide();}
     var cachedRunNo = $('#RUN_NUMBER').val();
     var cachedNevents = $('#NUMBER_OF_EVENTS').val();
     var cachedSupErr = $('#SUPERVISOR_ERROR').val();
+    if ($('#currentState').text() == "Configured") {
+      $('#Destroy').hide();
+      $('#commandSection :input[value="Exit"]').val("Halt+Destroy");
+      $('#commandSection :input[value="Halt+Destroy"]').insertAfter($('#Destroy'));
+    }
+    var cachedState = $('#currentState').text();
     //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
 
 
     setInterval(function () {
 
-        hidelocalparams();
-        var currentState = $('#currentState').text();
+      hidelocalparams();
+      var currentState = $('#currentState').text();
+      if (currentState != cachedState) {
         $('#currentState').attr("class", "hcal_control_" + currentState);
         if (currentState == "Initial") {
             $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
@@ -62,14 +70,26 @@ $(document).ready(function () {
         else {
             $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
         }
-        if ($('#SUPERVISOR_ERROR').val() !=  cachedSupErr) { showsupervisorerror(); }
-        if ($('#RUN_NUMBER').val() !=  cachedRunNo) { getfullpath(); }
-        if ($('#NUMBER_OF_EVENTS').val() !=  cachedNevents) { getfullpath(); }
-        //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
-        cachedRunNo = $('#RUN_NUMBER').val();
-        cachedNevents = $('#NUMBER_OF_EVENTS').val();
-        cachedSupErr = $('#SUPERVISOR_ERROR').val();
-    //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
+        if (currentState == "Configured") {
+          $('#Destroy').hide();
+          $('#commandSection :input[value="Exit"]').val("Halt+Destroy");
+          $('#commandSection :input[value="Halt+Destroy"]').insertAfter($('#Destroy'));
+        }
+        if (currentState == "Error") {
+          $('#Destroy').show();
+          $('#Destroy').siblings('input[value="Halt+Destroy"]').hide();
+        }
+      }
+      if ($('#SUPERVISOR_ERROR').val() !=  cachedSupErr) { showsupervisorerror(); }
+      if ($('#RUN_NUMBER').val() !=  cachedRunNo) { getfullpath(); }
+      if ($('#NUMBER_OF_EVENTS').val() !=  cachedNevents) { getfullpath(); }
+      //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
+      cachedRunNo = $('#RUN_NUMBER').val();
+      cachedNevents = $('#NUMBER_OF_EVENTS').val();
+      cachedSupErr = $('#SUPERVISOR_ERROR').val();
+      cachedState = currentState;
+	    if ($('#EXIT').val() == "true" && currentState=="Halted") { onDestroyButton(); }
+      //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
     }, 750);
 
 
@@ -78,10 +98,16 @@ $(document).ready(function () {
     });
 });
 
-function setProgress(progress) {
+function setProgress(parName, progress) {
     var numberOfEvents = $("#NUMBER_OF_EVENTS").val();
     var width = $(".container").width();
-    var progressPercent = 100 * progress / numberOfEvents;
+    var progressPercent = 0;
+    if (parName == "HCAL_EVENTSTAKEN") {
+      progressPercent = 100 * progress / numberOfEvents;
+    }
+    else if ( parName == "PROGRESS") {
+      progressPercent = 100 * progress;
+    }
     var progressBarWidth = progressPercent * (width / 100);
     //$(".progressbar").width(progressBarWidth);
     progressPercent = progressPercent.toFixed(2);

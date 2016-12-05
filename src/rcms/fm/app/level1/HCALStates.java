@@ -20,6 +20,8 @@ public final class HCALStates {
 
 	public static final State HALTED = new State("Halted");
 
+	public static final State EXITING = new State("Exiting");
+
 	public static final State UNINITIALIZED = new State("Uninitialized");
 
 	public static final State STOPPING = new State("Stopping");
@@ -27,6 +29,8 @@ public final class HCALStates {
 	public static final State CONFIGURING = new State("Configuring");
 
 	public static final State PREINIT = new State("Pre-Init");
+
+	public static final State COLDINIT = new State("Cold-Init");
 
 	public static final State INIT = new State("Init");
 

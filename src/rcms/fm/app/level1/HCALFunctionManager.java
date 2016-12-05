@@ -300,8 +300,6 @@ public class HCALFunctionManager extends UserFunctionManager {
       if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; return;}
     }
 
-    FMpartition = FMname.substring(5);
-
     System.out.println("[HCAL " + FMname + "] createAction called.");
     logger.debug("[HCAL " + FMname + "] createAction called.");
 
@@ -313,7 +311,6 @@ public class HCALFunctionManager extends UserFunctionManager {
     RunSetupDetails += "\nFM URL: " + FMurl;
     RunSetupDetails += "\nFM URI: " + FMuri;
     RunSetupDetails += "\nFM role: " + FMrole;
-    RunSetupDetails += "\nused for HCAL partition: " + FMpartition;
     RunSetupDetails += "\nthis FM was started at: " + utcFMtimeofstart;
 
     logger.info("[HCAL " + FMname + "] Run configuration details" + RunSetupDetails);
@@ -401,8 +398,8 @@ public class HCALFunctionManager extends UserFunctionManager {
           }
           catch (Exception e) {
             String errMessage = "[HCAL " + FMname + "] Could not destroy FM client named: " + fmChild.getResource().getName().toString() +"\n The URI is: "+ fmChild.getResource().getURI().toString() + "\nThe exception is:\n" + e.toString();
-            logger.error(errMessage,e);
-            // supressed to not worry the CDAQ shifter sendCMSError(errMessage);
+            goToError(errMessage,e);
+            throw (UserActionException) e;
           }
         }
       }
@@ -414,8 +411,14 @@ public class HCALFunctionManager extends UserFunctionManager {
     theEventHandler.stopAlarmerWatchThread = true; 
     theStateNotificationHandler.setTimeoutThread(false);
 
-    destroyXDAQ();
-
+    try{
+      destroyXDAQ();
+    }
+    catch (UserActionException e){
+      String errMessage="[HCAL "+FMname+" ] Got an exception during destroyXDAQ():";
+      goToError(errMessage,e);
+      throw e;
+    }
     destroyed = true;
 
     System.out.println("[HCAL " + FMname + "] destroyAction executed ...");
@@ -549,7 +552,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         sv.registerConditionState(containerFMChildren,HCALStates.CONFIGURING);
         sv.registerConditionState(containerlpmController,HCALStates.CONFIGURING);
         if (asynchcalSupervisor) {
-          sv.registerConditionState(containerhcalSupervisor,Arrays.asList(HCALStates.PREINIT,HCALStates.INIT));
+          sv.registerConditionState(containerhcalSupervisor,Arrays.asList(HCALStates.PREINIT,HCALStates.COLDINIT,HCALStates.INIT));
         }
         svCalc.add(sv);
       }
@@ -860,7 +863,7 @@ public class HCALFunctionManager extends UserFunctionManager {
   /**----------------------------------------------------------------------
    * get all XDAQ executives and kill them
    */
-  protected void destroyXDAQ() {
+  protected void destroyXDAQ() throws UserActionException {
     // see if there is an exec with a supervisor and kill it first
     URI supervExecURI = null;
     if (containerhcalSupervisor != null) {
@@ -870,7 +873,14 @@ public class HCALFunctionManager extends UserFunctionManager {
         supervExecURI = qrSupervParentExec.getURI();
         QualifiedResource qrExec = qualifiedGroup.seekQualifiedResourceOfURI(supervExecURI);
         XdaqExecutive ex = (XdaqExecutive) qrExec;
-        ex.destroy();
+        try{
+            ex.destroy();
+        }
+        catch( Exception e){
+          String errMessage="[HCAL "+FMname+"] Exception when destroying executive named:" + ex.getName()+ " with URI " + supervExecURI.toString(); 
+          goToError(errMessage,e);
+          throw (UserActionException) e;
+        }
       }
     }
 
@@ -881,7 +891,14 @@ public class HCALFunctionManager extends UserFunctionManager {
       while (it.hasNext()) {
         XdaqExecutive ex = (XdaqExecutive) it.next();
         if (!ex.getURI().equals(supervExecURI)) {
-          ex.destroy();
+          try{
+            ex.destroy();
+          }
+          catch(Exception e){
+            String errMessage="[HCAL "+FMname+"] Exception when destroying executive named:" + ex.getName()+ " with URI " + supervExecURI.toString(); 
+            goToError(errMessage,e);
+            throw (UserActionException)e;
+          }
         }
       }
     }
