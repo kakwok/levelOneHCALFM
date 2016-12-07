@@ -140,13 +140,15 @@ function clickboxes() {
 }
 
 function makedropdown(availableRunConfigs) {
-    availableRunConfigs = availableRunConfigs.substring(0, availableRunConfigs.length - 1);
-    var array = availableRunConfigs.split(';');
+    //availableRunConfigs = availableRunConfigs.substring(0, availableRunConfigs.length - 1);
+    //var array = availableRunConfigs.split(';');
+    var runConfigMap = JSON.parse(availableRunConfigs);
     var dropdownoption = "<select id='dropdown' > <option value='not set' maskedresources=''> --SELECT-- </option>";
 
-    for (var i = 0, l = array.length; i < l; i++) {
-        var option = array[i].split(':');
-        dropdownoption = dropdownoption + "<option value='" + option[1] + "' maskedresources='" + option[2] + ";'>" + option[0] + "</option>";
+    //for (var i = 0, l = array.length; i < l; i++) {
+        //var option = array[i].split(':');
+    for (name in runConfigMap) {
+        dropdownoption = dropdownoption + "<option value='" + runConfigMap[name].snippet + "' maskedresources='" + runConfigMap[name].maskedapps +"'>" + name + "</option>";
     }
     dropdownoption = dropdownoption + "</select>";
     $('#dropdowndiv').html(dropdownoption);
@@ -279,5 +281,6 @@ function hcalOnLoad() {
     getfullpath();
     showsupervisorerror();
     moveversionnumber();
+    makedropdown($('#AVAILABLE_RUN_CONFIGS').text());
     onClickCommandParameterCheckBox();
 }
