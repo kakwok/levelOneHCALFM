@@ -154,7 +154,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       // initialize all XDAQ executives
-      // we also halt the LPM applications inside here
       initXDAQ();
 
       String ruInstance = "";
@@ -162,12 +161,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         ruInstance = ((StringT)parameterSet.get("RU_INSTANCE").getValue()).getString();
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("RU_INSTANCE",new StringT(ruInstance)));
       }
-      String lpmSupervisor = "";
-      if (parameterSet.get("LPM_SUPERVISOR") != null) {
-        lpmSupervisor = ((StringT)parameterSet.get("LPM_SUPERVISOR").getValue()).getString();
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("LPM_SUPERVISOR",new StringT(lpmSupervisor)));
-      }
-      //Set instance numbers and HandleLPM in the infospace
+      //Set instance numbers and other items in the infospace
       initXDAQinfospace();
 
       //logger.info("[JohnLogX] just after initXdaq");
@@ -313,7 +307,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // also halt all LPM applications inside here
       initXDAQ();
 
-      //Set instance numbers and HandleLPM in the infospace
+      //Set instance numbers and other items in the infospace
       initXDAQinfospace();
 
       //Reset all EmptyFMs as we are going to halted

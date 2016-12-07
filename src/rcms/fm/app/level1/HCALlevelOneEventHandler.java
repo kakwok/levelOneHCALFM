@@ -292,11 +292,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("RU_INSTANCE", new StringT(ruInstance)));
       pSet.put(new CommandParameter<StringT>("RU_INSTANCE", new StringT(ruInstance)));
 
-      String lpmSupervisor =  ((StringT)functionManager.getHCALparameterSet().get("LPM_SUPERVISOR").getValue()).getString();
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "]: This level1 has the LPM_SUPERVISOR " + lpmSupervisor);
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("LPM_SUPERVISOR", new StringT(lpmSupervisor)));
-      pSet.put(new CommandParameter<StringT>("LPM_SUPERVISOR", new StringT(lpmSupervisor)));
-
       String evmTrigFM =  ((StringT)functionManager.getHCALparameterSet().get("EVM_TRIG_FM").getValue()).getString();
       logger.info("[HCAL LVL1 " + functionManager.FMname + "]: This level1 has the EVM_TRIG_FM " + evmTrigFM);
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("EVM_TRIG_FM", new StringT(evmTrigFM)));
@@ -1553,6 +1548,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.debug("[HCAL " + functionManager.FMname + "] ... stopping ProgressThread.");
     }
   }
+
   public void exitAction(Object obj) throws UserActionException {
 
     if (obj instanceof StateEnteredEvent) {
