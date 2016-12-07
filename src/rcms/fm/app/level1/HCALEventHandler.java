@@ -44,6 +44,7 @@ import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.VectorT;
+import rcms.fm.fw.parameter.type.MapT;
 import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserEventHandler;
@@ -328,16 +329,28 @@ public class HCALEventHandler extends UserEventHandler {
 
       NodeList nodes = null;
       nodes = xmlHandler.getHCALuserXML().getElementsByTagName("RunConfig");
-      String availableRunConfigs="";
+      MapT<MapT<StringT> > LocalRunKeyMap = new MapT<MapT<StringT>>();
       for (int i=0; i < nodes.getLength(); i++) {
         logger.debug("[HCAL " + functionManager.FMname + "]: Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
             + ", snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue()+ ", and maskedapps: " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
+        
+        MapT<StringT> RunKeySetting = new MapT<StringT>();
+        StringT runkeyName =new StringT(nodes.item(i).getAttributes().getNamedItem("name").getNodeValue());
 
-        availableRunConfigs += nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() + ":" + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue() + ":" + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue() + ";";
+        if ( ((Element)nodes.item(i)).hasAttribute("snippet")){
+          RunKeySetting.put(new StringT("snippet")   ,new StringT(nodes.item(i).getAttributes().getNamedItem("snippet"   ).getNodeValue()));
+        }
+        if ( ((Element)nodes.item(i)).hasAttribute("maskedapps")){
+          RunKeySetting.put(new StringT("maskedapps"),new StringT(nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue()));
+        }
+        if ( ((Element)nodes.item(i)).hasAttribute("maskedFM")){
+          RunKeySetting.put(new StringT("maskedFM")  ,new StringT(nodes.item(i).getAttributes().getNamedItem("maskedFM"  ).getNodeValue()));
+        }
+        LocalRunKeyMap.put(runkeyName,RunKeySetting);
 
-        logger.debug("[HCAL " + functionManager.FMname + "]: availableRunConfigs is now: " + availableRunConfigs);
       }
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("AVAILABLE_RUN_CONFIGS",new StringT(availableRunConfigs)));
+      logger.debug("[HCAL " + functionManager.FMname + "]: LocalRunKeyMap is :"+ LocalRunKeyMap.toString());
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<MapT<StringT>>>("AVAILABLE_RUN_CONFIGS",LocalRunKeyMap));
     }
     catch (DOMException | UserActionException e) {
       logger.error("[HCAL " + functionManager.FMname + "]: Got an error when trying to manipulate the userXML: " + e.getMessage());

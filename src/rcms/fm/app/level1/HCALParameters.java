@@ -11,6 +11,7 @@ import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.VectorT;
+import rcms.fm.fw.parameter.type.MapT;
 
 import rcms.util.logger.RCMSLogger;
 
@@ -80,7 +81,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_RUN_TYPE"                    ,  new StringT("local")      ) );  // Run type -- local or global
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_COMMENT"                     ,  new StringT("")           ) );  // User-input comment
-		this.put( new FunctionManagerParameter<StringT>  ("AVAILABLE_RUN_CONFIGS"            ,  new StringT("none found") ) );  // Local run types available
+		this.put( new FunctionManagerParameter<MapT<MapT<StringT> >  >  ("AVAILABLE_RUN_CONFIGS"  ,  new MapT<MapT<StringT>>()));  // Local run types available
 		this.put( new FunctionManagerParameter<StringT>  ("RUN_CONFIG_SELECTED"              ,  new StringT("not set")    ) );  // User selected local run type
 		this.put( new FunctionManagerParameter<StringT>  ("CFGSNIPPET_KEY_SELECTED"          ,  new StringT("not set")    ) );  // Key name for the local run type selected by the user
 		this.put( new FunctionManagerParameter<StringT>  ("RU_INSTANCE"                      ,  new StringT("")           ) );  // EventBuilder classname_instanceNumber of the active one for the run
