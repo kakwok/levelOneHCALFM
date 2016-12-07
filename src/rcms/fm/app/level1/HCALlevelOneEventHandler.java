@@ -820,8 +820,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         // now configure the rest in parallel
         //List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getQualifiedResourceList();
         List<FunctionManager> normalFMsToConfigureList = new ArrayList<FunctionManager>();
-        for(QualifiedResource qr : fmChildrenList)
+        for(QualifiedResource qr : fmChildrenList){
           normalFMsToConfigureList.add((FunctionManager)qr);
+        }
         QualifiedResourceContainer normalFMsToConfigureContainer = new QualifiedResourceContainer(normalFMsToConfigureList);
         SimpleTask fmChildrenTask = new SimpleTask(normalFMsToConfigureContainer,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring regular priority FM children");
         

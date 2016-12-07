@@ -70,6 +70,8 @@ public class HCALFunctionManager extends UserFunctionManager {
   public XdaqApplicationContainer containerXdaqApplication = null;  // this container contains _all_ XDAQ executives
 
   public XdaqApplicationContainer containerhcalSupervisor      = null;
+  public XdaqApplicationContainer containerICIController       = null;
+  public XdaqApplicationContainer containerPIController        = null;
   public XdaqApplicationContainer containerlpmController       = null;
   public XdaqApplicationContainer containerTCDSControllers     = null;
   public XdaqApplicationContainer containerhcalDCCManager      = null;
