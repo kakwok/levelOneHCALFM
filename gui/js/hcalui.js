@@ -140,7 +140,7 @@ function clickboxes() {
 }
 function preclickFMs() {
   $('#masks :checkbox').each( function (index) { 
-    if ( $.inArray($(this).val(), $('#dropdown option:selected').attr("maskedfm").split("|"))  !== -1) { $(this).prop('checked', true); }
+    if ( $.inArray($(this).val(), $('#dropdown option:selected').attr("maskedfm").split(";"))  !== -1) { $(this).prop('checked', true); }
     else { $(this).prop('checked', false); }
   });
 }
