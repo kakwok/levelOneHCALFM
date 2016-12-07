@@ -138,6 +138,12 @@ function clickboxes() {
         $('#newMASKED_RESOURCEScheckbox :checkbox').click();
     }
 }
+function preclickFMs() {
+  $('#masks :checkbox').each( function (index) { 
+    if ( $.inArray($(this).val(), $('#dropdown option:selected').attr("maskedfm").split("|"))  !== -1) { $(this).prop('checked', true); }
+    else { $(this).prop('checked', false); }
+  });
+}
 
 function makedropdown(availableRunConfigs) {
     //availableRunConfigs = availableRunConfigs.substring(0, availableRunConfigs.length - 1);
@@ -148,7 +154,9 @@ function makedropdown(availableRunConfigs) {
     //for (var i = 0, l = array.length; i < l; i++) {
         //var option = array[i].split(':');
     for (name in runConfigMap) {
-        dropdownoption = dropdownoption + "<option value='" + runConfigMap[name].snippet + "' maskedresources='" + runConfigMap[name].maskedapps +"'>" + name + "</option>";
+        maskedFM = "";
+        if (runConfigMap[name].hasOwnProperty('maskedFM')) { maskedFM=runConfigMap[name].maskedFM; }
+        dropdownoption = dropdownoption + "<option value='" + runConfigMap[name].snippet + "' maskedresources='" + runConfigMap[name].maskedapps +"' maskedFM='" + maskedFM + "' >" + name + "</option>";
     }
     dropdownoption = dropdownoption + "</select>";
     $('#dropdowndiv').html(dropdownoption);
@@ -158,7 +166,7 @@ function makedropdown(availableRunConfigs) {
     var masterSnippetArgs = "'" + masterSnippetNumber + "', 'RUN_CONFIG_SELECTED'";
     var maskedResourcesNumber = $('#MASKED_RESOURCES').attr("name").substring(20);
     var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'MASKED_RESOURCES'";
-    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection(); fillMask();";
+    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection(); preclickFMs(); fillMask();";
     $('#dropdown').attr("onchange", onchanges);
 }
 
