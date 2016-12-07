@@ -883,35 +883,25 @@ public class HCALEventHandler extends UserEventHandler {
       String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to initialize resources. "; 
       functionManager.goToError(errMessage,e);
     }
-
-    // find xdaq applications
-    List<QualifiedResource> xdaqList = qg.seekQualifiedResourcesOfType(new XdaqApplication());
-    functionManager.containerXdaqApplication = new XdaqApplicationContainer(xdaqList);
-    logger.debug("[HCAL " + functionManager.FMname + "] Number of XDAQ applications controlled: " + xdaqList.size() );
-
-    // fill applications for level one role
+    ////////////////////////////////////////
+    // Fill containers for levelOne FM
+    ////////////////////////////////////////
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Retrieving the possible defined function managers for different HCAL partitions ...")));
 
-    functionManager.containerFMChildren = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager()));
-    // get the EvmTrig FM and handle it separately for sane state calculation
-    List<QualifiedResource> childFMs = qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager());
-    Iterator fmChItr = childFMs.iterator();
-    while (fmChItr.hasNext()) {
-      FunctionManager fmChild = (FunctionManager) fmChItr.next();
-      //logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-      // role is set at beginning of init() so it's already set here
-      if (fmChild.getRole().toString().equals("EvmTrig") || fmChild.getRole().toString().equals("Level2_TCDSLPM")) {
-        //logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: REMOVE FM named: " + fmChild.getName() + " with role name: " + fmChild.getRole());
-        fmChItr.remove();
-      }
-    }
+    // Get list of childFMs from QG
+    List<QualifiedResource> childFMs = qg.seekQualifiedResourcesOfType(new FunctionManager());
+    functionManager.containerFMChildren = new QualifiedResourceContainer(childFMs);
+    // Fill containerFMchildren with Active FMs only
+    List<QualifiedResource> ActiveChildFMs = functionManager.containerFMChildren.getActiveQRList();
+    functionManager.containerFMChildren   = new QualifiedResourceContainer(ActiveChildFMs);
+ 
+    functionManager.containerFMEvmTrig = new QualifiedResourceContainer(qg.seekQualifiedResourcesOfRole("EvmTrig"));
+    functionManager.containerFMTCDSLPM = new QualifiedResourceContainer(qg.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
+    childFMs.removeAll(qg.seekQualifiedResourcesOfRole("EvmTrig"));
+    childFMs.removeAll(qg.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
+
     functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM = new QualifiedResourceContainer(childFMs);
-    functionManager.containerFMEvmTrig = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfRole("EvmTrig"));
-    functionManager.containerFMTCDSLPM = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
-    // get masked FMs and remove them from container
-    List<QualifiedResource> allChildFMs = functionManager.containerFMChildren.getActiveQRList();
-    functionManager.containerFMChildren   = new QualifiedResourceContainer(allChildFMs);
-    
+   
     if (functionManager.containerFMChildren.isEmpty()) {
       String debugMessage = ("[HCAL " + functionManager.FMname + "] No FM childs found.\nThis is probably OK for a level 2 HCAL FM.\nThis FM has the role: " + functionManager.FMrole);
       logger.debug(debugMessage);
@@ -921,35 +911,36 @@ public class HCALEventHandler extends UserEventHandler {
     List<FunctionManager> evmTrigList = new ArrayList<FunctionManager>();
     List<FunctionManager> normalList = new ArrayList<FunctionManager>();
     // see if we have any "special" FMs; store them in containers
-    {
-      Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
-      FunctionManager fmChild = null;
-      while (it.hasNext()) {
-        fmChild = (FunctionManager) it.next();
-        if (fmChild.getRole().toString().equals("EvmTrig")) {
+    for(QualifiedResource qr : functionManager.containerFMChildren.getActiveQRList()){
+      FunctionManager fmChild = (FunctionManager)qr;
+      if (fmChild.getRole().toString().equals("EvmTrig")){
           evmTrigList.add(fmChild);
-        }
-        else {
+      }
+      else{
           normalList.add(fmChild);
-        }
       }
     }
     functionManager.containerFMChildrenEvmTrig = new QualifiedResourceContainer(evmTrigList);
     functionManager.containerFMChildrenNormal = new QualifiedResourceContainer(normalList);
 
-    // fill applications for level two role
+    ////////////////////////////////////////
+    // Fill applications for level two FMs
+    ////////////////////////////////////////
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Retrieving HCAL XDAQ applications ...")));
+    // find xdaq applications
+    List<QualifiedResource> xdaqList = qg.seekQualifiedResourcesOfType(new XdaqApplication());
+    functionManager.containerXdaqApplication = new XdaqApplicationContainer(xdaqList);
+    logger.debug("[HCAL " + functionManager.FMname + "] Number of XDAQ applications controlled: " + xdaqList.size() );
 
     functionManager.containerhcalSupervisor = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalSupervisor"));
 
     // TCDS apps
-    List<XdaqApplication> lpmList = functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::lpm::LPMController");
-    functionManager.containerlpmController = new XdaqApplicationContainer(lpmList);
     List<XdaqApplication> tcdsList = new ArrayList<XdaqApplication>();
-    tcdsList.addAll(lpmList);
+    tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::lpm::LPMController"));
     tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::ici::ICIController"));
     tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::pi::PIController"));
     functionManager.containerTCDSControllers = new XdaqApplicationContainer(tcdsList);
+    functionManager.containerlpmController = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::lpm::LPMController"));
 
     functionManager.containerhcalDCCManager = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalDCCManager"));
     functionManager.containerTTCciControl   = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("ttc::TTCciControl"));
