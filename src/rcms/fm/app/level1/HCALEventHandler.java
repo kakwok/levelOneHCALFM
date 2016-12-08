@@ -20,6 +20,7 @@ import java.net.URL;
 import java.net.MalformedURLException;
 import java.lang.Math;
 
+
 import java.io.StringWriter;
 import java.io.PrintWriter;
 
@@ -35,6 +36,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 import org.w3c.dom.DOMException;
+import org.apache.commons.collections.map.LinkedMap;
 
 import rcms.fm.fw.StateEnteredEvent;
 import rcms.fm.fw.parameter.Parameter;
@@ -47,6 +49,7 @@ import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.VectorT;
 import rcms.fm.fw.parameter.type.MapT;
 import rcms.fm.fw.parameter.type.BooleanT;
+import rcms.fm.fw.parameter.type.ParameterType;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserEventHandler;
 import rcms.fm.resource.QualifiedGroup;
@@ -327,15 +330,18 @@ public class HCALEventHandler extends UserEventHandler {
     try {
 
       // Get the list of master snippets from the userXML and use it to find the mastersnippet file.
+      //LinkedHashMap<StringT,MapT<StringT>> LocalRunKeyMap = new LinkedHashMap<StringT,MapT<StringT>>();
+      //FIXME: Only LinkedMap works for MapT.createFromMap()
+      LinkedMap LocalRunKeyMap = new LinkedMap();
+      VectorT<StringT> LocalRunKeys = new VectorT<StringT>();
 
       NodeList nodes = null;
       nodes = xmlHandler.getHCALuserXML().getElementsByTagName("RunConfig");
-      MapT<MapT<StringT> > LocalRunKeyMap = new MapT(MapT.createFromMap(new LinkedHashMap<StringT,MapT>()));
       for (int i=0; i < nodes.getLength(); i++) {
         logger.debug("[HCAL " + functionManager.FMname + "]: Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
             + ", snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue()+ ", and maskedapps: " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
         
-        MapT<StringT> RunKeySetting = new MapT(MapT.createFromMap(new LinkedHashMap<StringT,StringT>()));
+        MapT<StringT> RunKeySetting = new MapT<StringT>();
         StringT runkeyName =new StringT(nodes.item(i).getAttributes().getNamedItem("name").getNodeValue());
 
         if ( ((Element)nodes.item(i)).hasAttribute("snippet")){
@@ -351,11 +357,22 @@ public class HCALEventHandler extends UserEventHandler {
         if ( ((Element)nodes.item(i)).hasAttribute("maskedFM")){
           RunKeySetting.put(new StringT("maskedFM")  ,new StringT(nodes.item(i).getAttributes().getNamedItem("maskedFM"  ).getNodeValue()));
         }
+        logger.debug("[HCAL " + functionManager.FMname + "]: RunkeySetting  is :"+ RunKeySetting.toString());
+
+        LocalRunKeys.add(runkeyName);
         LocalRunKeyMap.put(runkeyName,RunKeySetting);
 
       }
+
+      MapT<ParameterType<?>> LocalRunKeyMapT =  MapT.createFromMap(LocalRunKeyMap);
+      logger.debug("[HCAL " + functionManager.FMname + "]: instance of (LocalRunKeyMap)  =" +  (LocalRunKeyMap instanceof LinkedMap));
       logger.debug("[HCAL " + functionManager.FMname + "]: LocalRunKeyMap is :"+ LocalRunKeyMap.toString());
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<MapT<StringT>>>("AVAILABLE_RUN_CONFIGS",LocalRunKeyMap));
+      logger.debug("[HCAL " + functionManager.FMname + "]: LocalRunKeyMapT is :"+ LocalRunKeyMapT.toString());
+
+      // FIXME: Order of LocalRunKeyMapT is lost here
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>      ("AVAILABLE_LOCALRUNKEYS",LocalRunKeys));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<ParameterType<?>>>("AVAILABLE_RUN_CONFIGS" ,LocalRunKeyMapT));
+      
     }
     catch (DOMException | UserActionException e) {
       logger.error("[HCAL " + functionManager.FMname + "]: Got an error when trying to manipulate the userXML: " + e.getMessage());
