@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.Date;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Hashtable;
 import java.lang.Integer;
 import java.util.Iterator;
@@ -329,12 +330,12 @@ public class HCALEventHandler extends UserEventHandler {
 
       NodeList nodes = null;
       nodes = xmlHandler.getHCALuserXML().getElementsByTagName("RunConfig");
-      MapT<MapT<StringT> > LocalRunKeyMap = new MapT<MapT<StringT>>();
+      MapT<MapT<StringT> > LocalRunKeyMap = new MapT(MapT.createFromMap(new LinkedHashMap<StringT,MapT>()));
       for (int i=0; i < nodes.getLength(); i++) {
         logger.debug("[HCAL " + functionManager.FMname + "]: Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
             + ", snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue()+ ", and maskedapps: " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
         
-        MapT<StringT> RunKeySetting = new MapT<StringT>();
+        MapT<StringT> RunKeySetting = new MapT(MapT.createFromMap(new LinkedHashMap<StringT,StringT>()));
         StringT runkeyName =new StringT(nodes.item(i).getAttributes().getNamedItem("name").getNodeValue());
 
         if ( ((Element)nodes.item(i)).hasAttribute("snippet")){
