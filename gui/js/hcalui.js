@@ -145,18 +145,19 @@ function preclickFMs() {
   });
 }
 
-function makedropdown(availableRunConfigs) {
+function makedropdown(availableRunConfigs, availableLocalRunKeys) {
     //availableRunConfigs = availableRunConfigs.substring(0, availableRunConfigs.length - 1);
     //var array = availableRunConfigs.split(';');
+    var localRunKeysArray = JSON.parse(availableLocalRunKeys);
     var runConfigMap = JSON.parse(availableRunConfigs);
     var dropdownoption = "<select id='dropdown' > <option value='not set' maskedresources=''> --SELECT-- </option>";
 
     //for (var i = 0, l = array.length; i < l; i++) {
         //var option = array[i].split(':');
-    for (name in runConfigMap) {
+    for (var i = 0; i<localRunKeysArray.length; i++) {
         maskedFM = "";
-        if (runConfigMap[name].hasOwnProperty('maskedFM')) { maskedFM=runConfigMap[name].maskedFM; }
-        dropdownoption = dropdownoption + "<option value='" + runConfigMap[name].snippet + "' maskedresources='" + runConfigMap[name].maskedapps +"' maskedFM='" + maskedFM + "' >" + name + "</option>";
+        if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('maskedFM')) { maskedFM=runConfigMap[localRunKeysArray[i]].maskedFM; }
+        dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' >" + localRunKeysArray[i] + "</option>";
     }
     dropdownoption = dropdownoption + "</select>";
     $('#dropdowndiv').html(dropdownoption);
@@ -289,6 +290,6 @@ function hcalOnLoad() {
     getfullpath();
     showsupervisorerror();
     moveversionnumber();
-    makedropdown($('#AVAILABLE_RUN_CONFIGS').text());
+    makedropdown($('#AVAILABLE_RUN_CONFIGS').text(), $('#AVAILABLE_LOCALRUNKEYS').text());
     onClickCommandParameterCheckBox();
 }
