@@ -91,7 +91,6 @@ public class HCALEventHandler extends UserEventHandler {
   public LogSessionConnector logSessionConnector;  // Connector for logsession DB
 
   // Essential xdaq stuff
-  public QualifiedGroup qualifiedGroup = null;
   public static final String XDAQ_NS = "urn:xdaq-soap:3.0";
 
 
@@ -962,7 +961,7 @@ public class HCALEventHandler extends UserEventHandler {
 
   //Set instance numbers and HandleLPM after initXDAQ()
   protected void initXDAQinfospace() {
-      List<QualifiedResource> xdaqApplicationList = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqApplication());
+      List<QualifiedResource> xdaqApplicationList = functionManager.getQualifiedGroup().seekQualifiedResourcesOfType(new XdaqApplication());
       QualifiedResourceContainer qrc = new QualifiedResourceContainer(xdaqApplicationList);
       for (QualifiedResource qr : qrc.getActiveQRList()) {
           try {

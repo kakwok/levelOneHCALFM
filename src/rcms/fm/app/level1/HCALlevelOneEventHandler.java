@@ -76,7 +76,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
   public void init() throws rcms.fm.fw.EventHandlerException {
 
     functionManager = (HCALFunctionManager) getUserFunctionManager();
-    qualifiedGroup  = functionManager.getQualifiedGroup();
     xmlHandler = new HCALxmlHandler(this.functionManager);
     masker = new HCALMasker(this.functionManager);
 
