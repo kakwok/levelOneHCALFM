@@ -809,42 +809,6 @@ public class HCALEventHandler extends UserEventHandler {
   protected void initXDAQ() {
     // Look if the configuration uses TCDS and handle accordingly.
     QualifiedGroup qg = functionManager.getQualifiedGroup();
-//output
-    List<QualifiedResource> xdaqExecutiveList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
-    for (QualifiedResource qr : xdaqExecutiveList) {
-      XdaqExecutive exec = (XdaqExecutive)qr;
-      XdaqExecutiveConfiguration config =  exec.getXdaqExecutiveConfiguration();
-      String oldExecXML = config.getXml();
-      System.out.println("[SethLog HCAL " + functionManager.FMname + "] exec with URI: " + qr.getResource().getURI().toString() + " has configXML: " + oldExecXML);
-    }
-           logger.warn("Modified Group follows");
-           logger.warn(qg.getGroup().toString());
-           logger.warn("Modified QualifiedGroup follows");
-           logger.warn(qg.print());
-           //output
-
-    //List<QualifiedResource> xdaqExecutiveList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
-
-    ////XXX is this needed still?
-    //// mark tcds execs as initialized
-    //for (QualifiedResource qr : xdaqExecutiveList) {
-    //  String hostName = qr.getResource().getHostName();
-    //  // ===WARNING!!!=== This hostname is hardcoded and should NOT be!!!
-    //  //       // TODO This needs to be moved out into userXML or a snippet!!!
-    //  if (hostName.equals("tcds-control-hcal.cms") || hostName.equals("tcds-control-904.cms904") ) {
-    //    logger.info("[HCAL " + functionManager.FMname + "] the TCDS executive on hostName " + hostName + " is initialized? " + qr.isInitialized());
-    //    //qr.setInitialized(true);
-    //  }
-    //}
-
-    //// disable jobcontrols for tcds
-    //List<QualifiedResource> jobControlList = qg.seekQualifiedResourcesOfType(new JobControl());
-    //for (QualifiedResource qr: jobControlList) {
-    //  if (qr.getResource().getHostName().equals("tcds-control-hcal.cms") || qr.getResource().getHostName().equals("tcds-control-904.cms904") ) {
-    //    logger.info("[HCAL " + functionManager.FMname + "] Is the application with name " + qr.getName() + " running on host " + qr.getResource().getHostName() + " active? " + qr.isActive());
-    //    //qr.setActive(false);
-    //  }
-    //}
 
     try {
       qg.init();
