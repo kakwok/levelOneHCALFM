@@ -341,8 +341,8 @@ public class HCALEventHandler extends UserEventHandler {
           RunKeySetting.put(new StringT("snippet")   ,new StringT(nodes.item(i).getAttributes().getNamedItem("snippet"   ).getNodeValue()));
         }
         else{
-          String errMessage="Cannot find attribute snippet in this Runkey"+runkeyName+", check userXML!";
-          logger.error(errMessage);
+          String errMessage="Cannot find attribute snippet in this Runkey"+runkeyName+", check the RunConfig entry in userXML!";
+          functionManager.goToError(errMessage);
         }
         if ( ((Element)nodes.item(i)).hasAttribute("maskedapps")){
           RunKeySetting.put(new StringT("maskedapps"),new StringT(nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue()));

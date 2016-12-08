@@ -175,20 +175,7 @@ public class HCALMasker {
     VectorT<StringT> MaskedFMs =  (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
 
     logger.info("[Martin log "+ functionManager.FMname + "]: The list of MaskedFMs from gui is " + MaskedFMs.toString());
-    //String userXmlMaskedFM = "not set";
     String localrunkey = ((StringT)functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue()).getString();
-    //try{
-    //    userXmlMaskedFM = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", localrunkey, "maskedFM");
-    //    logger.info("[Martin log " + functionManager.FMname + "]: Got the following maskedFM from userXML: "+ userXmlMaskedFM );
-    //} catch (UserActionException e){
-    //    logger.error("[Martin log " + functionManager.FMname + "]: Got an error when getting maskedFM from userXML: " + e);
-    //}
-    //if (!userXmlMaskedFM.equals("")) {
-    //  String[] userXmlMaskedFMarray = userXmlMaskedFM.split(";");
-    //  for (String xmlMaskedFM : userXmlMaskedFMarray) {
-    //    MaskedFMs.add(new StringT(xmlMaskedFM));
-    //  }
-    //}
     logger.info("[Martin log "+ functionManager.FMname + "]: The final list of MaskedFMs is " + MaskedFMs.toString());
 
     List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
