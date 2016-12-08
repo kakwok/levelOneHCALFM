@@ -31,6 +31,7 @@ import rcms.util.logger.RCMSLogger;
 import rcms.xdaqctl.XDAQParameter;
 import rcms.utilities.runinfo.RunNumberData;
 
+import rcms.statemachine.definition.Input;
 import rcms.utilities.fm.task.TaskSequence;
 import rcms.utilities.fm.task.SimpleTask;
 
@@ -521,7 +522,17 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       FullLPMControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LPMCONTROL"    ).getValue()).getString();
       FullPIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL"     ).getValue()).getString();
 
-      
+      // Configure LPM
+      Input LPMconfigureInput= new Input(HCALInputs.CONFIGURE.toString());
+      ParameterSet<CommandParameter> LPMpSet = new ParameterSet<CommandParameter>();
+      LPMpSet.put( new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(FullLPMControlSequence)) );
+      LPMconfigureInput.setParameters( LPMpSet );
+      TaskSequence configureTaskSeq = new TaskSequence(HCALStates.CONFIGURING,HCALInputs.SETCONFIGURE);
+
+      configureTaskSeq.addLast(new SimpleTask( functionManager.containerlpmController, LPMconfigureInput, HCALStates.CONFIGURING, HCALStates.CONFIGURED, "Configuring LPM"));
+      functionManager.theStateNotificationHandler.executeTaskSequence(configureTaskSeq);
+
+
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] configureAction: We are in " + RunType + " mode ...");

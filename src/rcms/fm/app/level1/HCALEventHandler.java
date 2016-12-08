@@ -539,7 +539,7 @@ public class HCALEventHandler extends UserEventHandler {
               pam.setValue("Partition",functionManager.FMpartition);
               pam.setValue("RunSessionNumber",Sid.toString());
               pam.setValue("hardwareConfigurationStringTCDS", TCDSControlSequence);
-              pam.setValue("hardwareConfigurationStringLPM", LPMControlSequence);
+              //pam.setValue("hardwareConfigurationStringLPM", LPMControlSequence);
               pam.setValue("hardwareConfigurationStringPI", PIControlSequence);
               pam.setValue("fedEnableMask", FedEnableMask);
               pam.setValue("usePrimaryTCDS", new Boolean(UsePrimaryTCDS).toString());
