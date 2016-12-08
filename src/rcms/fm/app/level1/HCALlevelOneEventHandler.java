@@ -182,10 +182,23 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       masker.pickEvmTrig();
       masker.setMaskedFMs();
+      
+      Object sidObj = functionManager.getQualifiedGroup().getRegistryEntry("SID");
+      if (sidObj!=null){
+        logger.info("[HCAL "+ functionManager.FMname+"] before convert :SID object is "+sidObj.toString());
+      }else{
+        logger.error("[HCAL "+ functionManager.FMname+"] before convert:SID object is null!!!");
+      }
       // convert TCDS apps to service apps
       QualifiedGroup qg = ConvertTCDSAppsToServiceApps(functionManager.getQualifiedGroup());
       // reset QG to modified one
       functionManager.setQualifiedGroup(qg);
+      sidObj = functionManager.getQualifiedGroup().getRegistryEntry("SID");
+      if (sidObj!=null){
+        logger.info("[HCAL "+ functionManager.FMname+"] after convert :SID object is "+sidObj.toString());
+      }else{
+        logger.error("[HCAL "+ functionManager.FMname+"] after convert:SID object is null!!!");
+      }
 
       List<QualifiedResource> xdaqExecList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
       // loop over the executives to strip the connections
