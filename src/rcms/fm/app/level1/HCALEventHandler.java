@@ -809,6 +809,12 @@ public class HCALEventHandler extends UserEventHandler {
     // Look if the configuration uses TCDS and handle accordingly.
     QualifiedGroup qg = functionManager.getQualifiedGroup();
 
+    Object sidObj = qg.getRegistryEntry("SID");
+    if (sidObj!=null){
+      logger.info("[HCAL "+ functionManager.FMname+"] initXDAQ() :SID object is "+sidObj.toString());
+    }else{
+      logger.error("[HCAL "+ functionManager.FMname+"] initXDAQ():SID object is null!!!");
+    }
     try {
       qg.init();
     }
@@ -869,18 +875,29 @@ public class HCALEventHandler extends UserEventHandler {
     List<QualifiedResource> xdaqList = qg.seekQualifiedResourcesOfType(new XdaqApplication());
     functionManager.containerXdaqApplication = new XdaqApplicationContainer(xdaqList);
     logger.debug("[HCAL " + functionManager.FMname + "] Number of XDAQ applications controlled: " + xdaqList.size() );
+    logger.debug("[HCAL " + functionManager.FMname + "] Printing list of XDAQ:");
+    //PrintQRnames(functionManager.containerXdaqApplication);
 
     functionManager.containerhcalSupervisor = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalSupervisor"));
 
     // TCDS apps
+    functionManager.containerXdaqServiceApplication = new XdaqApplicationContainer(qg.seekQualifiedResourcesOfType(new XdaqServiceApplication()));
+    XdaqApplicationContainer XdaqServiceAppContainer    = functionManager.containerXdaqServiceApplication ;
+
     List<XdaqApplication> tcdsList = new ArrayList<XdaqApplication>();
-    tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::lpm::LPMController"));
-    tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::ici::ICIController"));
-    tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::pi::PIController"));
+    tcdsList.addAll(XdaqServiceAppContainer.getApplicationsOfClass("tcds::lpm::LPMController"));
+    tcdsList.addAll(XdaqServiceAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
+    tcdsList.addAll(XdaqServiceAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
     functionManager.containerTCDSControllers = new XdaqApplicationContainer(tcdsList);
-    functionManager.containerlpmController = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::lpm::LPMController"));
-    functionManager.containerICIController = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::ici::ICIController"));
-    functionManager.containerPIController  = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::pi::PIController"));
+    functionManager.containerlpmController   = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::lpm::LPMController"));
+    functionManager.containerICIController   = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
+    functionManager.containerPIController    = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
+    logger.warn("[HCAL "+functionManager.FMname +" initXDAQ: containerlpmController contains:");
+    PrintQRnames(functionManager.containerlpmController);
+    logger.warn("[HCAL "+functionManager.FMname +" initXDAQ: containerICIController contains:");
+    PrintQRnames(functionManager.containerICIController);
+    logger.warn("[HCAL "+functionManager.FMname +" initXDAQ: containerPIController contains:");
+    PrintQRnames(functionManager.containerPIController);
 
     functionManager.containerhcalDCCManager = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalDCCManager"));
     functionManager.containerTTCciControl   = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("ttc::TTCciControl"));
