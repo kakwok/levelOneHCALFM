@@ -527,15 +527,20 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       FullLPMControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LPMCONTROL"    ).getValue()).getString();
       FullPIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL"     ).getValue()).getString();
 
-      // Configure LPM
-      Input LPMconfigureInput= new Input(HCALInputs.CONFIGURE.toString());
+      ////////////////////////////////////////////////////////////////////////////////////
+      // Configure LPM,PI,ICI
+      // see: https://twiki.cern.ch/twiki/pub/CMS/TcdsNotes/tcds_control_software.pdf
+      ////////////////////////////////////////////////////////////////////////////////////
       ParameterSet<CommandParameter> LPMpSet = new ParameterSet<CommandParameter>();
       LPMpSet.put( new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(FullLPMControlSequence)) );
-      LPMconfigureInput.setParameters( LPMpSet );
-      TaskSequence configureTaskSeq = new TaskSequence(HCALStates.CONFIGURING,HCALInputs.SETCONFIGURE);
+      LPMpSet.put( new CommandParameter<StringT> ("fedEnableMask"              , new StringT(FullLPMControlSequence)) );
+      ParameterSet<CommandParameter> PIpSet  = new ParameterSet<CommandParameter>();
+      PIpSet.put( new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(FullPIControlSequence)) );
+      PIpSet.put( new CommandParameter<BooleanT>("usePrimaryTCDS"             , new BooleanT(UsePrimaryTCDS))       );
+      ParameterSet<CommandParameter> ICIpSet = new ParameterSet<CommandParameter>();
+      ICIpSet.put( new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(FullTCDSControlSequence)) );
 
-      configureTaskSeq.addLast(new SimpleTask( functionManager.containerlpmController, LPMconfigureInput, HCALStates.CONFIGURING, HCALStates.CONFIGURED, "Configuring LPM"));
-      functionManager.theStateNotificationHandler.executeTaskSequence(configureTaskSeq);
+      functionManager.theStateNotificationHandler.executeTaskSequence(makeTCDSconfigSeq(LPMpSet,PIpSet,ICIpSet));
 
 
       // give the RunType to the controlling FM
@@ -1932,6 +1937,25 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         } 
       }
     }
+  }
+  /**
+  * @return the tasksequence to configure TCDS from the pSets 
+  */
+  TaskSequence makeTCDSconfigSeq(ParameterSet<CommandParameter> LPMpSet,ParameterSet<CommandParameter> PIpSet,ParameterSet<CommandParameter> ICIpSet){
+    Input LPMconfigureInput= new Input(HCALInputs.CONFIGURE.toString());
+    Input PIconfigureInput = new Input(HCALInputs.CONFIGURE.toString());
+    Input ICIconfigureInput= new Input(HCALInputs.CONFIGURE.toString());
+    LPMconfigureInput.setParameters( LPMpSet );
+    PIconfigureInput.setParameters ( PIpSet );
+    ICIconfigureInput.setParameters( ICIpSet );
+    
+    TaskSequence configureTaskSeq = new TaskSequence(HCALStates.CONFIGURING,HCALInputs.SETCONFIGURE);
+
+    configureTaskSeq.addLast(new SimpleTask( functionManager.containerlpmController, LPMconfigureInput, HCALStates.CONFIGURING, HCALStates.CONFIGURED, "Configuring LPM"));
+    configureTaskSeq.addLast(new SimpleTask( functionManager.containerPIController , PIconfigureInput , HCALStates.CONFIGURING, HCALStates.CONFIGURED, "Configuring PI"));
+    configureTaskSeq.addLast(new SimpleTask( functionManager.containerICIController, ICIconfigureInput, HCALStates.CONFIGURING, HCALStates.CONFIGURED, "Configuring ICI"));
+
+    return configureTaskSeq;
   }
 }
 

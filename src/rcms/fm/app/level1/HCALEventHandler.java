@@ -992,6 +992,12 @@ public class HCALEventHandler extends UserEventHandler {
                 pam.send();
                 logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
               }
+              if (pamName.equals("HandleTCDS")) {
+                pam.select(new String[] {"HandleTCDS"});
+                pam.setValue("HandleTCDS","false");
+                pam.send();
+                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the HandleTCDS for " + qr.getName() + " to false");
+              }
             }
           }
           catch (XDAQTimeoutException e) {
@@ -2846,5 +2852,6 @@ public class HCALEventHandler extends UserEventHandler {
 
      return qg;
   }
-
+  
+  
 }
