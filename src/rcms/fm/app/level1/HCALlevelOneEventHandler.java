@@ -183,7 +183,11 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       masker.pickEvmTrig();
       masker.setMaskedFMs();
-      QualifiedGroup qg = functionManager.getQualifiedGroup();
+      // convert TCDS apps to service apps
+      QualifiedGroup qg = ConvertTCDSAppsToServiceApps(functionManager.getQualifiedGroup());
+      // reset QG to modified one
+      functionManager.setQualifiedGroup(qg);
+
       List<QualifiedResource> xdaqExecList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
       // loop over the executives to strip the connections
 

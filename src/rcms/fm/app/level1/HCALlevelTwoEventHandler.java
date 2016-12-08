@@ -82,6 +82,10 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         functionManager.FMrole="EvmTrig";
       }
 
+      // convert TCDS apps to service apps and reset QG to modified one
+      functionManager.setQualifiedGroup(ConvertTCDSAppsToServiceApps(qualifiedGroup));
+      qualifiedGroup  = functionManager.getQualifiedGroup();
+
       List<QualifiedResource> xdaqApplicationList = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqApplication());
       boolean doMasking = parameterSet.get("MASKED_RESOURCES") != null && ((VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue()).size()!=0;
       if (doMasking) {
