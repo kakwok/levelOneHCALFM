@@ -183,21 +183,19 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       masker.pickEvmTrig();
       masker.setMaskedFMs();
       
-      Object sidObj = functionManager.getQualifiedGroup().getRegistryEntry("SID");
-      if (sidObj!=null){
-        logger.info("[HCAL "+ functionManager.FMname+"] before convert :SID object is "+sidObj.toString());
-      }else{
-        logger.error("[HCAL "+ functionManager.FMname+"] before convert:SID object is null!!!");
-      }
       // convert TCDS apps to service apps
       QualifiedGroup qg = ConvertTCDSAppsToServiceApps(functionManager.getQualifiedGroup());
       // reset QG to modified one
       functionManager.setQualifiedGroup(qg);
-      sidObj = functionManager.getQualifiedGroup().getRegistryEntry("SID");
-      if (sidObj!=null){
-        logger.info("[HCAL "+ functionManager.FMname+"] after convert :SID object is "+sidObj.toString());
-      }else{
-        logger.error("[HCAL "+ functionManager.FMname+"] after convert:SID object is null!!!");
+      //Set SID of QG for service App
+      qg = functionManager.getQualifiedGroup();
+      if( qg.getRegistryEntry("SID") ==null){
+        Integer sid = ((IntegerT)functionManager.getHCALparameterSet().get("SID").getValue()).getInteger();
+        qg.putRegistryEntry("SID", sid);
+        logger.warn("[HCAL "+ functionManager.FMname+"] Just set the SID of QG to "+ sid);
+      }
+      else{
+        logger.info("[HCAL "+ functionManager.FMname+"] SID of QG is "+ qg.getRegistryEntry("SID"));
       }
 
       List<QualifiedResource> xdaqExecList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());

@@ -87,6 +87,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // reset QG to modified one
       functionManager.setQualifiedGroup(qg);
 
+
       List<QualifiedResource> xdaqApplicationList = qg.seekQualifiedResourcesOfType(new XdaqApplication());
       boolean doMasking = parameterSet.get("MASKED_RESOURCES") != null && ((VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue()).size()!=0;
       if (doMasking) {
@@ -246,6 +247,16 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
+      //Set SID of QG for service App
+      qg = functionManager.getQualifiedGroup();
+      if( qg.getRegistryEntry("SID") ==null){
+        Integer sid = ((IntegerT)functionManager.getHCALparameterSet().get("SID").getValue()).getInteger();
+        qg.putRegistryEntry("SID", Integer.toString(sid));
+        logger.warn("[HCAL "+ functionManager.FMname+"] Just set the SID of QG to "+ sid);
+      }
+      else{
+        logger.info("[HCAL "+ functionManager.FMname+"] SID of QG is "+ qg.getRegistryEntry("SID"));
+      }
   
       if (parameterSet.get("RUN_CONFIG_SELECTED") != null) {
         String RunConfigSelected = ((StringT)parameterSet.get("RUN_CONFIG_SELECTED").getValue()).getString();
@@ -531,19 +542,21 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // Configure LPM,PI,ICI
       // see: https://twiki.cern.ch/twiki/pub/CMS/TcdsNotes/tcds_control_software.pdf
       ////////////////////////////////////////////////////////////////////////////////////
-      ParameterSet<CommandParameter> LPMpSet = new ParameterSet<CommandParameter>();
-      LPMpSet.put( new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(FullLPMControlSequence))                 );
-      LPMpSet.put( new CommandParameter<StringT> ("fedEnableMask"              , new StringT(FedEnableMask))                          );
-      LPMpSet.put( new CommandParameter<StringT> ("rcmsURL"                    , new StringT(functionManager.rcmsStateListenerURL))   );
-      ParameterSet<CommandParameter> PIpSet  = new ParameterSet<CommandParameter>();
-      PIpSet.put(  new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(FullPIControlSequence))                  );
-      PIpSet.put(  new CommandParameter<BooleanT>("usePrimaryTCDS"             , new BooleanT(UsePrimaryTCDS))                        );
-      PIpSet.put(  new CommandParameter<BooleanT>("skipPLLReset"               , new BooleanT(true))                                  );
-      ParameterSet<CommandParameter> ICIpSet = new ParameterSet<CommandParameter>();
-      ICIpSet.put( new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(FullTCDSControlSequence)) );
+      if( !functionManager.containerTCDSControllers.isEmpty()){
+        ParameterSet<CommandParameter> LPMpSet = new ParameterSet<CommandParameter>();
+        LPMpSet.put( new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(FullLPMControlSequence))                 );
+        LPMpSet.put( new CommandParameter<StringT> ("fedEnableMask"              , new StringT(FedEnableMask))                          );
+        //LPMpSet.put( new CommandParameter<StringT> ("rcmsURL"                    , new StringT(functionManager.rcmsStateListenerURL))   );
+        ParameterSet<CommandParameter> PIpSet  = new ParameterSet<CommandParameter>();
+        PIpSet.put(  new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(FullPIControlSequence))                  );
+        PIpSet.put(  new CommandParameter<BooleanT>("usePrimaryTCDS"             , new BooleanT(UsePrimaryTCDS))                        );
+        PIpSet.put( new CommandParameter<StringT>  ("fedEnableMask"              , new StringT(FedEnableMask))                          );
+        PIpSet.put(  new CommandParameter<BooleanT>("skipPLLReset"               , new BooleanT(true))                                  );
+        ParameterSet<CommandParameter> ICIpSet = new ParameterSet<CommandParameter>();
+        ICIpSet.put( new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(FullTCDSControlSequence)) );
 
-      functionManager.theStateNotificationHandler.executeTaskSequence(makeTCDSconfigSeq(LPMpSet,PIpSet,ICIpSet));
-
+        functionManager.theStateNotificationHandler.executeTaskSequence(makeTCDSconfigSeq(LPMpSet,PIpSet,ICIpSet));
+      }
 
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
