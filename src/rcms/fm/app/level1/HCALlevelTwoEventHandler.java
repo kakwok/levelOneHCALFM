@@ -1305,10 +1305,35 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
         }
       }
-      //  Halt LPM with LPM FM. 
-      if( functionManager.FMrole.equals("Level2_TCDSLPM")){
-        functionManager.haltLPMControllers();
+      //  Halt TCDS service apps
+      if (functionManager.containerlpmController.isEmpty()){
+        try{
+          functionManager.containerlpmController.execute(HCALInputs.HALT);
+        }
+        catch (QualifiedResourceContainerException e) {
+          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: Halt LPM failed ...";
+          functionManager.goToError(errMessage,e);
+        }
       }
+      if (functionManager.containerICIController.isEmpty()){
+        try{
+          functionManager.containerICIController.execute(HCALInputs.HALT);
+        }
+        catch (QualifiedResourceContainerException e) {
+          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: Halt ICI failed ...";
+          functionManager.goToError(errMessage,e);
+        }
+      }
+      if (functionManager.containerPIController.isEmpty()){
+        try{
+          functionManager.containerPIController.execute(HCALInputs.HALT);
+        }
+        catch (QualifiedResourceContainerException e) {
+          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: Halt PI failed ...";
+          functionManager.goToError(errMessage,e);
+        }
+      }
+
 
       // check from which state we came, i.e. if we were in sTTS test mode disable this DCC special mode
       if (functionManager.getPreviousState().equals(HCALStates.TTSTEST_MODE)) {
