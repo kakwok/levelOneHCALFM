@@ -1118,35 +1118,6 @@ public class HCALEventHandler extends UserEventHandler {
     return xdaqMsg;
   }
 
-  // get and set a session ID (called only when in local run mode)
-  protected void getSessionId() {
-    String user = functionManager.getQualifiedGroup().getGroup().getDirectory().getUser();
-    String description = functionManager.getQualifiedGroup().getGroup().getDirectory().getFullPath();
-    logSessionConnector = functionManager.logSessionConnector;
-    int tempSessionId = 0;
-
-    logger.debug("[HCAL " + functionManager.FMname + "] HCALEventHandler: Log session connector: " + logSessionConnector );
-
-    if (logSessionConnector != null) {
-      try {
-        tempSessionId = logSessionConnector.createSession( user, description );
-        logger.info("[HCAL " + functionManager.FMname + "] New session Id obtained =" +tempSessionId );
-      }
-      catch (LogSessionException e1) {
-        logger.warn("[HCAL " + functionManager.FMname + "] Could not get session ID, using default = " + tempSessionId + ". Exception: ",e1);
-      }
-    }
-    else {
-      logger.warn("[HCAL " + functionManager.FMname + "] logSessionConnector = " + logSessionConnector + ", using default = " + tempSessionId + ".");
-    }
-
-    // and put it into the instance variable
-    Sid = tempSessionId;
-    // put the session ID into parameter set
-    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("SID",new IntegerT(Sid)));
-    logger.info("[HCAL " + functionManager.FMname + "] Reach the end of getsessionId() ");
-  }
-
   // get official CMS run and sequence number
   protected RunNumberData getOfficialRunNumber() {
 
