@@ -103,7 +103,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         // RunType = "global";
 
         // request a session ID
-        getSessionId();
+        functionManager.getSessionId();
         // get the Sid from the init command
         if (functionManager.getParameterSet().get("SID") != null) {
           logger.info("[HCAL LVL1 " + functionManager.FMname + "] Going to pass the SID just obtained ");

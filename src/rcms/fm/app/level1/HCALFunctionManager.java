@@ -26,6 +26,7 @@ import rcms.fm.resource.StateVector;
 import rcms.fm.resource.StateVectorCalculation;
 import rcms.util.logger.RCMSLogger;
 import rcms.util.logsession.LogSessionConnector;
+import rcms.util.logsession.LogSession;
 import rcms.errorFormat.CMS.CMSError;
 
 import rcms.fm.fw.parameter.FunctionManagerParameter;
@@ -378,8 +379,27 @@ public class HCALFunctionManager extends UserFunctionManager {
     HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
     }*/
 
-    // try to close any open session ID only if we are in local run mode i.e. not CDAQ and not miniDAQ runs and if it's a LV1FM
-    if (RunType.equals("local") && !containerFMChildren.isEmpty()) { closeSessionId(); }
+    // LV1 should try to close any open session ID not requested by LV0 
+    if ( !getQualifiedGroup().seekQualifiedResourcesOfType(new FunctionManager()).isEmpty()) {
+      int sessionId       = ((IntegerT)getParameterSet().get("SID").getValue()).getInteger();
+      Integer SIDforLV0   = ((IntegerT)getParameterSet().get("INITIALIZED_WITH_SID").getValue()).getInteger();
+      if (logSessionConnector.getSession(sessionId)!=null){
+        LogSession currentSession = logSessionConnector.getSession(sessionId);
+        logger.warn("[HCAL "+FMname+"] current log session is \n"+currentSession.toString());
+        if (currentSession.isOpen()){
+          if(SIDforLV0.equals(-1)){
+            logger.warn("[HCAL "+FMname+"] Closing current log session "+sessionId);
+            closeSessionId(); 
+          }
+          else{
+            logger.warn("[HCAL "+FMname+"] Not closing current log session "+sessionId+" as it is requested by LV0 ");
+          }
+        }
+        else{
+            logger.warn("[HCAL "+FMname+"] Not closing current log session "+sessionId+" as it is already closed");
+        }
+      }
+    }
 
     // unsubscribe from retrieving XMAS info
     if (XMASMonitoringEnabled) { unsubscribeWSE(); }  
@@ -424,7 +444,7 @@ public class HCALFunctionManager extends UserFunctionManager {
     destroyed = true;
 
     System.out.println("[HCAL " + FMname + "] destroyAction executed ...");
-    logger.debug("[HCAL " + FMname + "] destroyAction executed ...");
+    logger.info("[HCAL " + FMname + "] destroyAction executed ...");
   }
 
   public void unsubscribeWSE() {
@@ -692,19 +712,20 @@ public class HCALFunctionManager extends UserFunctionManager {
       String description = getQualifiedGroup().getGroup().getDirectory().getFullPath();
       int sessionId = 0;
 
-      logger.debug("[HCAL base] Log session connector: " + logSessionConnector );
+      logger.debug("[HCAL "+FMname+"] Log session connector: " + logSessionConnector );
 
       if (logSessionConnector != null) {
         try {
           sessionId = logSessionConnector.createSession( user, description );
-          logger.debug("[HCAL base] New session Id obtained =" + sessionId );
+          logger.debug("[HCAL "+FMname+"] New session Id obtained =" + sessionId );
+          logger.info("[HCAL "+FMname+"] New session obtained :" + logSessionConnector.getSession(sessionId).toString() );
         }
         catch (LogSessionException e1) {
-          logger.warn("[HCAL base] Could not get session ID, using default = " + sessionId + ". Exception: ",e1);
+          logger.warn("[HCAL "+FMname+"] Could not get session ID, using default = " + sessionId + ". Exception: ",e1);
         }
       }
       else {
-        logger.warn("[HCAL base] logSessionConnector = " + logSessionConnector + ", using default = " + sessionId + ".");      
+        logger.warn("[HCAL "+FMname+"] logSessionConnector = " + logSessionConnector + ", using default = " + sessionId + ".");      
       }
 
       // put the session ID into parameter set
