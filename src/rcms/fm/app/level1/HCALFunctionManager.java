@@ -388,15 +388,15 @@ public class HCALFunctionManager extends UserFunctionManager {
         logger.debug("[HCAL "+FMname+"] current log session is \n"+currentSession.toString());
         if (currentSession.isOpen()){
           if(SIDforLV0.equals(-1)){
-            logger.warn("[HCAL "+FMname+"] Closing current log session "+sessionId);
+            logger.info("[HCAL "+FMname+"] Closing current log session "+sessionId);
             closeSessionId(); 
           }
           else{
-            logger.warn("[HCAL "+FMname+"] Not closing current log session "+sessionId+" as it is requested by LV0 ");
+            logger.info("[HCAL "+FMname+"] Not closing current log session "+sessionId+" as it is requested by LV0 ");
           }
         }
         else{
-            logger.warn("[HCAL "+FMname+"] Not closing current log session "+sessionId+" as it is already closed");
+            logger.info("[HCAL "+FMname+"] Not closing current log session "+sessionId+" as it is already closed");
         }
       }
     }
