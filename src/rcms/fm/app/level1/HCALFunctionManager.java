@@ -385,7 +385,7 @@ public class HCALFunctionManager extends UserFunctionManager {
       Integer SIDforLV0   = ((IntegerT)getParameterSet().get("INITIALIZED_WITH_SID").getValue()).getInteger();
       if (logSessionConnector.getSession(sessionId)!=null){
         LogSession currentSession = logSessionConnector.getSession(sessionId);
-        logger.warn("[HCAL "+FMname+"] current log session is \n"+currentSession.toString());
+        logger.debug("[HCAL "+FMname+"] current log session is \n"+currentSession.toString());
         if (currentSession.isOpen()){
           if(SIDforLV0.equals(-1)){
             logger.warn("[HCAL "+FMname+"] Closing current log session "+sessionId);
