@@ -11,6 +11,7 @@ import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.VectorT;
+import rcms.fm.fw.parameter.type.MapT;
 
 import rcms.util.logger.RCMSLogger;
 
@@ -97,6 +98,11 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("MASKED_RESOURCES"         ,  new VectorT<StringT>()    ) );  // List of masked resources
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("MASK_SUMMARY"             ,  new VectorT<StringT>()    ) );  // Summary of masked FMs for user understandability
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("EMPTY_FMS"                ,  new VectorT<StringT>()    ) );  // LV2 FMs without XDAQs
+
+		//this.put( new FunctionManagerParameter<VectorT<StringT>> ("TEST_VECTORT_STRINGT", new VectorT<StringT>()));
+		//this.put( new FunctionManagerParameter<VectorT<IntegerT>> ("TEST_VECTORT_INTEGERT", new VectorT<IntegerT>()));
+		//this.put( new FunctionManagerParameter<MapT<StringT>> ("TEST_MAPT_STRINGT", new MapT<StringT>()));
+		//this.put( new FunctionManagerParameter<MapT<IntegerT>> ("TEST_MAPT_INTEGERT", new MapT<IntegerT>()));
 	}
 
 	public static HCALParameters getInstance() {
