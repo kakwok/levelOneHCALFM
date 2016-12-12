@@ -82,7 +82,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_RUN_TYPE"                    ,  new StringT("local")      ) );  // Run type -- local or global
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_COMMENT"                     ,  new StringT("")           ) );  // User-input comment
-		this.put( new FunctionManagerParameter<MapT<ParameterType<?>>>  ("AVAILABLE_RUN_CONFIGS"  ,  new MapT<ParameterType<?>>()));  // Local run types available
+		this.put( new FunctionManagerParameter<MapT<MapT<StringT>>>  ("AVAILABLE_RUN_CONFIGS"  ,  new MapT<MapT<StringT>>()));  // Local run types available
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("AVAILABLE_LOCALRUNKEYS"   ,  new VectorT<StringT>()    ) );  // List of local run keys
 		this.put( new FunctionManagerParameter<StringT>  ("RUN_CONFIG_SELECTED"              ,  new StringT("not set")    ) );  // User selected local run type
 		this.put( new FunctionManagerParameter<StringT>  ("CFGSNIPPET_KEY_SELECTED"          ,  new StringT("not set")    ) );  // Key name for the local run type selected by the user (aka Mastersnippet file)

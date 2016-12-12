@@ -330,9 +330,7 @@ public class HCALEventHandler extends UserEventHandler {
     try {
 
       // Get the list of master snippets from the userXML and use it to find the mastersnippet file.
-      //LinkedHashMap<StringT,MapT<StringT>> LocalRunKeyMap = new LinkedHashMap<StringT,MapT<StringT>>();
-      //FIXME: Only LinkedMap works for MapT.createFromMap()
-      LinkedMap LocalRunKeyMap = new LinkedMap();
+      MapT<MapT<StringT>> LocalRunKeyMap = new MapT<MapT<StringT>>();
       VectorT<StringT> LocalRunKeys = new VectorT<StringT>();
 
       NodeList nodes = null;
@@ -364,18 +362,15 @@ public class HCALEventHandler extends UserEventHandler {
 
       }
 
-      MapT<ParameterType<?>> LocalRunKeyMapT =  MapT.createFromMap(LocalRunKeyMap);
-      logger.debug("[HCAL " + functionManager.FMname + "]: instance of (LocalRunKeyMap)  =" +  (LocalRunKeyMap instanceof LinkedMap));
       logger.debug("[HCAL " + functionManager.FMname + "]: LocalRunKeyMap is :"+ LocalRunKeyMap.toString());
-      logger.debug("[HCAL " + functionManager.FMname + "]: LocalRunKeyMapT is :"+ LocalRunKeyMapT.toString());
 
-      // FIXME: Order of LocalRunKeyMapT is lost here
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>      ("AVAILABLE_LOCALRUNKEYS",LocalRunKeys));
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<ParameterType<?>>>("AVAILABLE_RUN_CONFIGS" ,LocalRunKeyMapT));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>   ("AVAILABLE_LOCALRUNKEYS",LocalRunKeys));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<MapT<StringT>>>("AVAILABLE_RUN_CONFIGS" ,LocalRunKeyMap));
       
     }
     catch (DOMException | UserActionException e) {
-      logger.error("[HCAL " + functionManager.FMname + "]: Got an error when trying to manipulate the userXML: " + e.getMessage());
+      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to manipulate the userXML: ";
+      functionManager.goToError(errMessage,e);
     }
 
     VectorT<StringT> availableResources = new VectorT<StringT>();
