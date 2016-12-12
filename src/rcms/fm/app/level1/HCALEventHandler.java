@@ -6,7 +6,6 @@ import java.util.Set;
 import java.util.Date;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Hashtable;
 import java.lang.Integer;
 import java.util.Iterator;
@@ -36,7 +35,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 import org.w3c.dom.DOMException;
-import org.apache.commons.collections.map.LinkedMap;
 
 import rcms.fm.fw.StateEnteredEvent;
 import rcms.fm.fw.parameter.Parameter;
