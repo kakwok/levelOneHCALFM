@@ -7,6 +7,7 @@ import java.io.StringReader;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.io.StringWriter;
@@ -34,6 +35,8 @@ import org.xml.sax.SAXException;
 import rcms.fm.fw.user.UserActionException;
 
 import rcms.fm.fw.parameter.FunctionManagerParameter;
+import rcms.fm.fw.parameter.type.ParameterType;
+import rcms.fm.fw.parameter.type.ParameterTypeFactory;
 import rcms.fm.fw.parameter.ParameterSet;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.BooleanT;
@@ -59,13 +62,16 @@ import rcms.fm.fw.parameter.type.ShortT;
 import rcms.fm.fw.parameter.type.UnsignedIntegerT;
 import rcms.fm.fw.parameter.type.UnsignedShortT;
 import rcms.fm.fw.parameter.type.MapT;
+import rcms.fm.fw.parameter.util.JsonUtil;
 
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.util.logger.RCMSLogger;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+//import com.google.gson.Gson;
+//import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Field;
 /**
  *  @author John Hakala
  *
@@ -463,25 +469,33 @@ public class HCALxmlHandler {
         }
       }
       if (commonMasterSnippetFile != "") {
+        logger.info("[HCAL " + functionManager.FMname + "]: Parsing the common master snippet from " + commonMasterSnippetFile + ".");
         this.parseMasterSnippet(commonMasterSnippetFile,CfgCVSBasePath,NeventIsSetFromGUI);
+        logger.info("[HCAL " + functionManager.FMname + "]: Done parsing common master snippet.");
       }
 
       // Parse parameters from main file
-      Gson gson = new Gson();
+      //Gson gson = new Gson();
       for (int iNode = 0; iNode < elements.getLength(); iNode++) {
         if (elements.item(iNode).getNodeType() == Node.ELEMENT_NODE) {
           Element parameterElement = (Element)elements.item(iNode);
           
           // Get parameter name and check against whitelist
           String parameterName = parameterElement.getNodeName();
+          if (parameterName == "CommonMasterSnippet") {
+            continue;
+          }
+          //logger.info("[HCAL " + functionManager.FMname + "]: Found parameter " + parameterName);
+
           if (!functionManager.getHCALparameterSet().contains(parameterName)) {
             String errMessage = "[HCAL " + functionManager.FMname + "] parseMasterSnippetTest: Invalid parameter found in master snippet! Parameter name = " + parameterName + ".";
             throw new UserActionException(errMessage);
           }
 
-          // Determine type, extract value, and set
-          //String parameterType = fmParameterTypes.get(parameterName);
-          String parameterType =  functionManager.getHCALparameterSet().get(parameterName).getType().getName();
+
+          //logger.info("[HCAL " + functionManager.FMname + "]: Parameter type = " + functionManager.getHCALparameterSet().get(parameterName).getType().getName());
+          String[] parameterTypeLong = functionManager.getHCALparameterSet().get(parameterName).getType().getName().split("\\.");
+          String parameterType = parameterTypeLong[parameterTypeLong.length - 1];
           String parameterValue = parameterElement.getTextContent();
         
           logger.info("[HCAL " + functionManager.FMname + "]: Parsing parameter " + parameterName + ", type=" + parameterType + ", value=" + parameterValue);
@@ -542,63 +556,101 @@ public class HCALxmlHandler {
               functionManager.getHCALparameterSet().put(new FunctionManagerParameter<UnsignedShortT>(parameterName, new UnsignedShortT(parameterValue)));
               break;
             }
-            case "VectorT<StringT>":
+            // MapT parsing : use JsonUtil from the rcms framework, as suggested by Hannes. 
+            // Note that we have no smart way to determine the type of the MapT value, so this is hacked in at the moment...
+            case "VectorT":
             {
-              Type type = new TypeToken<VectorT<StringT> >(){}.getType();
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT> >(gson.fromJson(parameterValue, type)));             
-              //VectorT<StringT> myMap = gson.fromJson(parameterValue, type);
+              Object parsedVector = JsonUtil.decode(parameterValue);
+              //logger.info("[HCAL " + functionManager.FMname + "]: Result of parsing vector is " + parsedVector);
+              if (parsedVector instanceof ArrayList<?>) {
+                VectorT tmpVectorT = new VectorT((ArrayList)parsedVector);
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<?>>(parameterName, tmpVectorT));
+              } else {
+                String errMessage = "[HCAL " + functionManager.FMname + "] parseMasterSnippet: parsed vector failed instanceof ArrayList<?>. Parsed result = " + parsedVector;
+                throw new UserActionException(errMessage);
+              }
+              break;
+            }
+            case "MapT":
+            {
+              Object parsedMap = JsonUtil.decode(parameterValue);
+              //logger.info("[HCAL " + functionManager.FMname + "]: Result of parsing map is " + parsedMap);
+              if (parsedMap instanceof HashMap<?,?>) {
+                //Map<String, ? extends ParameterType<?>> castMap = (Map<String, ? extends ParameterType<?>>)parsedMap;
+                //logger.info("[HCAL " + functionManager.FMname + "]: Cast map is " + castMap);
+//
+                //for (Map.Entry<String, ? extends ParameterType<?>> entry : castMap.entrySet()) {
+                //  logger.info("[HCAL " + functionManager.FMname + "]: On entry " + entry);
+                //  ((MapT)functionManager.getHCALparameterSet().get(parameterName).getValue()).put(new StringT(entry.//getKey()), entry.getValue());
+                //}
+                MapT tmpMapT = MapT.createFromMap((HashMap)parsedMap);
+                //logger.info("[HCAL " + functionManager.FMname + "]: MapT from map = " + tmpMapT);
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<?>>(parameterName, tmpMapT));
+                //logger.info("[HCAL " + functionManager.FMname + "]: Done with this map parsing");
+              } else {
+                String errMessage = "[HCAL " + functionManager.FMname + "] parseMasterSnippet: parsed map failed instanceof HashMap<?,?>. Parsed result = " + parsedMap;
+                throw new UserActionException(errMessage);
+              }
+              break;
+            }
 
-              //VectorT<StringT> tmpVector = new VectorT<StringT>();
-              //for (String vectorElement : vectorValues) {
-              //  tmpVector.add(new StringT(vectorElement));
-              //}
-              //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT> >(parameterName, tmpVector));
-              break;
-            }
-            case "VectorT<IntegerT>":
-            {
-              Type type = new TypeToken<VectorT<IntegerT> >(){}.getType();
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<IntegerT> >(gson.fromJson(parameterValue, type)));             
-              //VectorT<IntegerT> tmpVector = new VectorT<IntegerT>();
-              //for (String vectorElement : vectorValues) {
-                //tmpVector.add(new IntegerT(Integer.parseInt(vectorElement)));
-              //}
-              //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<IntegerT> >(parameterName, tmpVector));
-              break;
-            }
-            case "MapT<StringT>":
-            {
-              Type type = new TypeToken<MapT<StringT> >(){}.getType();
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<StringT> >(gson.fromJson(parameterValue, type)));             
-              //VectorT<IntegerT> tmpVector = new VectorT<IntegerT>();
-              //for (String vectorElement : vectorValues) {
-                //tmpVector.add(new IntegerT(Integer.parseInt(vectorElement)));
-              //}
-              //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<IntegerT> >(parameterName, tmpVector));
-              break;
-            }
-            case "MapT<IntegerT>":
-            {
-              Type type = new TypeToken<MapT<IntegerT> >(){}.getType();
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<IntegerT> >(gson.fromJson(parameterValue, type)));             
-              //VectorT<IntegerT> tmpVector = new VectorT<IntegerT>();
-              //for (String vectorElement : vectorValues) {
-                //tmpVector.add(new IntegerT(Integer.parseInt(vectorElement)));
-              //}
-              //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<IntegerT> >(parameterName, tmpVector));
-              break;
-            }
-            case "MapT<VectorT<IntegerT> >":
-            {
-              Type type = new TypeToken<MapT<VectorT<IntegerT> > >(){}.getType();
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<VectorT<IntegerT> > >(gson.fromJson(parameterValue, type)));             
-              //VectorT<IntegerT> tmpVector = new VectorT<IntegerT>();
-              //for (String vectorElement : vectorValues) {
-                //tmpVector.add(new IntegerT(Integer.parseInt(vectorElement)));
-              //}
-              //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<IntegerT> >(parameterName, tmpVector));
-              break;
-            }
+//            case "VectorT<StringT>":
+//            {
+//              Type type = new TypeToken<VectorT<StringT> >(){}.getType();
+//              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT> >(gson.fromJson(parameterValue, type)));             
+//              //VectorT<StringT> myMap = gson.fromJson(parameterValue, type);
+//
+//              //VectorT<StringT> tmpVector = new VectorT<StringT>();
+//              //for (String vectorElement : vectorValues) {
+//              //  tmpVector.add(new StringT(vectorElement));
+//              //}
+//              //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT> >(parameterName, tmpVector));
+//              break;
+//            }
+//            case "VectorT<IntegerT>":
+//            {
+//              Type type = new TypeToken<VectorT<IntegerT> >(){}.getType();
+//              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<IntegerT> >(gson.fromJson(parameterValue, type)));             
+//              //VectorT<IntegerT> tmpVector = new VectorT<IntegerT>();
+//              //for (String vectorElement : vectorValues) {
+//                //tmpVector.add(new IntegerT(Integer.parseInt(vectorElement)));
+//              //}
+//              //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<IntegerT> >(parameterName, tmpVector));
+//              break;
+//            }
+//            case "MapT<StringT>":
+//            {
+//              Type type = new TypeToken<MapT<StringT> >(){}.getType();
+//              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<StringT> >(gson.fromJson(parameterValue, type)));             
+//              //VectorT<IntegerT> tmpVector = new VectorT<IntegerT>();
+//              //for (String vectorElement : vectorValues) {
+//                //tmpVector.add(new IntegerT(Integer.parseInt(vectorElement)));
+//              //}
+//              //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<IntegerT> >(parameterName, tmpVector));
+//              break;
+//            }
+//            case "MapT<IntegerT>":
+//            {
+//              Type type = new TypeToken<MapT<IntegerT> >(){}.getType();
+//              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<IntegerT> >(gson.fromJson(parameterValue, type)));             
+//              //VectorT<IntegerT> tmpVector = new VectorT<IntegerT>();
+//              //for (String vectorElement : vectorValues) {
+//                //tmpVector.add(new IntegerT(Integer.parseInt(vectorElement)));
+//              //}
+//              //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<IntegerT> >(parameterName, tmpVector));
+//              break;
+//            }
+//            case "MapT<VectorT<IntegerT> >":
+//            {
+//              Type type = new TypeToken<MapT<VectorT<IntegerT> > >(){}.getType();
+//              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<VectorT<IntegerT> > >(gson.fromJson(parameterValue, type)));             
+//              //VectorT<IntegerT> tmpVector = new VectorT<IntegerT>();
+//              //for (String vectorElement : vectorValues) {
+//                //tmpVector.add(new IntegerT(Integer.parseInt(vectorElement)));
+//              //}
+//              //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<IntegerT> >(parameterName, tmpVector));
+//              break;
+//            }
 //              case "MapT(StringT)":
 //              {
 //                MapT< StringT> tmpMap = new MapT<StringT>();
@@ -623,14 +675,34 @@ public class HCALxmlHandler {
 //              }
             default:
             {
-              String errMessage="[David log HCAL " + functionManager.FMname + "] Unknown FMParameter type (" + parameterType + ") for FMParameter named " + parameterName; 
+              String errMessage="[David log HCAL " + functionManager.FMname + "] Error in master snippet parsing: for parameter " + parameterName + ", parameter type " + parameterType + " is not supported.";
               throw new UserActionException(errMessage);
             }
           }
         }
       }
+
+      // Print test parameters
+      //if (functionManager.getHCALparameterSet().contains("TEST_VECTORT_STRINGT")) {
+      //  logger.info("[HCAL " + functionManager.FMname + "] Printing test parameter TEST_VECTORT_STRINGT: " + //functionManager.getHCALparameterSet().get("TEST_VECTORT_STRINGT").getValue());
+      //}
+      //if (functionManager.getHCALparameterSet().contains("TEST_VECTORT_INTEGERT")) {
+      //  logger.info("[HCAL " + functionManager.FMname + "] Printing test parameter TEST_VECTORT_INTEGERT: " + //functionManager.getHCALparameterSet().get("TEST_VECTORT_INTEGERT").getValue());
+      //}
+      //if (functionManager.getHCALparameterSet().contains("TEST_MAPT_STRINGT")) {
+      //  logger.info("[HCAL " + functionManager.FMname + "] Printing test parameter TEST_MAPT_STRINGT: " + //functionManager.getHCALparameterSet().get("TEST_MAPT_STRINGT").getValue());
+      //}
+      //if (functionManager.getHCALparameterSet().contains("TEST_MAPT_INTEGERT")) {
+      //  logger.info("[HCAL " + functionManager.FMname + "] Printing test parameter TEST_MAPT_INTEGERT: " + //functionManager.getHCALparameterSet().get("TEST_MAPT_INTEGERT").getValue());
+      //}
+      
+      // Write a vector by hand
+      VectorT<IntegerT> testVector = new VectorT<IntegerT>();
+      testVector.add(new IntegerT(1));
+      testVector.add(new IntegerT(2));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<?>>("TEST_VECTORT_INTEGERT", testVector));
     } catch ( DOMException | ParserConfigurationException | SAXException | IOException e) {
-        logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing masterSnippet:: " + e.getMessage());
+        logger.error("[HCAL " + functionManager.FMname + "]: Got an error when parsing masterSnippet: " + e.getMessage());
     }
 
   }
