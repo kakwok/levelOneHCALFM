@@ -121,6 +121,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_RUN_TYPE",new StringT(RunType)));
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("GLOBAL_CONF_KEY",new StringT(GlobalConfKey)));
 
+        // RUN_CONFIG_SELECTED = LocalRunKey; CFGSNIPPET_KEY_SELECTED = MasterSnippet file of LocalRunKey
         RunConfigSelected = ((StringT)functionManager.getHCALparameterSet().get("RUN_CONFIG_SELECTED").getValue()).getString();
         CfgSnippetKeySelected = ((StringT)functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue()).getString();
       }
