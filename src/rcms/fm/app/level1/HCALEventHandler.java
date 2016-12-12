@@ -2663,7 +2663,7 @@ public class HCALEventHandler extends UserEventHandler {
       } catch (MalformedURLException e) {
         // in case the URL is bogus, just don't run the thread
         stopAlarmerWatchThread = true;
-        logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmerURL is not valid: " + ((StringT)functionManager.getHCALparameterSet().get("HCAL_ALARMER_URL").getValue() .getString())+ "; not checking alarmer status");
+        logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmerURL is not valid: " + ((StringT)functionManager.getHCALparameterSet().get("HCAL_ALARMER_URL").getValue()).getString() + "; not checking alarmer status");
       }
 
       // poll alarmer status in the Running/RunningDegraded states every 30 sec to see if it is still OK/alive
@@ -2705,7 +2705,7 @@ public class HCALEventHandler extends UserEventHandler {
 
             // ask for the status of the HCAL alarmer
             // ("http://hcalmon.cms:9945","hcalAlarmer",0);
-            XDAQParameter pam = new XDAQParameter(((StringT)functionManager.getHCALparameterSet().get("HCAL_ALARMER_URL").getValue(),.getString())"hcalAlarmer",0);
+            XDAQParameter pam = new XDAQParameter(((StringT)functionManager.getHCALparameterSet().get("HCAL_ALARMER_URL").getValue()).getString(), "hcalAlarmer", 0);
             // this does a lazy get. do we need to force the update before getting it?
 
             // Get the status for each watched alarm
