@@ -686,7 +686,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final PIControlSequence   is like this: \n"  +FullPIControlSequence               );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final TTCciControlSequence is like this: \n" +FullTTCciControlSequence            );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final LTCControlSequence is like this: \n"   +FullLTCControlSequence              );
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final AlarmerURL is "                        +functionManager.alarmerURL          );
+      //logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final AlarmerURL is "                        +functionManager.alarmerURL          );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final AlarmerPartition is "                  +functionManager.alarmerPartition    );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The FED_ENABLE_MASK used by the level-1 is: "    +FedEnableMask                       );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The RunInfoPublish value is : "                  +RunInfoPublish                      );
