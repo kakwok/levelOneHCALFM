@@ -20,6 +20,7 @@ import java.net.URL;
 import java.net.MalformedURLException;
 import java.lang.Math;
 
+
 import java.io.StringWriter;
 import java.io.PrintWriter;
 
@@ -45,7 +46,9 @@ import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.VectorT;
+import rcms.fm.fw.parameter.type.MapT;
 import rcms.fm.fw.parameter.type.BooleanT;
+import rcms.fm.fw.parameter.type.ParameterType;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserEventHandler;
 import rcms.fm.resource.QualifiedGroup;
@@ -332,22 +335,47 @@ public class HCALEventHandler extends UserEventHandler {
     try {
 
       // Get the list of master snippets from the userXML and use it to find the mastersnippet file.
+      MapT<MapT<StringT>> LocalRunKeyMap = new MapT<MapT<StringT>>();
+      VectorT<StringT> LocalRunKeys = new VectorT<StringT>();
 
       NodeList nodes = null;
       nodes = xmlHandler.getHCALuserXML().getElementsByTagName("RunConfig");
-      String availableRunConfigs="";
       for (int i=0; i < nodes.getLength(); i++) {
         logger.debug("[HCAL " + functionManager.FMname + "]: Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
             + ", snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue()+ ", and maskedapps: " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
+        
+        MapT<StringT> RunKeySetting = new MapT<StringT>();
+        StringT runkeyName =new StringT(nodes.item(i).getAttributes().getNamedItem("name").getNodeValue());
 
-        availableRunConfigs += nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() + ":" + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue() + ":" + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue() + ";";
+        if ( ((Element)nodes.item(i)).hasAttribute("snippet")){
+          RunKeySetting.put(new StringT("snippet")   ,new StringT(nodes.item(i).getAttributes().getNamedItem("snippet"   ).getNodeValue()));
+        }
+        else{
+          String errMessage="Cannot find attribute snippet in this Runkey"+runkeyName+", check the RunConfig entry in userXML!";
+          functionManager.goToError(errMessage);
+        }
+        if ( ((Element)nodes.item(i)).hasAttribute("maskedapps")){
+          RunKeySetting.put(new StringT("maskedapps"),new StringT(nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue()));
+        }
+        if ( ((Element)nodes.item(i)).hasAttribute("maskedFM")){
+          RunKeySetting.put(new StringT("maskedFM")  ,new StringT(nodes.item(i).getAttributes().getNamedItem("maskedFM"  ).getNodeValue()));
+        }
+        logger.debug("[HCAL " + functionManager.FMname + "]: RunkeySetting  is :"+ RunKeySetting.toString());
 
-        logger.debug("[HCAL " + functionManager.FMname + "]: availableRunConfigs is now: " + availableRunConfigs);
+        LocalRunKeys.add(runkeyName);
+        LocalRunKeyMap.put(runkeyName,RunKeySetting);
+
       }
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("AVAILABLE_RUN_CONFIGS",new StringT(availableRunConfigs)));
+
+      logger.debug("[HCAL " + functionManager.FMname + "]: LocalRunKeyMap is :"+ LocalRunKeyMap.toString());
+
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>   ("AVAILABLE_LOCALRUNKEYS",LocalRunKeys));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<MapT<StringT>>>("AVAILABLE_RUN_CONFIGS" ,LocalRunKeyMap));
+      
     }
     catch (DOMException | UserActionException e) {
-      logger.error("[HCAL " + functionManager.FMname + "]: Got an error when trying to manipulate the userXML: " + e.getMessage());
+      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to manipulate the userXML: ";
+      functionManager.goToError(errMessage,e);
     }
 
     VectorT<StringT> availableResources = new VectorT<StringT>();
@@ -1069,35 +1097,6 @@ public class HCALEventHandler extends UserEventHandler {
     xdaqMsg.setDOM(document);
 
     return xdaqMsg;
-  }
-
-  // get and set a session ID (called only when in local run mode)
-  protected void getSessionId() {
-    String user = functionManager.getQualifiedGroup().getGroup().getDirectory().getUser();
-    String description = functionManager.getQualifiedGroup().getGroup().getDirectory().getFullPath();
-    logSessionConnector = functionManager.logSessionConnector;
-    int tempSessionId = 0;
-
-    logger.debug("[HCAL " + functionManager.FMname + "] HCALEventHandler: Log session connector: " + logSessionConnector );
-
-    if (logSessionConnector != null) {
-      try {
-        tempSessionId = logSessionConnector.createSession( user, description );
-        logger.info("[HCAL " + functionManager.FMname + "] New session Id obtained =" +tempSessionId );
-      }
-      catch (LogSessionException e1) {
-        logger.warn("[HCAL " + functionManager.FMname + "] Could not get session ID, using default = " + tempSessionId + ". Exception: ",e1);
-      }
-    }
-    else {
-      logger.warn("[HCAL " + functionManager.FMname + "] logSessionConnector = " + logSessionConnector + ", using default = " + tempSessionId + ".");
-    }
-
-    // and put it into the instance variable
-    Sid = tempSessionId;
-    // put the session ID into parameter set
-    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("SID",new IntegerT(Sid)));
-    logger.info("[HCAL " + functionManager.FMname + "] Reach the end of getsessionId() ");
   }
 
   // get official CMS run and sequence number

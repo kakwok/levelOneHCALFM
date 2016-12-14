@@ -102,7 +102,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         // RunType = "global";
 
         // request a session ID
-        getSessionId();
+        functionManager.getSessionId();
         // get the Sid from the init command
         if (functionManager.getParameterSet().get("SID") != null) {
           logger.info("[HCAL LVL1 " + functionManager.FMname + "] Going to pass the SID just obtained ");
@@ -120,6 +120,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_RUN_TYPE",new StringT(RunType)));
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("GLOBAL_CONF_KEY",new StringT(GlobalConfKey)));
 
+        // RUN_CONFIG_SELECTED = LocalRunKey; CFGSNIPPET_KEY_SELECTED = MasterSnippet file of LocalRunKey
         RunConfigSelected = ((StringT)functionManager.getHCALparameterSet().get("RUN_CONFIG_SELECTED").getValue()).getString();
         CfgSnippetKeySelected = ((StringT)functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue()).getString();
       }

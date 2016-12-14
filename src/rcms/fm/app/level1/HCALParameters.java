@@ -11,6 +11,8 @@ import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.VectorT;
+import rcms.fm.fw.parameter.type.MapT;
+import rcms.fm.fw.parameter.type.ParameterType;
 
 import rcms.util.logger.RCMSLogger;
 
@@ -64,7 +66,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_TCDSCONTROL"                 ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration script for iCI
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_PICONTROL"                   ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration script for PI
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_TIME_OF_FM_START"            ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Date and time of when FM was initialized
-		this.put( new FunctionManagerParameter<StringT>  ("INITIALIZED_WITH_SID"             ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration information for l0:  SID on initialize
+		this.put( new FunctionManagerParameter<IntegerT>  ("INITIALIZED_WITH_SID"            ,  new IntegerT(-1)       ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration information for l0:  SID on initialize
 		this.put( new FunctionManagerParameter<StringT>  ("INITIALIZED_WITH_GLOBAL_CONF_KEY" ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration information for l0: Current global configuration key
 		this.put( new FunctionManagerParameter<StringT>  ("CONFIGURED_WITH_RUN_KEY"          ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration information for l0: Global configuration key at last configure
 		this.put( new FunctionManagerParameter<StringT>  ("CONFIGURED_WITH_TPG_KEY"          ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration information for l0: Trigger key at last configure
@@ -80,9 +82,10 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_RUN_TYPE"                    ,  new StringT("local")      ) );  // Run type -- local or global
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_COMMENT"                     ,  new StringT("")           ) );  // User-input comment
-		this.put( new FunctionManagerParameter<StringT>  ("AVAILABLE_RUN_CONFIGS"            ,  new StringT("none found") ) );  // Local run types available
+		this.put( new FunctionManagerParameter<MapT<MapT<StringT>>>  ("AVAILABLE_RUN_CONFIGS"  ,  new MapT<MapT<StringT>>()));  // Local run types available
+		this.put( new FunctionManagerParameter<VectorT<StringT>> ("AVAILABLE_LOCALRUNKEYS"   ,  new VectorT<StringT>()    ) );  // List of local run keys
 		this.put( new FunctionManagerParameter<StringT>  ("RUN_CONFIG_SELECTED"              ,  new StringT("not set")    ) );  // User selected local run type
-		this.put( new FunctionManagerParameter<StringT>  ("CFGSNIPPET_KEY_SELECTED"          ,  new StringT("not set")    ) );  // Key name for the local run type selected by the user
+		this.put( new FunctionManagerParameter<StringT>  ("CFGSNIPPET_KEY_SELECTED"          ,  new StringT("not set")    ) );  // Key name for the local run type selected by the user (aka Mastersnippet file)
 		this.put( new FunctionManagerParameter<StringT>  ("RU_INSTANCE"                      ,  new StringT("")           ) );  // EventBuilder classname_instanceNumber of the active one for the run
 		this.put( new FunctionManagerParameter<StringT>  ("EVM_TRIG_FM"                      ,  new StringT("")           ) );  // Function manager doing eventbuilding and triggeradapting duties
 		this.put( new FunctionManagerParameter<StringT>  ("FM_PARTITION"                     ,  new StringT("not set")    ) );  // TCDS partition of LV2 FM 

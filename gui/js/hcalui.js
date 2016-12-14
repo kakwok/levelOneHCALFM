@@ -138,15 +138,26 @@ function clickboxes() {
         $('#newMASKED_RESOURCEScheckbox :checkbox').click();
     }
 }
+function preclickFMs() {
+  $('#masks :checkbox').each( function (index) { 
+    if ( $.inArray($(this).val(), $('#dropdown option:selected').attr("maskedfm").split(";"))  !== -1) { $(this).prop('checked', true); }
+    else { $(this).prop('checked', false); }
+  });
+}
 
-function makedropdown(availableRunConfigs) {
-    availableRunConfigs = availableRunConfigs.substring(0, availableRunConfigs.length - 1);
-    var array = availableRunConfigs.split(';');
+function makedropdown(availableRunConfigs, availableLocalRunKeys) {
+    //availableRunConfigs = availableRunConfigs.substring(0, availableRunConfigs.length - 1);
+    //var array = availableRunConfigs.split(';');
+    var localRunKeysArray = JSON.parse(availableLocalRunKeys);
+    var runConfigMap = JSON.parse(availableRunConfigs);
     var dropdownoption = "<select id='dropdown' > <option value='not set' maskedresources=''> --SELECT-- </option>";
 
-    for (var i = 0, l = array.length; i < l; i++) {
-        var option = array[i].split(':');
-        dropdownoption = dropdownoption + "<option value='" + option[1] + "' maskedresources='" + option[2] + ";'>" + option[0] + "</option>";
+    //for (var i = 0, l = array.length; i < l; i++) {
+        //var option = array[i].split(':');
+    for (var i = 0; i<localRunKeysArray.length; i++) {
+        maskedFM = "";
+        if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('maskedFM')) { maskedFM=runConfigMap[localRunKeysArray[i]].maskedFM; }
+        dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' >" + localRunKeysArray[i] + "</option>";
     }
     dropdownoption = dropdownoption + "</select>";
     $('#dropdowndiv').html(dropdownoption);
@@ -156,7 +167,7 @@ function makedropdown(availableRunConfigs) {
     var masterSnippetArgs = "'" + masterSnippetNumber + "', 'RUN_CONFIG_SELECTED'";
     var maskedResourcesNumber = $('#MASKED_RESOURCES').attr("name").substring(20);
     var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'MASKED_RESOURCES'";
-    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection(); fillMask();";
+    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection(); preclickFMs(); fillMask();";
     $('#dropdown').attr("onchange", onchanges);
 }
 
@@ -279,5 +290,6 @@ function hcalOnLoad() {
     getfullpath();
     showsupervisorerror();
     moveversionnumber();
+    makedropdown($('#AVAILABLE_RUN_CONFIGS').text(), $('#AVAILABLE_LOCALRUNKEYS').text());
     onClickCommandParameterCheckBox();
 }
