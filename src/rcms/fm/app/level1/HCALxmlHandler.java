@@ -553,14 +553,29 @@ public class HCALxmlHandler {
               break;
             }
             // VectorT and MapT parsing use JsonUtil from the rcms framework, as suggested by Hannes. 
-            // The type is inferred from the content: Number, String, Boolean, Array. 
+            // The type is inferred from the content: Double, Integer, String, Boolean. 
             case "VectorT":
             {
               Object parsedVector = JsonUtil.decode(parameterValue);
               //logger.info("[HCAL " + functionManager.FMname + "]: Result of parsing vector is " + parsedVector);
               if (parsedVector instanceof ArrayList<?>) {
-                VectorT tmpVectorT = new VectorT((ArrayList)parsedVector);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<?>>(parameterName, tmpVectorT));
+                for (Object entry : (ArrayList)parsedVector) {
+                  if (entry instanceof Double) {
+                    ((VectorT)functionManager.getHCALparameterSet().get(parameterName).getValue()).add(new DoubleT((Double)entry));
+                  } else if (entry instanceof Integer) {
+                    ((VectorT)functionManager.getHCALparameterSet().get(parameterName).getValue()).add(new IntegerT((Integer)entry));
+                  } else if (entry instanceof Boolean) {
+                    ((VectorT)functionManager.getHCALparameterSet().get(parameterName).getValue()).add(new BooleanT((Boolean)entry));
+                  } else if (entry instanceof String) {
+                    ((VectorT)functionManager.getHCALparameterSet().get(parameterName).getValue()).add(new StringT((String)entry));
+                  } else {
+                    String errMessage = "[HCAL " + functionManager.FMname + "] parseMasterSnippet: Parameter " + parameterName + " was not parsed into a vector of Double, Integer, String, or Boolean.";
+                    throw new UserActionException(errMessage);
+                  }
+                }
+                // The following code unfortunately doesn't work: HCALParameters::run() starts throwing a `failed to update` error, somewhere in HCALParameters::getClonedParameterSet(). We suspect it's due to the wildcard ?, but don't understand why.
+                //VectorT tmpVectorT = new VectorT((ArrayList)parsedVector);
+                //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<? extends ParameterType>>(parameterName, tmpVectorT));
               } else {
                 String errMessage = "[HCAL " + functionManager.FMname + "] parseMasterSnippet: parsed vector failed instanceof ArrayList<?>. Parsed result = " + parsedVector;
                 throw new UserActionException(errMessage);
@@ -591,9 +606,9 @@ public class HCALxmlHandler {
       }
 
       // Print test parameters
-      //if (functionManager.getHCALparameterSet().contains("TEST_VECTORT_STRINGT")) {
-      //  logger.info("[HCAL " + functionManager.FMname + "] Printing test parameter TEST_VECTORT_STRINGT: " + //functionManager.getHCALparameterSet().get("TEST_VECTORT_STRINGT").getValue());
-      //}
+      if (functionManager.getHCALparameterSet().contains("TEST_VECTORT_STRINGT")) {
+        logger.info("[HCAL " + functionManager.FMname + "] Printing test parameter TEST_VECTORT_STRINGT: " + functionManager.getHCALparameterSet().get("TEST_VECTORT_STRINGT").getValue());
+      }
       //if (functionManager.getHCALparameterSet().contains("TEST_VECTORT_INTEGERT")) {
       //  logger.info("[HCAL " + functionManager.FMname + "] Printing test parameter TEST_VECTORT_INTEGERT: " + //functionManager.getHCALparameterSet().get("TEST_VECTORT_INTEGERT").getValue());
       //}
