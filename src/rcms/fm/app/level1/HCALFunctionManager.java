@@ -12,6 +12,7 @@ import rcms.fm.fw.user.UserFunctionManager;
 import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainer;
+import rcms.fm.resource.QualifiedResourceContainerException;
 import rcms.fm.resource.qualifiedresource.XdaqApplicationContainer;
 import rcms.fm.resource.qualifiedresource.XdaqApplication;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
@@ -864,28 +865,29 @@ public class HCALFunctionManager extends UserFunctionManager {
   /**----------------------------------------------------------------------
    * halt the LPM controller 
    */
-  public void haltLPMControllers() {
-    if (!containerlpmController.isEmpty()) {
-      XdaqApplication lpmApp = null;
-      try {
-        logger.debug("[HCAL LVL2 " + FMname + "] HALT LPM...");
-        Iterator it = containerlpmController.getQualifiedResourceList().iterator();
-        while (it.hasNext()) {
-          lpmApp = (XdaqApplication) it.next();
-          lpmApp.execute(HCALInputs.HALT,"test",rcmsStateListenerURL);
-        }
+  public void haltTCDSControllers() {
+    try{
+      if (!containerlpmController.isEmpty()) {
+        logger.info("[HCAL LVL2 " + FMname + "]  Sending halt to LPM ");
+        containerlpmController.execute(HCALInputs.HALT);
+        // if LPM is not a service app, need to provide rcmsURL
+        //lpmApp.execute(HCALInputs.HALT,"test",rcmsStateListenerURL);
       }
-      catch (Exception e) {
-        String errMessage = "[HCAL " + FMname + "] " + this.getClass().toString() + " failed HALT of lpm application: " + lpmApp.getName() + " class: " + lpmApp.getClass() + " instance: " + lpmApp.getInstance();
-        logger.error(errMessage,e);
-        sendCMSError(errMessage);
-        getParameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-        getParameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-        if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; return;}
+      if (!containerPIController.isEmpty()) {
+        logger.info("[HCAL LVL2 " + FMname + "]  Sending halt to PI ");
+        containerPIController.execute(HCALInputs.HALT);
+      }
+      if (!containerICIController.isEmpty()) {
+        logger.info("[HCAL LVL2 " + FMname + "]  Sending halt to iCI ");
+        containerICIController.execute(HCALInputs.HALT);
       }
     }
+    catch (QualifiedResourceContainerException e) {
+      String errMessage = "[HCAL LVL2 " + FMname + "] Error! QualifiedResourceContainerException: Failed halting LPM/PI/ICI...";
+      goToError(errMessage,e);
+    }
   }
-
+ 
   /**----------------------------------------------------------------------
    * get all XDAQ executives and kill them
    */

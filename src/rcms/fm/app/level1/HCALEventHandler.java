@@ -996,8 +996,8 @@ public class HCALEventHandler extends UserEventHandler {
       logger.info("[HCAL " + functionManager.FMname + "] Warning! No HCAL supervisor found in initXDAQ().\nThis happened when checking the async SOAP capabilities.\nThis is OK for a level1 FM.");
     }
 
-    // finally, halt all LPM apps
-    functionManager.haltLPMControllers();
+    // finally, halt all TCDS apps
+    functionManager.haltTCDSControllers();
 
     // define the condition state vectors only here since the group must have been qualified before and all containers are filled
     functionManager.defineConditionState();

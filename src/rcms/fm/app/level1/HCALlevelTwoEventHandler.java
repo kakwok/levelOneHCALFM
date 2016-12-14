@@ -379,8 +379,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: recoverAction()";
         functionManager.goToError(errMessage);
       }
-      // halt LPM
-      functionManager.haltLPMControllers();
+      // halt TCDS Controllers
+      functionManager.haltTCDSControllers();
 
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
@@ -546,7 +546,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         ParameterSet<CommandParameter> LPMpSet = new ParameterSet<CommandParameter>();
         LPMpSet.put( new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(FullLPMControlSequence))                 );
         LPMpSet.put( new CommandParameter<StringT> ("fedEnableMask"              , new StringT(FedEnableMask))                          );
-        //LPMpSet.put( new CommandParameter<StringT> ("rcmsURL"                    , new StringT(functionManager.rcmsStateListenerURL))   );
         ParameterSet<CommandParameter> PIpSet  = new ParameterSet<CommandParameter>();
         PIpSet.put(  new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(FullPIControlSequence))                  );
         PIpSet.put(  new CommandParameter<BooleanT>("usePrimaryTCDS"             , new BooleanT(UsePrimaryTCDS))                        );
@@ -1281,6 +1280,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         functionManager.goToError(errMessage);
       } 
       logger.warn("[HCAL LVL2 " + functionManager.FMname + "] executing Halt TaskSequence.");
+      logger.warn("[HCAL LVL2 " + functionManager.FMname + "] haltAction : this task isEmpty() = "+LV2haltTaskSeq.isEmpty());
       functionManager.theStateNotificationHandler.executeTaskSequence(LV2haltTaskSeq);
 
       // Reset the EmptyFMs for all LV2s
@@ -1305,35 +1305,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
         }
       }
-      //  Halt TCDS service apps
-      if (functionManager.containerlpmController.isEmpty()){
-        try{
-          functionManager.containerlpmController.execute(HCALInputs.HALT);
-        }
-        catch (QualifiedResourceContainerException e) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: Halt LPM failed ...";
-          functionManager.goToError(errMessage,e);
-        }
-      }
-      if (functionManager.containerICIController.isEmpty()){
-        try{
-          functionManager.containerICIController.execute(HCALInputs.HALT);
-        }
-        catch (QualifiedResourceContainerException e) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: Halt ICI failed ...";
-          functionManager.goToError(errMessage,e);
-        }
-      }
-      if (functionManager.containerPIController.isEmpty()){
-        try{
-          functionManager.containerPIController.execute(HCALInputs.HALT);
-        }
-        catch (QualifiedResourceContainerException e) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: Halt PI failed ...";
-          functionManager.goToError(errMessage,e);
-        }
-      }
-
+      //  Halt TCDS service apps if there are any
+      functionManager.haltTCDSControllers();
 
       // check from which state we came, i.e. if we were in sTTS test mode disable this DCC special mode
       if (functionManager.getPreviousState().equals(HCALStates.TTSTEST_MODE)) {
