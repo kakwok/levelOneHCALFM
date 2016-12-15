@@ -321,8 +321,10 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.destroyXDAQ();
 
       // init all XDAQ executives
-      // also halt all LPM applications inside here
       initXDAQ();
+      
+      // Halt TCDS controllers to release the lease
+      functionManager.haltTCDSControllers();
 
       //Set instance numbers and other items in the infospace
       initXDAQinfospace();
