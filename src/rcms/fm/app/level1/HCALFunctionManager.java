@@ -863,7 +863,7 @@ public class HCALFunctionManager extends UserFunctionManager {
   }
 
   /**----------------------------------------------------------------------
-   * halt the LPM controller 
+   * halt the TCDS controllers 
    */
   public void haltTCDSControllers() {
     try{

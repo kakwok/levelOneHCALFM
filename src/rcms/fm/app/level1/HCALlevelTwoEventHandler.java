@@ -1281,8 +1281,17 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: haltAction()";
         functionManager.goToError(errMessage);
       } 
-      logger.warn("[HCAL LVL2 " + functionManager.FMname + "] executing Halt TaskSequence.");
-      logger.warn("[HCAL LVL2 " + functionManager.FMname + "] haltAction : this task isEmpty() = "+LV2haltTaskSeq.isEmpty());
+      // 3) Halt TCDS service apps
+      if (functionManager.containerTCDSControllers!=null){
+        if (!functionManager.containerTCDSControllers.isEmpty()){
+          SimpleTask TCDShaltTask = new SimpleTask(functionManager.containerTCDSControllers,HCALInputs.HALT,HCALStates.HALTING,HCALStates.HALTED,"LV2 HALT TCDS");
+          LV2haltTaskSeq.addLast(TCDShaltTask);
+        }
+      }
+      logger.info("[HCAL LVL2 " + functionManager.FMname + "] executing Halt TaskSequence.");
+      if (LV2haltTaskSeq.isEmpty()){
+        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] haltAction : LV2haltTaskSeq is Empty! This LV2 has no supervisor,no TA and no TCDS apps");
+      }
       functionManager.theStateNotificationHandler.executeTaskSequence(LV2haltTaskSeq);
 
       // Reset the EmptyFMs for all LV2s
@@ -1307,8 +1316,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
         }
       }
-      //  Halt TCDS service apps if there are any
-      functionManager.haltTCDSControllers();
 
       // check from which state we came, i.e. if we were in sTTS test mode disable this DCC special mode
       if (functionManager.getPreviousState().equals(HCALStates.TTSTEST_MODE)) {
