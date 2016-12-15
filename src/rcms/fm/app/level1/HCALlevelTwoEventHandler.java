@@ -523,6 +523,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           CheckAndSetParameter( parameterSet , "HCAL_TCDSCONTROL"    );
           CheckAndSetParameter( parameterSet , "HCAL_LPMCONTROL"     );
           CheckAndSetParameter( parameterSet , "HCAL_PICONTROL"      );
+          CheckAndSetParameter( parameterSet , "TCDS_SKIP_PLLRESET"  );
 
         }
         catch (UserActionException e){
@@ -540,7 +541,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       FullLPMControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LPMCONTROL"    ).getValue()).getString();
       FullPIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL"     ).getValue()).getString();
       // We default skipPLLreset to true for now. 
-      BooleanT skipPLLreset    = ((BooleanT)functionManager.getHCALparameterSet().get("SKIP_PLLRESET"     ).getValue());
+      BooleanT skipPLLreset    = ((BooleanT)functionManager.getHCALparameterSet().get("TCDS_SKIP_PLLRESET").getValue());
 
       ////////////////////////////////////////////////////////////////////////////////////
       // Configure LPM,PI,ICI
