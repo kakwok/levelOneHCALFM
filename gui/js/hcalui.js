@@ -279,7 +279,7 @@ function hcalOnLoad() {
        $(panelId).siblings().hide();
        $(panelId).show();
        if ($(this).attr("id") == "multiPartition") {
-         $('#newSINGLEPARTITIzON_MODEcheckbox :checkbox').prop('checked', true);
+         $('#newSINGLEPARTITION_MODEcheckbox :checkbox').prop('checked', true);
          $('#SINGLEPARTITION_MODE').val("false");
        }
        else if ($(this).attr("id") == "singlePartition") {
