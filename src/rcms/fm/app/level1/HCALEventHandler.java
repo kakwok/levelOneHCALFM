@@ -841,8 +841,12 @@ public class HCALEventHandler extends UserEventHandler {
     if (sidObj!=null){
       logger.info("[HCAL "+ functionManager.FMname+"] initXDAQ() :SID object is "+sidObj.toString());
     }else{
-      logger.error("[HCAL "+ functionManager.FMname+"] initXDAQ():SID object is null!!!");
+      logger.warn("[HCAL "+ functionManager.FMname+"] initXDAQ():SID object is null. This is OK if LV2 has not received it from LV1.");
     }
+
+    //Always set TCDS executive to initialized and the Job control to Active false
+    maskTCDSExecAndJC(qg);
+
     try {
       qg.init();
     }
@@ -995,9 +999,6 @@ public class HCALEventHandler extends UserEventHandler {
     else {
       logger.info("[HCAL " + functionManager.FMname + "] Warning! No HCAL supervisor found in initXDAQ().\nThis happened when checking the async SOAP capabilities.\nThis is OK for a level1 FM.");
     }
-
-    // finally, halt all TCDS apps
-    functionManager.haltTCDSControllers();
 
     // define the condition state vectors only here since the group must have been qualified before and all containers are filled
     functionManager.defineConditionState();
@@ -2854,20 +2855,21 @@ public class HCALEventHandler extends UserEventHandler {
 
        // make new QG
        QualifiedGroup newQG = new QualifiedGroup(origGroup);
-       // mark TCDS execs as initialized and mask their JobControl
-       List<QualifiedResource> xdaqNewQRExecutiveList = newQG.seekQualifiedResourcesOfType(new XdaqExecutive());
-       for (QualifiedResource qr : xdaqNewQRExecutiveList) {
-         if (qr.getResource().getHostName().contains("tcds") || qr.getResource().getName().contains("tcds")) {
-           qr.setInitialized(true);
-           newQG.seekQualifiedResourceOnPC(qr, new JobControl()).setActive(false);
-         }
-       }
 
        return newQG;
      }
 
      return qg;
   }
-  
-  
+
+  void maskTCDSExecAndJC(QualifiedGroup qg){
+     // mark TCDS execs as initialized and mask their JobControl
+    List<QualifiedResource> xdaqExecutiveList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
+    for (QualifiedResource qr : xdaqExecutiveList) {
+      if (qr.getResource().getHostName().contains("tcds") || qr.getResource().getName().contains("tcds")) {
+        qr.setInitialized(true);
+        qg.seekQualifiedResourceOnPC(qr, new JobControl()).setActive(false);
+      }
+    }   
+  } 
 }
