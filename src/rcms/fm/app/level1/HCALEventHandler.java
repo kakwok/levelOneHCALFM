@@ -78,7 +78,6 @@ import rcms.utilities.runinfo.RunNumberData;
 import rcms.utilities.runinfo.RunSequenceNumber;
 import rcms.util.logsession.LogSessionConnector;
 
-import rcms.fm.resource.qualifiedresource.XdaqExecutiveConfiguration;
 
 /**
  * Event Handler base class for HCAL Function Managers
