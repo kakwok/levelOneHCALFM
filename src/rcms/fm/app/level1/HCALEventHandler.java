@@ -924,13 +924,7 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager.containerlpmController   = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::lpm::LPMController"));
     functionManager.containerICIController   = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
     functionManager.containerPIController    = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
-    logger.warn("[HCAL "+functionManager.FMname +" initXDAQ: containerlpmController contains:");
-    PrintQRnames(functionManager.containerlpmController);
-    logger.warn("[HCAL "+functionManager.FMname +" initXDAQ: containerICIController contains:");
-    PrintQRnames(functionManager.containerICIController);
-    logger.warn("[HCAL "+functionManager.FMname +" initXDAQ: containerPIController contains:");
-    PrintQRnames(functionManager.containerPIController);
-
+    
     functionManager.containerhcalDCCManager = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalDCCManager"));
     functionManager.containerTTCciControl   = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("ttc::TTCciControl"));
 
