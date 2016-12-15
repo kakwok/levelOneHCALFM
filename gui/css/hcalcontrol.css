@@ -326,4 +326,6 @@ body {
   display: inline;
   padding-left: 15px;
   padding-right: 15px;
+  border-style: solid;
+  border-radius: 5px;
 }

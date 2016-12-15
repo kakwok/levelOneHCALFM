@@ -71,8 +71,7 @@ $(document).ready(function () {
         cachedRunNo = $('#RUN_NUMBER').val();
         cachedNevents = $('#NUMBER_OF_EVENTS').val();
         cachedSupErr = $('#SUPERVISOR_ERROR').val();
-	if ($('#EXIT').val() == "true" && currentState=="Halted") { onDestroyButton(); }
-    //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
+        if ($('#EXIT').val() == "true" && currentState=="Halted") { onDestroyButton(); }
     }, 750);
 
 
@@ -236,6 +235,7 @@ function hcalOnLoad() {
     removeduplicatecheckbox('NUMBER_OF_EVENTS');
     removeduplicatecheckbox('ACTION_MSG');
     removeduplicatecheckbox('RUN_NUMBER');
+    removeduplicatecheckbox('SINGLEPARTITION_MODE');
     copyContents(CFGSNIPPET_KEY_SELECTED, newCFGSNIPPET_KEY_SELECTED);
     makecheckbox('newCFGSNIPPET_KEY_SELECTEDcheckbox', 'CFGSNIPPET_KEY_SELECTED');
     copyContents(RUN_CONFIG_SELECTED, newRUN_CONFIG_SELECTED);
@@ -250,6 +250,8 @@ function hcalOnLoad() {
     copyContents(RUN_NUMBER, newRUN_NUMBER);
     makecheckbox('newRUN_NUMBERcheckbox', 'RUN_NUMBER');
     copyContents(HCAL_TIME_OF_FM_START, newHCAL_TIME_OF_FM_START);
+    copyContents(SINGLEPARTITION_MODE, newSINGLEPARTITION_MODE);
+    makecheckbox('newSINGLEPARTITION_MODEcheckbox', 'SINGLEPARTITION_MODE');
     hidecheckboxes();
     hideinitializebutton();
     hidelocalparams();
@@ -276,6 +278,14 @@ function hcalOnLoad() {
        panelId = "#".concat($(this).attr("id")).concat("Selection");
        $(panelId).siblings().hide();
        $(panelId).show();
+       if ($(this).attr("id") == "multiPartition") {
+         $('#newSINGLEPARTITIzON_MODEcheckbox :checkbox').prop('checked', true);
+         $('#SINGLEPARTITION_MODE').val("false");
+       }
+       else if ($(this).attr("id") == "singlePartition") {
+         $('#newSINGLEPARTITION_MODEcheckbox :checkbox').prop('checked', true);
+         $('#SINGLEPARTITION_MODE').val("true");
+       }
        $(panelId).parent().find("input").prop('checked', false);
        fillMask();
     });
