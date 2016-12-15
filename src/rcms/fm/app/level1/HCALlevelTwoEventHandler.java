@@ -539,6 +539,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       FullTCDSControlSequence  = ((StringT)functionManager.getHCALparameterSet().get("HCAL_TCDSCONTROL"   ).getValue()).getString();
       FullLPMControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LPMCONTROL"    ).getValue()).getString();
       FullPIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL"     ).getValue()).getString();
+      // We default skipPLLreset to true for now. 
+      BooleanT skipPLLreset    = ((BooleanT)functionManager.getHCALparameterSet().get("SKIP_PLLRESET"     ).getValue());
 
       ////////////////////////////////////////////////////////////////////////////////////
       // Configure LPM,PI,ICI
@@ -551,8 +553,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         ParameterSet<CommandParameter> PIpSet  = new ParameterSet<CommandParameter>();
         PIpSet.put(  new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(FullPIControlSequence))                  );
         PIpSet.put(  new CommandParameter<BooleanT>("usePrimaryTCDS"             , new BooleanT(UsePrimaryTCDS))                        );
-        PIpSet.put( new CommandParameter<StringT>  ("fedEnableMask"              , new StringT(FedEnableMask))                          );
-        PIpSet.put(  new CommandParameter<BooleanT>("skipPLLReset"               , new BooleanT(true))                                  );
+        PIpSet.put(  new CommandParameter<StringT> ("fedEnableMask"              , new StringT(FedEnableMask))                          );
+        PIpSet.put(  new CommandParameter<BooleanT>("skipPLLReset"               , skipPLLreset)                                        );
         ParameterSet<CommandParameter> ICIpSet = new ParameterSet<CommandParameter>();
         ICIpSet.put( new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(FullTCDSControlSequence)) );
 
