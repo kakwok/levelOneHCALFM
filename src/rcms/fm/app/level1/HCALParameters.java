@@ -118,11 +118,11 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 
 	public synchronized HCALParameters getClonedParameterSet() { 
     HCALParameters cloned = new HCALParameters();
-		for (Map.Entry<String, FunctionManagerParameter> pair : this.getMap().entrySet()) {
-			if (pair.getValue() instanceof FunctionManagerParameter) {
-				cloned.put(new FunctionManagerParameter((FunctionManagerParameter) pair.getValue()));
-			}
+	for (Map.Entry<String, FunctionManagerParameter> pair : this.getMap().entrySet()) {
+		if (pair.getValue() instanceof FunctionManagerParameter) {
+			cloned.put(new FunctionManagerParameter((FunctionManagerParameter) pair.getValue()));
 		}
+	}
 	  return cloned;
 	}
 

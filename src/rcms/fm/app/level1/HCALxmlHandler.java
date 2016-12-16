@@ -606,9 +606,9 @@ public class HCALxmlHandler {
       }
 
       // Print test parameters
-      if (functionManager.getHCALparameterSet().contains("TEST_VECTORT_STRINGT")) {
-        logger.info("[HCAL " + functionManager.FMname + "] Printing test parameter TEST_VECTORT_STRINGT: " + functionManager.getHCALparameterSet().get("TEST_VECTORT_STRINGT").getValue());
-      }
+      //if (functionManager.getHCALparameterSet().contains("TEST_VECTORT_STRINGT")) {
+      //  logger.info("[HCAL " + functionManager.FMname + "] Printing test parameter TEST_VECTORT_STRINGT: " + functionManager.getHCALparameterSet().get("TEST_VECTORT_STRINGT").getValue());
+      //}
       //if (functionManager.getHCALparameterSet().contains("TEST_VECTORT_INTEGERT")) {
       //  logger.info("[HCAL " + functionManager.FMname + "] Printing test parameter TEST_VECTORT_INTEGERT: " + //functionManager.getHCALparameterSet().get("TEST_VECTORT_INTEGERT").getValue());
       //}
