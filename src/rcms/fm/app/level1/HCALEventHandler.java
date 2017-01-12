@@ -597,14 +597,6 @@ public class HCALEventHandler extends UserEventHandler {
         }
       }
 
-      // send SOAP configure to the HCAL supervisor
-      try {
-        functionManager.containerhcalSupervisor.execute(HCALInputs.CONFIGURE);
-      }
-      catch (QualifiedResourceContainerException e) {
-        String errMessage = "[HCAL " + functionManager.FMname + "] Error! QualifiedResourceContainerException: sendRunTypeConfiguration()";
-        functionManager.goToError(errMessage,e);
-      }
     }
     else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
       String errMessage = "[HCAL " + functionManager.FMname + "] Error! No HCAL supervisor found: sendRunTypeConfiguration()";
