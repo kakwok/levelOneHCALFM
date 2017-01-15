@@ -1990,17 +1990,18 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       PrintQRnames(functionManager.containerlpmController);
       configureTaskSeq.addLast(new SimpleTask( functionManager.containerlpmController, LPMconfigureInput, HCALStates.CONFIGURING, HCALStates.CONFIGURED, "Configuring LPM in "+functionManager.FMname));
     }
-    if( !functionManager.containerPIController.isEmpty()){
-      logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Adding PI to configure tasks:");
-      PrintQRnames(functionManager.containerPIController);
-      configureTaskSeq.addLast(new SimpleTask( functionManager.containerPIController , PIconfigureInput , HCALStates.CONFIGURING, HCALStates.CONFIGURED, "Configuring PI in "+functionManager.FMname));
-    }
-    if( !functionManager.containerPIController.isEmpty()){
+
+    if( !functionManager.containerICIController.isEmpty()){
       logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Adding ICI to configure tasks:");
       PrintQRnames(functionManager.containerICIController);
       configureTaskSeq.addLast(new SimpleTask( functionManager.containerICIController, ICIconfigureInput, HCALStates.CONFIGURING, HCALStates.CONFIGURED, "Configuring ICI in "+functionManager.FMname));
     }
 
+    if( !functionManager.containerPIController.isEmpty()){
+      logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Adding PI to configure tasks:");
+      PrintQRnames(functionManager.containerPIController);
+      configureTaskSeq.addLast(new SimpleTask( functionManager.containerPIController , PIconfigureInput , HCALStates.CONFIGURING, HCALStates.CONFIGURED, "Configuring PI in "+functionManager.FMname));
+    }
     return configureTaskSeq;
   }
 }
