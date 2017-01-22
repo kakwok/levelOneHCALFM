@@ -253,37 +253,23 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       pSet.put(new CommandParameter<StringT>("RUN_CONFIG_SELECTED", new StringT(RunConfigSelected)));
       pSet.put(new CommandParameter<StringT>("CFGSNIPPET_KEY_SELECTED", new StringT(CfgSnippetKeySelected)));
-      String xmlString = "<userXML>" + ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getUserXml() + "</userXML>";
       logger.info("[HCAL LVL1 " + functionManager.FMname + "]: Started out with masked resources: " + MaskedResources.toString());
-      try {
-        DocumentBuilder docBuilder;
-        logger.info("[HCAL LVL1 " + functionManager.FMname + "]: The xmlString was: " + xmlString );
-
-        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        InputSource inputSource = new InputSource();
-        inputSource.setCharacterStream(new StringReader(xmlString));
-        Document userXML = docBuilder.parse(inputSource);
-        userXML.getDocumentElement().normalize();
-
-        NodeList nodes = null;
-        nodes = userXML.getDocumentElement().getElementsByTagName("RunConfig");
-        logger.info("[HCAL LVL1 " + functionManager.FMname + "]: RunConfigSelected was " + RunConfigSelected);
-        for (int i=0; i < nodes.getLength(); i++) {
-          logger.info("[HCAL LVL1 " + functionManager.FMname + "] In RunConfig element " + Integer.toString(i) + " with name " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() + " found maskedapp nodevalue " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
-          logger.info("[HCAL LVL1 " + functionManager.FMname + "]:RunConfigSelected was " + RunConfigSelected);
-          if (nodes.item(i).getAttributes().getNamedItem("name").getNodeValue().equals(CfgSnippetKeySelected)) {
-            String[] appsToMask = nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue().split(Pattern.quote("|"));
-            for (String appToMask : appsToMask) {
-              if (!appToMask.isEmpty()) MaskedResources.add(new StringT(appToMask)) ;
-            }
-            logger.info("[HCAL LVL1 " + functionManager.FMname + "]: From selecting the RunConfig " + RunConfigSelected + ", got additional masked application " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
+      String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
+      String MasterSnippetList = ((StringT) functionManager.getHCALparameterSet().get("HCAL_MASTERSNIPPETLIST").getValue()).getString();
+      NodeList nodes = xmlHandler.getHCALuserXML(CfgCVSBasePath,MasterSnippetList).getElementsByTagName("RunConfig");
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "]: RunConfigSelected was " + RunConfigSelected);
+      for (int i=0; i < nodes.getLength(); i++) {
+        logger.info("[HCAL LVL1 " + functionManager.FMname + "] In RunConfig element " + Integer.toString(i) + " with name " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() + " found maskedapp nodevalue " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
+        logger.info("[HCAL LVL1 " + functionManager.FMname + "]:RunConfigSelected was " + RunConfigSelected);
+        if (nodes.item(i).getAttributes().getNamedItem("name").getNodeValue().equals(CfgSnippetKeySelected)) {
+          String[] appsToMask = nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue().split(Pattern.quote("|"));
+          for (String appToMask : appsToMask) {
+            if (!appToMask.isEmpty()) MaskedResources.add(new StringT(appToMask)) ;
           }
-        } 
-        logger.info("[HCAL LVL1 " + functionManager.FMname + "]: Ended up with the list of masked resources: " + MaskedResources.toString());
-      }
-      catch (ParserConfigurationException | SAXException | IOException e) {
-        logger.error("[HCAL LVL1 " + functionManager.FMname + "]: Got an error when trying to manipulate the userXML: " + e.getMessage());
-      }
+          logger.info("[HCAL LVL1 " + functionManager.FMname + "]: From selecting the RunConfig " + RunConfigSelected + ", got additional masked application " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
+        }
+      } 
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "]: Ended up with the list of masked resources: " + MaskedResources.toString());
       logger.info("[HCAL LVL1 " + functionManager.FMname + "]: About to set the initial list of masked resources: " + MaskedResources );
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES", MaskedResources));
       pSet.put(new CommandParameter<VectorT<StringT>>("MASKED_RESOURCES", MaskedResources));

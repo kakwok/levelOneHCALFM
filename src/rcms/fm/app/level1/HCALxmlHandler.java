@@ -89,19 +89,47 @@ public class HCALxmlHandler {
       throw new UserActionException(errMessage);
     }
   }
+
+  // Get userXML from a CfgCVS path
+  public Element getHCALuserXML(String CfgCVSBasePath,String fileName) throws UserActionException {
+    try {
+      // return the userXML
+      String userXmlString = "<userXML>" + new String(Files.readAllBytes(Paths.get(CfgCVSBasePath+fileName+"/pro"))) + "</userXML>";
+
+      logger.debug("[HCAL " + functionManager.FMname + "]: got the userXML :"+ userXmlString);
+      docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+      InputSource inputSource = new InputSource();
+      inputSource.setCharacterStream(new StringReader(userXmlString));
+      Document hcalUserXML = docBuilder.parse(inputSource);
+      hcalUserXML.getDocumentElement().normalize();
+      return hcalUserXML.getDocumentElement();
+    }
+    catch (DOMException | ParserConfigurationException | SAXException | IOException e) {
+      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the userXML: " + e.getMessage();
+      logger.error(errMessage);
+      throw new UserActionException(errMessage);
+    }
+  }
+
   public String getHCALuserXMLelementContent(String tagName) throws UserActionException {
     try {
-      Element hcalUserXML = getHCALuserXML();
-      if (!hcalUserXML.equals(null) && !hcalUserXML.getElementsByTagName(tagName).equals(null)) {
-        if (hcalUserXML.getElementsByTagName(tagName).getLength()==1) {
-          return hcalUserXML.getElementsByTagName(tagName).item(0).getTextContent();
+      String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
+      String MasterSnippetList = ((StringT) functionManager.getHCALparameterSet().get("HCAL_MASTERSNIPPETLIST").getValue()).getString();
+      //Element hcalUserXML = getHCALuserXML();
+      if(MasterSnippetList!=""){
+        Element hcalUserXML = getHCALuserXML(CfgCVSBasePath,MasterSnippetList);
+        if (!hcalUserXML.equals(null) && !hcalUserXML.getElementsByTagName(tagName).equals(null)) {
+          if (hcalUserXML.getElementsByTagName(tagName).getLength()==1) {
+            return hcalUserXML.getElementsByTagName(tagName).item(0).getTextContent();
+          }
+          else {
+            String errMessage = (hcalUserXML.getElementsByTagName(tagName).getLength()==0) ? " was not found in the userXML. Will use value supplied by level1 or default value." : " was found with more than one occurrance in the userXML.";
+            throw new UserActionException("[HCAL " + functionManager.FMname + "]: The userXML element with tag name '" + tagName + "'" + errMessage);
+          }
         }
-        else {
-          String errMessage = (hcalUserXML.getElementsByTagName(tagName).getLength()==0) ? " was not found in the userXML. Will use value supplied by level1 or default value." : " was found with more than one occurrance in the userXML.";
-          throw new UserActionException("[HCAL " + functionManager.FMname + "]: The userXML element with tag name '" + tagName + "'" + errMessage);
-        }
+        else return "";
       }
-      else return null;
+      else return "";
     }     
     catch (UserActionException e) {throw e;}
   }
@@ -109,41 +137,48 @@ public class HCALxmlHandler {
   public String getNamedUserXMLelementAttributeValue (String tag, String name, String attribute ) throws UserActionException {
     try {
       boolean foundTheRequestedNamedElement = false;
-      Element hcalUserXML = getHCALuserXML();
-      if (!hcalUserXML.equals(null) && !hcalUserXML.getElementsByTagName(tag).equals(null)) {
-        if (hcalUserXML.getElementsByTagName(tag).getLength()!=0) {
-          NodeList nodes = hcalUserXML.getElementsByTagName(tag); 
-          logger.warn("[JohnLog3] " + functionManager.FMname + ": the length of the list of nodes with tag name '" + tag + "' is: " + nodes.getLength());
-          for (int iNode = 0; iNode < nodes.getLength(); iNode++) {
-            logger.warn("[JohnLog3] " + functionManager.FMname + " found a userXML element with tagname '" + tag + "' and name '" + ((Element)nodes.item(iNode)).getAttributes().getNamedItem("name").getNodeValue()  + "'"); 
-            if (((Element)nodes.item(iNode)).getAttributes().getNamedItem("name").getNodeValue().equals(name)) {
-               foundTheRequestedNamedElement = true;
-               if ( ((Element)nodes.item(iNode)).hasAttribute(attribute)) {
-                  return ((Element)nodes.item(iNode)).getAttributes().getNamedItem(attribute).getNodeValue();
-               }else{
-                  logger.warn("[Martin log "+functionManager.FMname+"] Does not found the attribute='"+attribute+"' with name='"+name+"' in tag='"+tag+"'. Empty string will be returned");
-                  String emptyString = "";
-                  return emptyString;
-               }
+      String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
+      String MasterSnippetList = ((StringT) functionManager.getHCALparameterSet().get("HCAL_MASTERSNIPPETLIST").getValue()).getString();
+      //Element hcalUserXML = getHCALuserXML();
+      if(MasterSnippetList!=""){
+        Element hcalUserXML = getHCALuserXML(CfgCVSBasePath,MasterSnippetList);
+        if (!hcalUserXML.equals(null) && !hcalUserXML.getElementsByTagName(tag).equals(null)) {
+          if (hcalUserXML.getElementsByTagName(tag).getLength()!=0) {
+            NodeList nodes = hcalUserXML.getElementsByTagName(tag); 
+            logger.warn("[JohnLog3] " + functionManager.FMname + ": the length of the list of nodes with tag name '" + tag + "' is: " + nodes.getLength());
+            for (int iNode = 0; iNode < nodes.getLength(); iNode++) {
+              logger.warn("[JohnLog3] " + functionManager.FMname + " found a userXML element with tagname '" + tag + "' and name '" + ((Element)nodes.item(iNode)).getAttributes().getNamedItem("name").getNodeValue()  + "'"); 
+              if (((Element)nodes.item(iNode)).getAttributes().getNamedItem("name").getNodeValue().equals(name)) {
+                 foundTheRequestedNamedElement = true;
+                 if ( ((Element)nodes.item(iNode)).hasAttribute(attribute)) {
+                    return ((Element)nodes.item(iNode)).getAttributes().getNamedItem(attribute).getNodeValue();
+                 }else{
+                    logger.warn("[Martin log "+functionManager.FMname+"] Does not found the attribute='"+attribute+"' with name='"+name+"' in tag='"+tag+"'. Empty string will be returned");
+                    String emptyString = "";
+                    return emptyString;
+                 }
+              }
+            }
+            if (!foundTheRequestedNamedElement) {
+              String errMessage = "[JohnLog3] " + functionManager.FMname + ": this FM requested the value of the attribute '" + attribute + "' from a userXML element with tag '" + tag + "' and name '" + name + "' but that name did not exist in that element. Empty String is returned.";
+              logger.warn(errMessage);
+              String emptyString = "";
+              return emptyString;
+              //throw new UserActionException("[HCAL " + functionManager.FMname + "]: " + errMessage);
             }
           }
-          if (!foundTheRequestedNamedElement) {
-            String errMessage = "[JohnLog3] " + functionManager.FMname + ": this FM requested the value of the attribute '" + attribute + "' from a userXML element with tag '" + tag + "' and name '" + name + "' but that name did not exist in that element. Empty String is returned.";
-            logger.warn(errMessage);
-            String emptyString = "";
-            return emptyString;
-            //throw new UserActionException("[HCAL " + functionManager.FMname + "]: " + errMessage);
+          else {
+            //throw new UserActionException("[HCAL " + functionManager.FMname + "]: A userXML element with tag name '" + tag + "'" + "was not found in the userXML. Empty String will be returned.");
+            logger.warn("[HCAL " + functionManager.FMname + "]: A userXML element with tag name '" + tag + "'" + "was not found in the userXML. Empty String will be returned.");
+            String emptyElement="";
+            return  emptyElement;
           }
         }
         else {
-          //throw new UserActionException("[HCAL " + functionManager.FMname + "]: A userXML element with tag name '" + tag + "'" + "was not found in the userXML. Empty String will be returned.");
-          logger.warn("[HCAL " + functionManager.FMname + "]: A userXML element with tag name '" + tag + "'" + "was not found in the userXML. Empty String will be returned.");
-          String emptyElement="";
-          return  emptyElement;
+          throw new UserActionException("[HCAL " + functionManager.FMname + "]: The userXML or the userXML element with tag name '" + tag + "'" + "was null.");
         }
-      }
-      else {
-        throw new UserActionException("[HCAL " + functionManager.FMname + "]: The userXML or the userXML element with tag name '" + tag + "'" + "was null.");
+      }else{
+        return "";
       }
     }     
     catch (UserActionException e) {throw e;}

@@ -185,6 +185,44 @@ public class HCALEventHandler extends UserEventHandler {
       }
     }
 
+    // Get the CfgCVSBasePath in the userXML
+    {
+      String DefaultCfgCVSBasePath = "/nfshome0/hcalcfg/cvs/RevHistory/";
+      //String DefaultCfgCVSBasePath = "/data/cfgcvs/cvs/RevHistory/";
+      String theCfgCVSBasePath = "";
+      try {
+        NodeList NodesOfTag = xmlHandler.getHCALuserXML().getElementsByTagName("CfgCVSBasePath");
+        if(xmlHandler.hasUniqueTag(NodesOfTag,"CfgCVSBasePath")){
+          theCfgCVSBasePath=xmlHandler.getHCALuserXML().getElementsByTagName("CfgCVSBasePath").item(0).getTextContent(); 
+        }
+      }
+      catch (UserActionException e) { logger.warn(e.getMessage()); }
+      if (!theCfgCVSBasePath.equals("")) {
+        CfgCVSBasePath = theCfgCVSBasePath;
+      } else{
+        CfgCVSBasePath = DefaultCfgCVSBasePath;
+      }
+      logger.info("[HCAL " + functionManager.FMname + "] The CfgCVSBasePath for this FM is " + CfgCVSBasePath);
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGCVSBASEPATH",new StringT(CfgCVSBasePath)));
+    }
+
+    // Get the MasterSnippetList in the userXML
+    {
+      String theMasterSnippetList = "";
+      try {
+        NodeList NodesOfTag = xmlHandler.getHCALuserXML().getElementsByTagName("MasterSnippetList");
+        if(xmlHandler.hasUniqueTag(NodesOfTag,"MasterSnippetList")){
+          theMasterSnippetList=xmlHandler.getHCALuserXML().getElementsByTagName("MasterSnippetList").item(0).getTextContent(); 
+        }
+      }
+      catch (UserActionException e) { logger.warn(e.getMessage()); }
+      if (!theMasterSnippetList.equals("")) {
+        logger.info("[HCAL " + functionManager.FMname + "] The MasterSnippetList for this FM is " + theMasterSnippetList);
+      }else{
+        logger.warn("[HCAL " + functionManager.FMname + "] The MasterSnippetList for this FM is " + theMasterSnippetList);
+      }
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_MASTERSNIPPETLIST",new StringT(theMasterSnippetList)));
+    }
     // Get the RunSequenceName from the userXML
     {
       String NewRunSequenceName = "";
@@ -256,23 +294,6 @@ public class HCALEventHandler extends UserEventHandler {
     }
 
 
-    // Get the CfgCVSBasePath in the userXML
-    {
-      String DefaultCfgCVSBasePath = "/nfshome0/hcalcfg/cvs/RevHistory/";
-      //String DefaultCfgCVSBasePath = "/data/cfgcvs/cvs/RevHistory/";
-      String theCfgCVSBasePath = "";
-      try { theCfgCVSBasePath=xmlHandler.getHCALuserXMLelementContent("CfgCVSBasePath"); }
-      catch (UserActionException e) { logger.warn(e.getMessage()); }
-      if (!theCfgCVSBasePath.equals("")) {
-        CfgCVSBasePath = theCfgCVSBasePath;
-      } else{
-        CfgCVSBasePath = DefaultCfgCVSBasePath;
-      }
-      //logger.debug("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
-      //logger.info("[HCAL ] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
-      logger.info("[Martin Log HCAL " + functionManager.FMname + "] The CfgCVSBasePath for this FM is " + CfgCVSBasePath);
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGCVSBASEPATH",new StringT(CfgCVSBasePath)));
-    }
 
     // Check if a default ZeroSuppressionSnippetName is given in the userXML
     {
@@ -331,33 +352,37 @@ public class HCALEventHandler extends UserEventHandler {
       MapT<MapT<StringT>> LocalRunKeyMap = new MapT<MapT<StringT>>();
       VectorT<StringT> LocalRunKeys = new VectorT<StringT>();
 
-      NodeList nodes = null;
-      nodes = xmlHandler.getHCALuserXML().getElementsByTagName("RunConfig");
-      for (int i=0; i < nodes.getLength(); i++) {
-        logger.debug("[HCAL " + functionManager.FMname + "]: Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
-            + ", snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue()+ ", and maskedapps: " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
-        
-        MapT<StringT> RunKeySetting = new MapT<StringT>();
-        StringT runkeyName =new StringT(nodes.item(i).getAttributes().getNamedItem("name").getNodeValue());
+      String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
+      String MasterSnippetList = ((StringT) functionManager.getHCALparameterSet().get("HCAL_MASTERSNIPPETLIST").getValue()).getString();
 
-        if ( ((Element)nodes.item(i)).hasAttribute("snippet")){
-          RunKeySetting.put(new StringT("snippet")   ,new StringT(nodes.item(i).getAttributes().getNamedItem("snippet"   ).getNodeValue()));
-        }
-        else{
-          String errMessage="Cannot find attribute snippet in this Runkey"+runkeyName+", check the RunConfig entry in userXML!";
-          functionManager.goToError(errMessage);
-        }
-        if ( ((Element)nodes.item(i)).hasAttribute("maskedapps")){
-          RunKeySetting.put(new StringT("maskedapps"),new StringT(nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue()));
-        }
-        if ( ((Element)nodes.item(i)).hasAttribute("maskedFM")){
-          RunKeySetting.put(new StringT("maskedFM")  ,new StringT(nodes.item(i).getAttributes().getNamedItem("maskedFM"  ).getNodeValue()));
-        }
-        logger.debug("[HCAL " + functionManager.FMname + "]: RunkeySetting  is :"+ RunKeySetting.toString());
+      if(MasterSnippetList!=""){
+        NodeList nodes = xmlHandler.getHCALuserXML(CfgCVSBasePath,MasterSnippetList).getElementsByTagName("RunConfig");
+        for (int i=0; i < nodes.getLength(); i++) {
+          logger.debug("[HCAL " + functionManager.FMname + "]: Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
+              + ", snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue()+ ", and maskedapps: " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
+          
+          MapT<StringT> RunKeySetting = new MapT<StringT>();
+          StringT runkeyName =new StringT(nodes.item(i).getAttributes().getNamedItem("name").getNodeValue());
 
-        LocalRunKeys.add(runkeyName);
-        LocalRunKeyMap.put(runkeyName,RunKeySetting);
+          if ( ((Element)nodes.item(i)).hasAttribute("snippet")){
+            RunKeySetting.put(new StringT("snippet")   ,new StringT(nodes.item(i).getAttributes().getNamedItem("snippet"   ).getNodeValue()));
+          }
+          else{
+            String errMessage="Cannot find attribute snippet in this Runkey"+runkeyName+", check the RunConfig entry in userXML!";
+            functionManager.goToError(errMessage);
+          }
+          if ( ((Element)nodes.item(i)).hasAttribute("maskedapps")){
+            RunKeySetting.put(new StringT("maskedapps"),new StringT(nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue()));
+          }
+          if ( ((Element)nodes.item(i)).hasAttribute("maskedFM")){
+            RunKeySetting.put(new StringT("maskedFM")  ,new StringT(nodes.item(i).getAttributes().getNamedItem("maskedFM"  ).getNodeValue()));
+          }
+          logger.debug("[HCAL " + functionManager.FMname + "]: RunkeySetting  is :"+ RunKeySetting.toString());
 
+          LocalRunKeys.add(runkeyName);
+          LocalRunKeyMap.put(runkeyName,RunKeySetting);
+
+        }
       }
 
       logger.debug("[HCAL " + functionManager.FMname + "]: LocalRunKeyMap is :"+ LocalRunKeyMap.toString());
