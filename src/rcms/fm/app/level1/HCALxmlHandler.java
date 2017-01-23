@@ -716,16 +716,16 @@ public class HCALxmlHandler {
     boolean isUnique=false;
     if( inputlist.getLength()==0){
       //Return false if no Tagname is found
-      logger.info("[Martin log HCAL " + functionManager.FMname + "]: Cannot find "+ TagName+ " in mastersnippet.  Empty string will be returned. ");
+      logger.info("[HCAL " + functionManager.FMname + "]: Cannot find "+ TagName+ ".  Empty string will be returned. ");
     } 
     else if(inputlist.getLength()>1){
         //Throw execptions if more than 1 TagName is found, decide later what to do
-        String errMessage="[Martin log HCAL " + functionManager.FMname + "]: Found more than one Tag of "+ TagName+ " in mastersnippet. ";
+        String errMessage="[HCAL " + functionManager.FMname + "]: Found more than one Tag of name: "+ TagName+ ".";
         throw new UserActionException(errMessage);
       }
       else if(inputlist.getLength()==1){
           //Return True if only 1 TagName is found.
-          logger.debug("[Martin log HCAL " + functionManager.FMname + "]: Found 1 "+ TagName+ " in mastersnippet. Going to parse it. ");
+          logger.debug("[HCAL " + functionManager.FMname + "]: Found 1 "+ TagName+ ". Going to parse it. ");
           isUnique=true;
       }
     return isUnique;
