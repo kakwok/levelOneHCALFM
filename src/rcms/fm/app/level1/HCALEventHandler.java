@@ -277,23 +277,6 @@ public class HCALEventHandler extends UserEventHandler {
       }
     }
 
-    // Check if the userXML specifies that FEDStreamer applications should be stopped
-    {
-      String useStopFEDStreamer = "";
-      try { useStopFEDStreamer=xmlHandler.getHCALuserXMLelementContent("StopFEDStreamer"); }
-      catch (UserActionException e) { logger.warn(e.getMessage()); }
-      if (!useStopFEDStreamer.equals("")) {
-        functionManager.StopATCP = true;
-      }
-      if (functionManager.StopFEDStreamer) {
-        logger.warn("[HCAL base] StopFEDStreamer: " + functionManager.StopFEDStreamer + " - this means FEDStreamer XDAQ apps are operated normally, i.e. started and stopped in the corresponding transitions.");
-      }
-      else {
-        logger.warn("[HCAL base] StopFEDStreamer: " + functionManager.StopFEDStreamer + " - this means FEDStreamer XDAQ apps are started once during the starting transition but never ever stopped in a run config.");
-      }
-    }
-
-
 
     // Check if a default ZeroSuppressionSnippetName is given in the userXML
     {
@@ -1012,7 +995,6 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager.containerFUResourceBroker  = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("evf::FUResourceBroker"));
     functionManager.containerFUEventProcessor  = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("evf::FUEventProcessor"));
     functionManager.containerStorageManager    = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("StorageManager"));
-    functionManager.containerFEDStreamer       = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("FEDStreamer"));
     functionManager.containerPeerTransportATCP = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("pt::atcp::PeerTransportATCP"));
     functionManager.containerhcalRunInfoServer = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalRunInfoServer"));
 
