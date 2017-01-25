@@ -227,7 +227,7 @@ public class HCALEventHandler extends UserEventHandler {
     {
       String NewRunSequenceName = "";
       try {
-        NewRunSequenceName = xmlHandler.getHCALuserXMLelementContent("RunSequenceName");
+        NewRunSequenceName = xmlHandler.getHCALuserXMLelementContent("RunSequenceName",true);
       }
       catch (UserActionException e) { 
         logger.warn(e.getMessage());
@@ -246,7 +246,7 @@ public class HCALEventHandler extends UserEventHandler {
     {
       String useTestMode = "";
       try {
-        useTestMode = xmlHandler.getHCALuserXMLelementContent("TestMode");
+        useTestMode = xmlHandler.getHCALuserXMLelementContent("TestMode",true);
       }
       catch (UserActionException e) { 
         logger.warn(e.getMessage());
@@ -261,7 +261,7 @@ public class HCALEventHandler extends UserEventHandler {
     {
       String useStopATCP = "";
       try {
-        useStopATCP = xmlHandler.getHCALuserXMLelementContent("StopATCP");
+        useStopATCP = xmlHandler.getHCALuserXMLelementContent("StopATCP",true);
       }
       catch (UserActionException e) { 
         logger.warn(e.getMessage());
@@ -281,7 +281,7 @@ public class HCALEventHandler extends UserEventHandler {
     // Check if a default ZeroSuppressionSnippetName is given in the userXML
     {
       String theZeroSuppressionSnippetName = "";
-      try { theZeroSuppressionSnippetName=xmlHandler.getHCALuserXMLelementContent("ZeroSuppressionSnippetName"); }
+      try { theZeroSuppressionSnippetName=xmlHandler.getHCALuserXMLelementContent("ZeroSuppressionSnippetName",true); }
       catch (UserActionException e) { logger.warn(e.getMessage()); }
       if (!theZeroSuppressionSnippetName.equals("")) {
         ZeroSuppressionSnippetName = theZeroSuppressionSnippetName;
@@ -292,7 +292,7 @@ public class HCALEventHandler extends UserEventHandler {
     // Check if a default SpecialZeroSuppressionSnippetName is given in the userXML
     {
       String theSpecialZeroSuppressionSnippetName = "";
-      try { theSpecialZeroSuppressionSnippetName=xmlHandler.getHCALuserXMLelementContent("SpecialZeroSuppressionSnippetName"); }
+      try { theSpecialZeroSuppressionSnippetName=xmlHandler.getHCALuserXMLelementContent("SpecialZeroSuppressionSnippetName",true); }
       catch (UserActionException e) { logger.warn(e.getMessage()); }
       if (!theSpecialZeroSuppressionSnippetName.equals("")) {
         SpecialZeroSuppressionSnippetName = theSpecialZeroSuppressionSnippetName;
@@ -303,7 +303,7 @@ public class HCALEventHandler extends UserEventHandler {
     // Check if a default VdMSnippetName is given in the userXML
     {
       String theVdMSnippetName = "";
-      try {theVdMSnippetName=xmlHandler.getHCALuserXMLelementContent("VdMSnippetName"); }
+      try {theVdMSnippetName=xmlHandler.getHCALuserXMLelementContent("VdMSnippetName",true); }
       catch (UserActionException e) { logger.warn(e.getMessage()); }
       if (!theVdMSnippetName.equals("")) {
         VdMSnippetName = theVdMSnippetName;
@@ -314,7 +314,7 @@ public class HCALEventHandler extends UserEventHandler {
     // Check if we want the "Recover" button to actually perform a "Reset"
     {
       String useResetForRecover = ""; 
-      try { useResetForRecover=xmlHandler.getHCALuserXMLelementContent("UseResetForRecover"); }
+      try { useResetForRecover=xmlHandler.getHCALuserXMLelementContent("UseResetForRecover",true); }
       catch (UserActionException e) { logger.warn(e.getMessage()); }
       if (useResetForRecover.equals("false")) {
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("USE_RESET_FOR_RECOVER",new BooleanT(false)));
