@@ -440,6 +440,7 @@ public class HCALxmlHandler {
   }
 
   public void parseMasterSnippet(String selectedRun, String CfgCVSBasePath, boolean NeventIsSetFromGUI) throws UserActionException {
+    logger.info("[HCAL " + functionManager.FMname + "]: Welcome to parseMasterSnippet(" + selectedRun + ", " + CfgCVSBasePath + ", " + NeventIsSetFromGUI + ")");
     try {
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
       factory.setXIncludeAware(true); // This is needed for xi:include to work
@@ -450,6 +451,7 @@ public class HCALxmlHandler {
       InputSource masterInputSource = new InputSource(new FileInputStream(masterUriActual));
       Document masterSnippet = docBuilder.parse(masterInputSource.getByteStream(), masterUriSystem);
       masterSnippet.getDocumentElement().normalize();
+
       Element masterSnippetElement = masterSnippet.getDocumentElement();
       NodeList elements = masterSnippetElement.getChildNodes();
 
@@ -467,21 +469,24 @@ public class HCALxmlHandler {
           }
         }
       }
+
       if (commonMasterSnippetFile != "") {
         logger.info("[HCAL " + functionManager.FMname + "]: Parsing the common master snippet from " + commonMasterSnippetFile + ".");
         this.parseMasterSnippet(commonMasterSnippetFile,CfgCVSBasePath,NeventIsSetFromGUI);
         logger.info("[HCAL " + functionManager.FMname + "]: Done parsing common master snippet.");
       }
 
+
       // Parse parameters from main file
       for (int iNode = 0; iNode < elements.getLength(); iNode++) {
         if (elements.item(iNode).getNodeType() == Node.ELEMENT_NODE) {
           Element parameterElement = (Element)elements.item(iNode);
-          
+
           String parameterName = parameterElement.getNodeName();
           if (parameterName == "CommonMasterSnippet") {
             continue;
           }
+          logger.info("HCAL " + functionManager.FMname + "]: Found parameter " + parameterName);
 
           // Require that the parameter is declared in HCALParameters.java
           if (!functionManager.getHCALparameterSet().contains(parameterName)) {
@@ -495,6 +500,17 @@ public class HCALxmlHandler {
           String parameterValue = parameterElement.getTextContent();
         
           logger.info("[HCAL " + functionManager.FMname + "]: Parsing parameter " + parameterName + ", type=" + parameterType + ", value=" + parameterValue);
+
+          // Overwrite/concatenate flag
+          Boolean concatenate = false;
+          if (parameterElement.hasAttribute("conflict")) {
+            if (!parameterType.equals("StringT")) {
+              logger.warn("[HCAL " + functionManager.FMname + "]: attribute 'conflict' (=overwrite or concatenate) is only implemented for StringT parameters. This parameter will be overwritten.");
+              concatenate = false;
+            } else {
+              concatenate = (parameterElement.getAttributes().getNamedItem("conflict").getNodeValue().equals("concatenate"));
+            }
+          }
 
           switch (parameterType) {
             case "BooleanT":
@@ -539,7 +555,20 @@ public class HCALxmlHandler {
             }
             case "StringT":
             {
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(parameterName, new StringT(parameterValue)));
+              if (concatenate) {
+                logger.info("[HCAL " + functionManager.FMname + "]: Hold on to your butts, I am about to CONCATENATE a PARAMETER!");
+                String oldString = ((StringT)functionManager.getHCALparameterSet().get(parameterName).getValue()).getString();
+                if (oldString.equals("not set")) {
+                  oldString = "";
+                }
+                String newString = oldString + parameterValue;
+                logger.info("[HCAL " + functionManager.FMname + "]: Old = " + oldString);
+                logger.info("[HCAL " + functionManager.FMname + "]: New = " + newString);
+
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(parameterName, new StringT(newString)));
+              } else {
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(parameterName, new StringT(parameterValue)));
+              }
               break;
             }
             case "UnsignedIntegerT":
