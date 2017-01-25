@@ -114,12 +114,14 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         if(xmlHandler.hasUniqueTag(NodesOfTag,"MasterSnippetList")){
           theMasterSnippetList=xmlHandler.getHCALuserXML().getElementsByTagName("MasterSnippetList").item(0).getTextContent(); 
         }
+        else{
+          String errMessage="[HCAL " + functionManager.FMname + "] Cannot find MasterSnippetList tag in userXML! LV1 FM must contain a MasterSnippetList tag in userXML";
+          functionManager.goToError(errMessage);
+        }
       }
       catch (UserActionException e) { logger.warn(e.getMessage()); }
       if (!theMasterSnippetList.equals("")) {
         logger.info("[HCAL " + functionManager.FMname + "] The MasterSnippetList for this FM is " + theMasterSnippetList);
-      }else{
-        logger.warn("[HCAL " + functionManager.FMname + "] The MasterSnippetList for this FM is " + theMasterSnippetList);
       }
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_MASTERSNIPPETLIST",new StringT(theMasterSnippetList)));
     }
