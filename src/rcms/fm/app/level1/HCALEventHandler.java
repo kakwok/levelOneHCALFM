@@ -254,26 +254,6 @@ public class HCALEventHandler extends UserEventHandler {
       }
     }
 
-    // Check if the userXML specifies whether ATCP connections should be stopped
-    {
-      String useStopATCP = "";
-      try {
-        useStopATCP = xmlHandler.getHCALuserXMLelementContent("StopATCP",true);
-      }
-      catch (UserActionException e) { 
-        logger.warn(e.getMessage());
-      }
-      if (!useStopATCP.equals("")) {
-        functionManager.StopATCP = true;
-      }
-      if (functionManager.StopATCP) {
-        logger.warn("[HCAL base] StopATCP: " + functionManager.StopATCP + " - this means ATCP XDAQ apps are operated normally, i.e. started and stopped in the corresponding transitions.");
-      }
-      else {
-        logger.warn("[HCAL base] StopATCP: " + functionManager.StopATCP + " - this means ATCP XDAQ apps are started once during the starting transition but never ever stopped in a run config.");
-      }
-    }
-
     // Check if we want the "Recover" button to actually perform a "Reset"
     {
       String useResetForRecover = ""; 
