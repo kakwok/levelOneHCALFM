@@ -139,9 +139,6 @@ public class HCALEventHandler extends UserEventHandler {
   protected boolean LocalMultiPartitionReadOut =  false;  // Switch for enabling multipartition runs
 
   protected String WSE_FILTER                        =  "empty";                         // for XMAS -- TODO: is this needed?
-  protected String ZeroSuppressionSnippetName        =  "/HTR/ZeroSuppression.cfg/pro";  //TODO: are these last three needed?
-  protected String SpecialZeroSuppressionSnippetName =  "/HTR/SpecialZeroSuppression.cfg/pro";
-  protected String VdMSnippetName                    =  "/LUMI/VdM.cfg/pro";
 
   private List<Thread> TriggerAdapterWatchThreadList =  new ArrayList<Thread>();  // For querying the TA periodically
   private List<Thread> MonitorThreadList             =  new ArrayList<Thread>();  // For watching level2s
@@ -275,40 +272,6 @@ public class HCALEventHandler extends UserEventHandler {
       else {
         logger.warn("[HCAL base] StopATCP: " + functionManager.StopATCP + " - this means ATCP XDAQ apps are started once during the starting transition but never ever stopped in a run config.");
       }
-    }
-
-
-    // Check if a default ZeroSuppressionSnippetName is given in the userXML
-    {
-      String theZeroSuppressionSnippetName = "";
-      try { theZeroSuppressionSnippetName=xmlHandler.getHCALuserXMLelementContent("ZeroSuppressionSnippetName",true); }
-      catch (UserActionException e) { logger.warn(e.getMessage()); }
-      if (!theZeroSuppressionSnippetName.equals("")) {
-        ZeroSuppressionSnippetName = theZeroSuppressionSnippetName;
-      }
-      logger.debug("[HCAL base] The ZeroSuppressionSnippetName: " + ZeroSuppressionSnippetName + " is used.");
-    }
-
-    // Check if a default SpecialZeroSuppressionSnippetName is given in the userXML
-    {
-      String theSpecialZeroSuppressionSnippetName = "";
-      try { theSpecialZeroSuppressionSnippetName=xmlHandler.getHCALuserXMLelementContent("SpecialZeroSuppressionSnippetName",true); }
-      catch (UserActionException e) { logger.warn(e.getMessage()); }
-      if (!theSpecialZeroSuppressionSnippetName.equals("")) {
-        SpecialZeroSuppressionSnippetName = theSpecialZeroSuppressionSnippetName;
-      }
-      logger.debug("[HCAL base] The special ZeroSuppressionSnippetName: " + SpecialZeroSuppressionSnippetName + " is used.");
-    }
-
-    // Check if a default VdMSnippetName is given in the userXML
-    {
-      String theVdMSnippetName = "";
-      try {theVdMSnippetName=xmlHandler.getHCALuserXMLelementContent("VdMSnippetName",true); }
-      catch (UserActionException e) { logger.warn(e.getMessage()); }
-      if (!theVdMSnippetName.equals("")) {
-        VdMSnippetName = theVdMSnippetName;
-      }
-      logger.debug("[HCAL base] The VdMSnippetName: " + VdMSnippetName + " is used.");
     }
 
     // Check if we want the "Recover" button to actually perform a "Reset"
