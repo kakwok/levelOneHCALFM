@@ -501,17 +501,6 @@ public class HCALxmlHandler {
         
           logger.info("[HCAL " + functionManager.FMname + "]: Parsing parameter " + parameterName + ", type=" + parameterType + ", value=" + parameterValue);
 
-          // Overwrite/concatenate flag
-          Boolean concatenate = false;
-          if (parameterElement.hasAttribute("conflict")) {
-            if (!parameterType.equals("StringT")) {
-              logger.warn("[HCAL " + functionManager.FMname + "]: attribute 'conflict' (=overwrite or concatenate) is only implemented for StringT parameters. This parameter will be overwritten.");
-              concatenate = false;
-            } else {
-              concatenate = (parameterElement.getAttributes().getNamedItem("conflict").getNodeValue().equals("concatenate"));
-            }
-          }
-
           switch (parameterType) {
             case "BooleanT":
             {
@@ -555,21 +544,16 @@ public class HCALxmlHandler {
             }
             case "StringT":
             {
-              if (concatenate) {
-                logger.info("[HCAL " + functionManager.FMname + "]: Hold on to your butts, I am about to CONCATENATE a PARAMETER!");
+              if (parameterName.equals("HCAL_CFGSCRIPT")) {
                 String oldString = ((StringT)functionManager.getHCALparameterSet().get(parameterName).getValue()).getString();
                 if (oldString.equals("not set")) {
                   oldString = "";
                 }
                 String newString = oldString + parameterValue;
-                logger.info("[HCAL " + functionManager.FMname + "]: Old = " + oldString);
-                logger.info("[HCAL " + functionManager.FMname + "]: New = " + newString);
-
                 functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(parameterName, new StringT(newString)));
               } else {
                 functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(parameterName, new StringT(parameterValue)));
               }
-              break;
             }
             case "UnsignedIntegerT":
             {
