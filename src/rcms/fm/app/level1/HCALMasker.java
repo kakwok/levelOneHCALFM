@@ -184,7 +184,7 @@ public class HCALMasker {
     VectorT<StringT> allMaskedResources = new VectorT<StringT>();
     String userXmlMaskedApps= "not set";
     try{
-        userXmlMaskedApps = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", localrunkey, "maskedapps");
+        userXmlMaskedApps = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", localrunkey, "maskedapps",true);
     } catch (UserActionException e){
     }
     if (!userXmlMaskedApps.equals("")) {
