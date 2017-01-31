@@ -83,7 +83,6 @@ public class HCALFunctionManager extends UserFunctionManager {
   public XdaqApplicationContainer containerFUResourceBroker    = null;
   public XdaqApplicationContainer containerFUEventProcessor    = null;
   public XdaqApplicationContainer containerStorageManager      = null;
-  public XdaqApplicationContainer containerFEDStreamer         = null;
   public XdaqApplicationContainer containerPeerTransportATCP   = null;
   public XdaqApplicationContainer containerhcalRunInfoServer   = null;
 
@@ -191,9 +190,6 @@ public class HCALFunctionManager extends UserFunctionManager {
   // switches to define the operation of any ATCP XDAQ application
   public boolean StopATCP = false;
   public boolean ATCPsWereStartedOnce = false;
-
-  // switches to define the operation of any FEDStreamer XDAQ application
-  public boolean StopFEDStreamer = false;
 
   // list of XMAS/WSE ressouces for which flashlist, etc. can be accessed
   public List<QualifiedResource> wseList = null;  // list of XDAQ apps which are detected to sent flashlists

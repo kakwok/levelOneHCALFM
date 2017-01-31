@@ -89,9 +89,46 @@ public class HCALxmlHandler {
       throw new UserActionException(errMessage);
     }
   }
-  public String getHCALuserXMLelementContent(String tagName) throws UserActionException {
+
+  // Get userXML from a CfgCVS path
+  public Element getHCALuserXML(String CfgCVSBasePath,String fileName) throws UserActionException {
     try {
-      Element hcalUserXML = getHCALuserXML();
+      // return the userXML
+      File grandMaster = new File(CfgCVSBasePath+fileName+"/pro");
+      String userXmlString ="";
+      if (grandMaster.exists()){
+        userXmlString = "<userXML>" + new String(Files.readAllBytes(Paths.get(CfgCVSBasePath+fileName+"/pro"))) + "</userXML>";
+      }
+      else{
+        String errMessage="[HCAL "+functionManager.FMname+"] The file "+CfgCVSBasePath+fileName+"/pro  does not exists";
+        functionManager.goToError(errMessage);
+      }
+      logger.debug("[HCAL " + functionManager.FMname + "]: got the userXML :"+ userXmlString);
+      docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+      InputSource inputSource = new InputSource();
+      inputSource.setCharacterStream(new StringReader(userXmlString));
+      Document hcalUserXML = docBuilder.parse(inputSource);
+      hcalUserXML.getDocumentElement().normalize();
+      return hcalUserXML.getDocumentElement();
+    }
+    catch (DOMException | ParserConfigurationException | SAXException | IOException e) {
+      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the userXML: " + e.getMessage();
+      logger.error(errMessage);
+      throw new UserActionException(errMessage);
+    }
+  }
+
+  public String getHCALuserXMLelementContent(String tagName,Boolean isGrandMaster) throws UserActionException {
+    try {
+      String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
+      String MasterSnippetList = ((StringT) functionManager.getHCALparameterSet().get("HCAL_MASTERSNIPPETLIST").getValue()).getString();
+      Element hcalUserXML = null;
+      if (!isGrandMaster){
+        hcalUserXML = getHCALuserXML();
+      }
+      else{
+        hcalUserXML = getHCALuserXML(CfgCVSBasePath,MasterSnippetList);
+      }
       if (!hcalUserXML.equals(null) && !hcalUserXML.getElementsByTagName(tagName).equals(null)) {
         if (hcalUserXML.getElementsByTagName(tagName).getLength()==1) {
           return hcalUserXML.getElementsByTagName(tagName).item(0).getTextContent();
@@ -101,15 +138,23 @@ public class HCALxmlHandler {
           throw new UserActionException("[HCAL " + functionManager.FMname + "]: The userXML element with tag name '" + tagName + "'" + errMessage);
         }
       }
-      else return null;
+      else return "";
     }     
     catch (UserActionException e) {throw e;}
   }
 
-  public String getNamedUserXMLelementAttributeValue (String tag, String name, String attribute ) throws UserActionException {
+  public String getNamedUserXMLelementAttributeValue (String tag, String name, String attribute, Boolean isGrandMaster ) throws UserActionException {
     try {
       boolean foundTheRequestedNamedElement = false;
-      Element hcalUserXML = getHCALuserXML();
+      String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
+      String MasterSnippetList = ((StringT) functionManager.getHCALparameterSet().get("HCAL_MASTERSNIPPETLIST").getValue()).getString();
+      Element hcalUserXML=null;
+      if (!isGrandMaster){
+        hcalUserXML = getHCALuserXML();
+      }
+      else{
+        hcalUserXML = getHCALuserXML(CfgCVSBasePath,MasterSnippetList);
+      }
       if (!hcalUserXML.equals(null) && !hcalUserXML.getElementsByTagName(tag).equals(null)) {
         if (hcalUserXML.getElementsByTagName(tag).getLength()!=0) {
           NodeList nodes = hcalUserXML.getElementsByTagName(tag); 
@@ -681,16 +726,16 @@ public class HCALxmlHandler {
     boolean isUnique=false;
     if( inputlist.getLength()==0){
       //Return false if no Tagname is found
-      logger.info("[Martin log HCAL " + functionManager.FMname + "]: Cannot find "+ TagName+ " in mastersnippet.  Empty string will be returned. ");
+      logger.info("[HCAL " + functionManager.FMname + "]: Cannot find "+ TagName+ ".  Empty string will be returned. ");
     } 
     else if(inputlist.getLength()>1){
         //Throw execptions if more than 1 TagName is found, decide later what to do
-        String errMessage="[Martin log HCAL " + functionManager.FMname + "]: Found more than one Tag of "+ TagName+ " in mastersnippet. ";
+        String errMessage="[HCAL " + functionManager.FMname + "]: Found more than one Tag of name: "+ TagName+ ".";
         throw new UserActionException(errMessage);
       }
       else if(inputlist.getLength()==1){
           //Return True if only 1 TagName is found.
-          logger.debug("[Martin log HCAL " + functionManager.FMname + "]: Found 1 "+ TagName+ " in mastersnippet. Going to parse it. ");
+          logger.debug("[HCAL " + functionManager.FMname + "]: Found 1 "+ TagName+ ". Going to parse it. ");
           isUnique=true;
       }
     return isUnique;
