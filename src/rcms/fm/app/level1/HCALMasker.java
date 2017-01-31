@@ -76,17 +76,23 @@ public class HCALMasker {
 
   protected Map<String, Resource> getEvmTrigResources(List<Resource> level2Children) throws UserActionException { 
     if (isEvmTrigCandidate(level2Children).get("isAcandidate")) {
+      VectorT<StringT> maskedRss =  (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
+      StringT[] maskedRssArray = maskedRss.toArray(new StringT[maskedRss.size()]);
+
+      //if (!Arrays.asList(maskedRssArray).contains(new StringT(level2resource.getName()))) {
       // This implementation assumes no level2 function managers will have no more than one TA.
       Map<String, Resource> evmTrigResources = new HashMap<String, Resource>();
       for (Resource level2resource : level2Children) {
-        if (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")) {
-          evmTrigResources.put("TriggerAdapter", level2resource);
-        }
-        if (level2resource.getName().contains("hcalTrivialFU")) {
-          evmTrigResources.put("hcalTrivialFU", level2resource);
-        }
-        if (level2resource.getName().contains("hcalEventBuilder")) {
-          evmTrigResources.put("hcalEventBuilder", level2resource);
+        if (!Arrays.asList(maskedRssArray).contains(new StringT(level2resource.getName()))){
+          if (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")) {
+            evmTrigResources.put("TriggerAdapter", level2resource);
+          }
+          if (level2resource.getName().contains("hcalTrivialFU")) {
+            evmTrigResources.put("hcalTrivialFU", level2resource);
+          }
+          if (level2resource.getName().contains("hcalEventBuilder")) {
+            evmTrigResources.put("hcalEventBuilder", level2resource);
+          }
         }
       }
       return evmTrigResources;
@@ -182,17 +188,18 @@ public class HCALMasker {
 
     //Update the MaskedResources for pickEvmTrig
     VectorT<StringT> allMaskedResources = new VectorT<StringT>();
-    String userXmlMaskedApps= "not set";
-    try{
-        userXmlMaskedApps = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", localrunkey, "maskedapps",true);
-    } catch (UserActionException e){
-    }
-    if (!userXmlMaskedApps.equals("")) {
-      String[] userXmlMaskedAppsArray = userXmlMaskedApps.split((Pattern.quote("|")));
-      for (String xmlMaskedApp : userXmlMaskedAppsArray) {
-        MaskedFMs.add(new StringT(xmlMaskedApp));
-      }
-    }
+    // This should come from the gui now -- JCH test
+    //String userXmlMaskedApps= "not set";
+    //try{
+    //    userXmlMaskedApps = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", localrunkey, "maskedapps",true);
+    //} catch (UserActionException e){
+    //}
+    //if (!userXmlMaskedApps.equals("")) {
+    //  String[] userXmlMaskedAppsArray = userXmlMaskedApps.split((Pattern.quote("|")));
+    //  for (String xmlMaskedApp : userXmlMaskedAppsArray) {
+    //    MaskedFMs.add(new StringT(xmlMaskedApp));
+    //  }
+    //}
 
     try {
       allMaskedResources = MaskedFMs.clone();
