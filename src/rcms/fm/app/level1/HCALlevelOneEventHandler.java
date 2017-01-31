@@ -13,6 +13,8 @@ import java.io.IOException;
 
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
 import rcms.fm.resource.qualifiedresource.XdaqExecutiveConfiguration;
+import rcms.fm.resource.qualifiedresource.XdaqApplication;
+import rcms.fm.resource.qualifiedresource.XdaqApplicationContainer;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
@@ -42,6 +44,7 @@ import rcms.fm.resource.QualifiedResourceContainer;
 import rcms.fm.resource.QualifiedResourceContainerException;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.resourceservice.db.resource.config.ConfigProperty;
+import rcms.fm.resource.qualifiedresource.XdaqApplication;
 import rcms.stateFormat.StateNotification;
 import rcms.util.logger.RCMSLogger;
 import rcms.utilities.fm.task.SimpleTask;
@@ -50,6 +53,8 @@ import rcms.utilities.runinfo.RunNumberData;
 import rcms.statemachine.definition.Input;
 import rcms.fm.resource.CommandException;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
+import rcms.xdaqctl.XDAQParameter;
+import net.hep.cms.xdaqctl.XDAQException;
 
 /**
  * Event Handler class for HCAL Function Managers
@@ -721,6 +726,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The OfficialRunNumbers value is : "              +OfficialRunNumbers                  );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The NumberOfEvents is : "                        +TriggersToTake                      );
 
+      //Set up infospace parameters needed by localDAQ FM
+      SetLocalDAQinfospace();
 
       // start the alarmer watch thread here, now that we have the alarmerURL
       if (alarmerthread!=null){
@@ -861,9 +868,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("configureAction executed ... - we're close ...")));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("configureAction executed.")));
 
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "] configureAction executed ... - were are close ...");
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] configureAction executed.");
     }
   }
 
@@ -1582,6 +1589,52 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       haltAction(obj);
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("EXITING")));
       logger.debug("[JohnLog " + functionManager.FMname + "] exitAction executed ...");
+    }
+  }
+
+  public void SetLocalDAQinfospace(){
+    List<QualifiedResource> EvmTrigFMlist = functionManager.containerFMEvmTrig.getActiveQRList();
+    Boolean isUsingLocalDAQ = false;
+    for (QualifiedResource qr : EvmTrigFMlist){
+      if (qr.getName().contains("localDAQ")){
+        isUsingLocalDAQ = true;
+        logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: We have a localDAQ FM!");
+      }
+    }
+    if (isUsingLocalDAQ){
+      List<QualifiedResource> level2list    = functionManager.containerFMChildrenNormal.getActiveQRList();
+      Boolean foundDTCReadout = false;
+      for (QualifiedResource level2 : level2list){
+        QualifiedGroup level2group = ((FunctionManager)level2).getQualifiedGroup();
+        List<QualifiedResource> xdaqList = level2group.seekQualifiedResourcesOfType(new XdaqApplication());
+        XdaqApplicationContainer XdaqQRC = new XdaqApplicationContainer(xdaqList);
+        logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: Printing this LV2: "+level2.getName()+"'s XdaqApplication names:");
+        PrintQRnames(XdaqQRC);
+        XdaqApplicationContainer containerDTCReadout = XdaqQRC.getApplicationsOfClass("hcal::DTCReadout");
+        if( containerDTCReadout!=null){
+          if (!containerDTCReadout.isEmpty()){
+            logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: found a DTCReadout in "+level2.getName());
+            if (!foundDTCReadout){
+              try{
+                XDAQParameter pam = null;
+                XdaqApplication DTCReadout = ((XdaqApplicationContainer)XdaqQRC.getApplicationsOfClass("hcal::DTCReadout")).getApplications().get(0); 
+                pam = DTCReadout.getXDAQParameter();
+                pam.select(new String[]{"TriggerBlockDestClassname","TriggerBlockDestInstance","PollingReadout"});
+                pam.setValue("TriggerBlockDestClassname","DummyTriggerAdapter");
+                pam.setValue("TriggerBlockDestInstance","0");
+                pam.setValue("PollingReadout","true");
+                pam.send();
+                logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: Just set "+DTCReadout.getName()+" to send trigger blocks");
+                foundDTCReadout=true;
+              }
+              catch (XDAQException e) {
+                String errMessage="[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: Failed to get infospace from "+level2.getName();
+                functionManager.goToError(errMessage,e);
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
