@@ -51,8 +51,13 @@ $(document).ready(function () {
     var cachedSupErr = $('#SUPERVISOR_ERROR').val();
     if ($('#currentState').text() == "Configured") {
       $('#Destroy').hide();
-      $('#commandSection :input[value="Exit"]').val("Halt+Destroy");
-      $('#commandSection :input[value="Halt+Destroy"]').insertAfter($('#Destroy'));
+      if ($('#commandSection :input[value="Halt+Destroy"]').size() == 0) {
+        $('#commandSection :input[value="Exit"]').val("Halt+Destroy");
+        $('#commandSection :input[value="Halt+Destroy"]').insertAfter($('#Destroy'));
+      }
+      else {
+        $('#commandSection :input[value="Exit"]').remove();
+      }
     }
     var cachedState = $('#currentState').text();
     //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
