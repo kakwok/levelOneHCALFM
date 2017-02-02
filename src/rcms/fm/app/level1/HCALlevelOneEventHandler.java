@@ -40,6 +40,8 @@ import rcms.fm.fw.parameter.type.VectorT;
 import rcms.fm.fw.parameter.type.MapT;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserStateNotificationHandler;
+import rcms.common.db.DBConnectorException;
+import rcms.resourceservice.db.Group;
 import rcms.resourceservice.db.resource.Resource;
 import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
@@ -832,7 +834,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The NumberOfEvents is : "                        +TriggersToTake                      );
 
       //Set up infospace parameters needed by localDAQ FM
-      //SetLocalDAQinfospace();
+      SetLocalDAQinfospace();
 
       // start the alarmer watch thread here, now that we have the alarmerURL
       if (alarmerthread!=null){
@@ -1706,37 +1708,50 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: We have a localDAQ FM!");
       }
     }
+    // Set infospace of first LV2 with DTCReadout
     if (isUsingLocalDAQ){
       List<QualifiedResource> level2list    = functionManager.containerFMChildrenNormal.getActiveQRList();
       Boolean foundDTCReadout = false;
+      // getQualifiedGroup() returns the Group in which the FM is created with. ie.: 
+      // ((FunctionManager)level2).getQualifiedGroup() still returns the LV1 QG
+      QualifiedGroup level1group = functionManager.getQualifiedGroup();
       for (QualifiedResource level2 : level2list){
-        QualifiedGroup level2group = ((FunctionManager)level2).getQualifiedGroup();
-        List<QualifiedResource> xdaqList = level2group.seekQualifiedResourcesOfType(new XdaqApplication());
-        XdaqApplicationContainer XdaqQRC = new XdaqApplicationContainer(xdaqList);
-        logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: Printing this LV2: "+level2.getName()+"'s XdaqApplication names:");
-        PrintQRnames(XdaqQRC);
-        XdaqApplicationContainer containerDTCReadout = new XdaqApplicationContainer(XdaqQRC.getApplicationsOfClass("hcal::DTCReadout"));
-        if( containerDTCReadout!=null){
-          if (!containerDTCReadout.isEmpty()){
-            logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: found a DTCReadout in "+level2.getName());
-            if (!foundDTCReadout){
-              try{
-                XDAQParameter pam = null;
-                XdaqApplication DTCReadout = ((XdaqApplicationContainer)XdaqQRC.getApplicationsOfClass("hcal::DTCReadout")).getApplications().get(0); 
-                pam = DTCReadout.getXDAQParameter();
-                pam.select(new String[]{"TriggerBlockDestClassname","TriggerBlockDestInstance","PollingReadout"});
-                pam.setValue("TriggerBlockDestClassname","DummyTriggerAdapter");
-                pam.setValue("TriggerBlockDestInstance","0");
-                pam.setValue("PollingReadout","true");
-                pam.send();
-                logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: Just set "+DTCReadout.getName()+" to send trigger blocks");
-                foundDTCReadout=true;
-              }
-              catch (XDAQException e) {
-                String errMessage="[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: Failed to get infospace from "+level2.getName();
-                functionManager.goToError(errMessage,e);
+        if (!foundDTCReadout){
+          try {
+            //Get the light LV2 group from rs connector of the group
+            Group lv2Group = level1group.rs.retrieveLightGroup(level2.getResource());
+            logger.debug("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: Printing this LV2: "+level2.getName()+"'s Group after getting from DB: "+lv2Group.toString());
+            //Create a QG from the group
+            //KKH: XdaqApplications lost their class info, i.e. xdaq.getApplication()=null;
+            QualifiedGroup lv2QG = new QualifiedGroup(lv2Group);
+       
+            List<QualifiedResource> xdaqList = lv2QG.seekQualifiedResourcesOfType(new XdaqApplication());
+            for (QualifiedResource qr: xdaqList){
+              XdaqApplication xdaq = (XdaqApplication)qr;
+              logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: This LV2: "+level2.getName()+"   has   xdaq named:"+xdaq.getName());
+              if(xdaq.getName().contains("hcal::DTCReadout")){
+                logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: found a DTCReadout in "+level2.getName());
+                try{
+                  XDAQParameter pam = null;
+                  XdaqApplication DTCReadout = xdaq ; 
+                  pam = DTCReadout.getXDAQParameter();
+                  pam.select(new String[]{"TriggerBlockDestClassname","TriggerBlockDestInstance","PollingReadout"});
+                  pam.setValue("TriggerBlockDestClassname","DummyTriggerAdapter");
+                  pam.setValue("TriggerBlockDestInstance","0");
+                  pam.setValue("PollingReadout","true");
+                  pam.send();
+                  logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: Just set "+DTCReadout.getName()+" to send trigger blocks");
+                  foundDTCReadout=true;
+                }
+                catch (XDAQException e) {
+                  String errMessage="[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: Failed to get infospace from "+level2.getName();
+                  functionManager.goToError(errMessage,e);
+                }
               }
             }
+          }
+          catch (DBConnectorException ex) {
+            logger.error("[HCAL " + functionManager.FMname + "]: Got a DBConnectorException when trying to retrieve level2s' children resources: " + ex.getMessage());
           }
         }
       }
