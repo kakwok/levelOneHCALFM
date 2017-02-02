@@ -176,6 +176,12 @@ function fillMask() {
     $('#masks :checked').each(function () {
         finalMasks.push($(this).val());
     });
+    //HERE
+    //$('#dropdown option:selected').text()
+    var userXMLmaskedApps = $('#dropdown option:selected').attr("maskedresources").split("|");
+    for (var i = 0; i < userXMLmaskedApps.length; i++) {
+      finalMasks.push(userXMLmaskedApps[i]);
+    }
     $('#MASKED_RESOURCES').val(JSON.stringify(finalMasks));
     $('#maskTest').html(JSON.stringify(finalMasks));
 }
