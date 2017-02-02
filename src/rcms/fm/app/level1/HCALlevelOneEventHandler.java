@@ -832,7 +832,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The NumberOfEvents is : "                        +TriggersToTake                      );
 
       //Set up infospace parameters needed by localDAQ FM
-      SetLocalDAQinfospace();
+      //SetLocalDAQinfospace();
 
       // start the alarmer watch thread here, now that we have the alarmerURL
       if (alarmerthread!=null){
@@ -1715,7 +1715,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         XdaqApplicationContainer XdaqQRC = new XdaqApplicationContainer(xdaqList);
         logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: Printing this LV2: "+level2.getName()+"'s XdaqApplication names:");
         PrintQRnames(XdaqQRC);
-        XdaqApplicationContainer containerDTCReadout = XdaqQRC.getApplicationsOfClass("hcal::DTCReadout");
+        XdaqApplicationContainer containerDTCReadout = new XdaqApplicationContainer(XdaqQRC.getApplicationsOfClass("hcal::DTCReadout"));
         if( containerDTCReadout!=null){
           if (!containerDTCReadout.isEmpty()){
             logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: found a DTCReadout in "+level2.getName());
