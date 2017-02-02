@@ -60,6 +60,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.put( new FunctionManagerParameter<StringT>  ("GLOBAL_CONF_KEY"                  ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Global configuration key for current run
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_CFGSCRIPT"                   ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration script for supervisors
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_CFGCVSBASEPATH"              ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // CfgCVS basepath, i.e. where to look for snippets
+		this.put( new FunctionManagerParameter<StringT>  ("HCAL_MASTERSNIPPETLIST"           ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // GrandMasterSnippet
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_TTCCICONTROL"                ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration script for TTCci
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_LTCCONTROL"                  ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration script for LTC (obsolete)
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_LPMCONTROL"                  ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration script for LPM
