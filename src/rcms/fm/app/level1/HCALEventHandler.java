@@ -2661,7 +2661,7 @@ public class HCALEventHandler extends UserEventHandler {
      // mark TCDS execs as initialized and mask their JobControl
     List<QualifiedResource> xdaqExecutiveList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
     for (QualifiedResource qr : xdaqExecutiveList) {
-      if (qr.getResource().getHostName().contains("tcds") || qr.getResource().getName().contains("tcds")) {
+      if (qr.getResource().getHostName().contains("tcds") ) {
         qr.setInitialized(true);
         qg.seekQualifiedResourceOnPC(qr, new JobControl()).setActive(false);
       }
