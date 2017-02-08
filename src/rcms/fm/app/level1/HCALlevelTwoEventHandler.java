@@ -13,6 +13,7 @@ import rcms.fm.fw.parameter.CommandParameter;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.ParameterSet;
 import rcms.fm.fw.parameter.type.IntegerT;
+import rcms.fm.fw.parameter.type.UnsignedIntegerT;
 import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.BooleanT;
@@ -1021,7 +1022,24 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: startAction()";
 				functionManager.goToError(errMessage);
       }
+      
+      // Enable TCDS apps
+      if( !functionManager.containerTCDSControllers.isEmpty()){
+        TaskSequence LV2startTaskSeq    = new TaskSequence(HCALStates.STARTING,HCALInputs.SETSTART);
+        ////////////////////////////////////////////////////////////////////////////////////
+        // Enable PI,ICI (LPM is enabled by TA)
+        // see: https://twiki.cern.ch/twiki/pub/CMS/TcdsNotes/tcds_control_software.pdf
+        ////////////////////////////////////////////////////////////////////////////////////
+          ParameterSet<CommandParameter> PIpSet  = new ParameterSet<CommandParameter>();
+          PIpSet.put(  new CommandParameter<UnsignedIntegerT> ("runNumber", new UnsignedIntegerT(functionManager.RunNumber))   );
+          ParameterSet<CommandParameter> ICIpSet = new ParameterSet<CommandParameter>();
+          ICIpSet.put( new CommandParameter<UnsignedIntegerT> ("runNumber", new UnsignedIntegerT(functionManager.RunNumber)) );
 
+          LV2startTaskSeq = makeTCDSenableSeq(PIpSet,ICIpSet);
+          functionManager.theStateNotificationHandler.executeTaskSequence(LV2startTaskSeq);
+      }
+
+      // LPM FM needs to be RUNNING so that TA can enble it, so fire SETSTART first
       if (functionManager.FMrole.equals("Level2_TCDSLPM") || functionManager.FMrole.contains("TTCci")) {
         functionManager.fireEvent( HCALInputs.SETSTART ); //TODO revisit this, a proper fix would get rid of this.
       } 
@@ -2004,5 +2022,29 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
     }
     return configureTaskSeq;
   }
+  /**
+  * @return the tasksequence to enable TCDS from the pSets 
+  */
+  TaskSequence makeTCDSenableSeq(ParameterSet<CommandParameter> PIpSet,ParameterSet<CommandParameter> ICIpSet){
+    Input PIenableInput = new Input(HCALInputs.HCALSTART.toString());
+    Input ICIenableInput= new Input(HCALInputs.HCALSTART.toString());
+    PIenableInput.setParameters (  PIpSet );
+    ICIenableInput.setParameters( ICIpSet );
+    
+    TaskSequence enableTaskSeq = new TaskSequence(HCALStates.STARTING,HCALInputs.SETSTART);
+
+    if( !functionManager.containerPIController.isEmpty()){
+      logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Adding PI to enable tasks:");
+      PrintQRnames(functionManager.containerPIController);
+      enableTaskSeq.addLast(new SimpleTask( functionManager.containerPIController , PIenableInput , HCALStates.STARTING, HCALStates.ENABLED, "Enabling PI in "+functionManager.FMname));
+    }
+    if( !functionManager.containerICIController.isEmpty()){
+      logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Adding ICI to enable tasks:");
+      PrintQRnames(functionManager.containerICIController);
+      enableTaskSeq.addLast(new SimpleTask( functionManager.containerICIController, ICIenableInput, HCALStates.STARTING, HCALStates.ENABLED, "Enabling ICI in "+functionManager.FMname));
+    } 
+    return enableTaskSeq;
+  }
+
 }
 
