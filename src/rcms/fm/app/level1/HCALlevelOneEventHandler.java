@@ -929,20 +929,18 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         TaskSequence configureTaskSeq = new TaskSequence(HCALStates.CONFIGURING,HCALInputs.SETCONFIGURE);
 
         // now configure the rest in parallel
-        //List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getQualifiedResourceList();
-        //List<FunctionManager> normalFMsToConfigureList = new ArrayList<FunctionManager>();
-        //for(QualifiedResource qr : fmChildrenList)
-        //  normalFMsToConfigureList.add((FunctionManager)qr);
-        //QualifiedResourceContainer normalFMsToConfigureContainer = new QualifiedResourceContainer(normalFMsToConfigureList);
+        List<QualifiedResource> EvmAndLPMfmList = functionManager.containerFMChildrenEvmTrig.getQualifiedResourceList();
+        EvmAndLPMfmList.addAll(qualifiedGroup.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
+        QualifiedResourceContainer containerEvmAndLPM = new QualifiedResourceContainer(EvmAndLPMfmList);
         //SimpleTask fmChildrenTask = new SimpleTask(normalFMsToConfigureContainer,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring regular priority FM children");
-        SimpleTask fmChildrenTask = new SimpleTask(functionManager.containerFMChildrenNormal,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring regular priority FM children");
-        SimpleTask EvmTrigConfigureTask = new SimpleTask(functionManager.containerFMChildrenEvmTrig,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring EvmTrig FM");
+        SimpleTask fmChildrenTask   = new SimpleTask(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring regular priority FM children");
+        SimpleTask EvmTrigConfigureTask = new SimpleTask(containerEvmAndLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring EvmTrig FM");
         
         logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring these regular LV2 FMs: ");
-        PrintQRnames(functionManager.containerFMChildrenNormal);
+        PrintQRnames(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM);
         configureTaskSeq.addLast(fmChildrenTask);
-        logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring the EvmTrig FM last: ");
-        PrintQRnames(functionManager.containerFMChildrenEvmTrig);
+        logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring the EvmTrig and TCDS LPM FM together: ");
+        PrintQRnames(containerEvmAndLPM);
         configureTaskSeq.addLast(EvmTrigConfigureTask);
         logger.info("[HCAL LVL1 " + functionManager.FMname +"] Destroying XDAQ for these LV2 FMs: "+emptyFMnames);
 
