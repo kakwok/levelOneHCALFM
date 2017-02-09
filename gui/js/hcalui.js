@@ -84,6 +84,10 @@ $(document).ready(function () {
           $('#Destroy').show();
           $('#Destroy').siblings('input[value="Halt+Destroy"]').hide();
         }
+        if (cachedState == "Configured") {
+          $('#commandSection :input[value="Halt+Destroy"]').remove();
+          $('#Destroy').show();
+        }
       }
       if ($('#SUPERVISOR_ERROR').val() !=  cachedSupErr) { showsupervisorerror(); }
       if ($('#RUN_NUMBER').val() !=  cachedRunNo) { getfullpath(); }
