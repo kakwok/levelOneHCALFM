@@ -246,6 +246,28 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
+      //Send SID to supervisor
+      for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
+        try {
+          XDAQParameter pam = null;
+          pam =((XdaqApplication)qr).getXDAQParameter();
+     
+          // "Sid" was received from LV1
+          pam.select(new String[] {"SessionID"});
+          pam.setValue("SessionID", Sid.toString());
+          logger.info("[HCAL " + functionManager.FMname + "] Sent SID to supervisor: " + Sid);
+      
+          pam.send();
+        }
+        catch (XDAQTimeoutException  e) {
+          String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: initAction() when trying to send SID to the HCAL supervisor.";
+          functionManager.goToError(errMessage,e);
+        }
+        catch (XDAQException e) {
+          String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: initAction() when trying to send SID to the HCAL supervisor.";
+          functionManager.goToError(errMessage,e);
+        }
+      }
   
       if (parameterSet.get("RUN_CONFIG_SELECTED") != null) {
         String RunConfigSelected = ((StringT)parameterSet.get("RUN_CONFIG_SELECTED").getValue()).getString();
