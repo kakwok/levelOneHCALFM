@@ -59,7 +59,7 @@ public class HCALxmlHandler {
   protected HCALFunctionManager functionManager = null;
   static RCMSLogger logger = null;
   public DocumentBuilder docBuilder;
-  public String[] ValidMasterSnippetTags = new String[] {"CfgScript","TCDSControl","TTCciControl","LPMControl","PIControl","LTCControl","AlarmerURL","AlarmerStatus","FedEnableMask","FMSettings","FMParameter"};
+  public String[] ValidMasterSnippetTags = new String[] {"CfgScript","ICIControlSingle","ICIControlMulti","TTCciControl","LPMControl","PIControlSingle","PIControlMulti","LTCControl","AlarmerURL","AlarmerStatus","FedEnableMask","FMSettings","FMParameter"};
 
   public HCALxmlHandler(HCALFunctionManager parentFunctionManager) {
     this.logger = new RCMSLogger(HCALFunctionManager.class);
@@ -496,9 +496,11 @@ public class HCALxmlHandler {
 
   public String getHCALParameterFromTagName(String TagName){
     String emptyString="";
-    if(TagName.equals("TCDSControl") ) return "HCAL_TCDSCONTROL";
+    if(TagName.equals("ICIControlSingle") ) return "HCAL_ICICONTROL_SINGLE";
+    if(TagName.equals("ICIControlMulti") ) return "HCAL_ICICONTROL_MULTI";
     if(TagName.equals("LPMControl")  ) return "HCAL_LPMCONTROL";
-    if(TagName.equals("PIControl")   ) return "HCAL_PICONTROL";
+    if(TagName.equals("PIControlSingle")   ) return "HCAL_PICONTROL_SINGLE";
+    if(TagName.equals("PIControlMulti" )   ) return "HCAL_PICONTROL_MULTI";
     if(TagName.equals("TTCciControl")) return "HCAL_TTCCICONTROL";
     if(TagName.equals("LTCControl")  ) return "HCAL_LTCCONTROL";
     logger.error("[Martin log HCAL "+ functionManager.FMname +"]: Cannot find HCALParameter corresponding to TagName "+ TagName +". Please check the mapping");
@@ -641,7 +643,7 @@ public class HCALxmlHandler {
 
   public void SetHCALParameterFromTagName(String TagName, NodeList NodeListOfTagName ,String CfgCVSBasePath, boolean NeventIsSetFromGUI){
     try{
-      if(TagName.equals("TCDSControl")|| TagName.equals("LPMControl")|| TagName.equals("PIControl")|| TagName.equals("TTCciControl") || TagName.equals("LTCControl") ){
+      if(TagName.equals("ICIControlSingle")|| TagName.equals("ICIControlMulti") || TagName.equals("LPMControl")|| TagName.equals("PIControlSingle")||TagName.equals("PIControlMulti") || TagName.equals("TTCciControl") || TagName.equals("LTCControl") ){
           String HCALParameter = getHCALParameterFromTagName(TagName);
           String ControlSequence  = getIncludeFiles( NodeListOfTagName, CfgCVSBasePath ,TagName );
           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameter ,new StringT(ControlSequence)));
