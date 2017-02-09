@@ -861,9 +861,9 @@ public class HCALFunctionManager extends UserFunctionManager {
     if (!containerlpmController.isEmpty()) {
       XdaqApplication lpmApp = null;
       try {
-        logger.debug("[HCAL LVL2 " + FMname + "] HALT LPM...");
         Iterator it = containerlpmController.getQualifiedResourceList().iterator();
         int sessionId       = ((IntegerT)getParameterSet().get("SID").getValue()).getInteger();
+        logger.info("[HCAL LVL2 " + FMname + "] haltLPMControllers: Halting LPM with SID= "+sessionId+" and RCMSURL = "+rcmsStateListenerURL);
         while (it.hasNext()) {
           lpmApp = (XdaqApplication) it.next();
           lpmApp.execute(HCALInputs.HALT,Integer.toString(sessionId),rcmsStateListenerURL);
