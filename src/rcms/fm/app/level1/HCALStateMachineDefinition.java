@@ -177,7 +177,7 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     CommandParameter<StringT>  configureRU_INSTANCE              =  new CommandParameter<StringT>  ("RU_INSTANCE"             ,  new StringT("")     );
     CommandParameter<StringT>  configureLPM_SUPERVISOR           =  new CommandParameter<StringT>  ("LPM_SUPERVISOR"          ,  new StringT("")     );
     CommandParameter<StringT>  configureEVM_TRIG_FM              =  new CommandParameter<StringT>  ("EVM_TRIG_FM"             ,  new StringT("")     );
-    CommandParameter<BooleanT> singlepartitionmode               =  new CommandParameter<BooleanT> ("SINGLEPARTITION_MODE"    ,  new BooleanT(false) );
+    //CommandParameter<BooleanT> singlepartitionmode               =  new CommandParameter<BooleanT> ("SINGLEPARTITION_MODE"    ,  new BooleanT(false) );
     CommandParameter<BooleanT> configureCLOCK_CHANGED            =  new CommandParameter<BooleanT> ("CLOCK_CHANGED"           ,  new BooleanT(false) );
     CommandParameter<BooleanT> configureUSE_PRIMARY_TCDS         =  new CommandParameter<BooleanT> ("USE_PRIMARY_TCDS"        ,  new BooleanT(true)  );
     CommandParameter<BooleanT> configureUSE_RESET_FOR_RECOVER    =  new CommandParameter<BooleanT> ("USE_RESET_FOR_RECOVER"   ,  new BooleanT(true)  );

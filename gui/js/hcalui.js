@@ -321,11 +321,15 @@ function hcalOnLoad() {
        $(panelId).siblings().hide();
        $(panelId).show();
        if ($(this).attr("id") == "multiPartition") {
-         $('#newSINGLEPARTITION_MODEcheckbox :checkbox').prop('checked', true);
+         if (!$('#newSINGLEPARTITION_MODEcheckbox :checkbox').prop('checked')) {
+           $('#newSINGLEPARTITION_MODEcheckbox :checkbox').click();
+         }
          $('#SINGLEPARTITION_MODE').val("false");
        }
        else if ($(this).attr("id") == "singlePartition") {
-         $('#newSINGLEPARTITION_MODEcheckbox :checkbox').prop('checked', true);
+         if (!$('#newSINGLEPARTITION_MODEcheckbox :checkbox').prop('checked')) {
+           $('#newSINGLEPARTITION_MODEcheckbox :checkbox').click();
+         }
          $('#SINGLEPARTITION_MODE').val("true");
        }
        $(panelId).parent().find("input").prop('checked', false);
