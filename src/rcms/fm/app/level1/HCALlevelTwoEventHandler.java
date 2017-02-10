@@ -1536,6 +1536,27 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
         }
       }
+      
+      // Disable TCDS apps
+      if( !functionManager.containerTCDSControllers.isEmpty()){
+        TaskSequence LV2stopTaskSeq    = new TaskSequence(HCALStates.STOPPING,HCALInputs.SETCONFIGURE);
+        ////////////////////////////////////////////////////////////////////////////////////
+        // Disable PI,ICI (LPM is disabled by TA)
+        // see: https://twiki.cern.ch/twiki/pub/CMS/TcdsNotes/tcds_control_software.pdf
+        ////////////////////////////////////////////////////////////////////////////////////
+        ParameterSet<CommandParameter> PIpSet  = new ParameterSet<CommandParameter>();
+        ParameterSet<CommandParameter> ICIpSet = new ParameterSet<CommandParameter>();
+        ParameterSet<CommandParameter> LPMpSet = new ParameterSet<CommandParameter>();
+
+        if (functionManager.FMrole.equals("EvmTrig")) {
+          LV2stopTaskSeq = makeTCDSstopSeq(PIpSet,ICIpSet,LPMpSet,false); // last argument means don't stop ici
+          functionManager.theStateNotificationHandler.executeTaskSequence(LV2stopTaskSeq);
+        }
+        else {
+          LV2stopTaskSeq = makeTCDSstopSeq(PIpSet,ICIpSet,LPMpSet,true);
+          functionManager.theStateNotificationHandler.executeTaskSequence(LV2stopTaskSeq);
+        }
+      }
 
       // stop HCAL
       if (!functionManager.containerhcalSupervisor.isEmpty()) {
@@ -2022,6 +2043,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
     }
     return configureTaskSeq;
   }
+
   /**
   * @return the tasksequence to enable TCDS from the pSets 
   */
@@ -2044,6 +2066,37 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       enableTaskSeq.addLast(new SimpleTask( functionManager.containerICIController, ICIenableInput, HCALStates.STARTING, HCALStates.ENABLED, "Enabling ICI in "+functionManager.FMname));
     } 
     return enableTaskSeq;
+  }
+
+  /**
+  * @return the tasksequence to stop TCDS from the pSets 
+  */
+  TaskSequence makeTCDSstopSeq(ParameterSet<CommandParameter> PIpSet,ParameterSet<CommandParameter> ICIpSet,ParameterSet<CommandParameter> LPMpSet, boolean stopICILPM){
+    Input PIstopInput = new Input(HCALInputs.STOP.toString());
+    Input ICIstopInput= new Input(HCALInputs.STOP.toString());
+    Input LPMstopInput= new Input(HCALInputs.STOP.toString());
+    PIstopInput.setParameters (  PIpSet );
+    ICIstopInput.setParameters( ICIpSet );
+    LPMstopInput.setParameters( ICIpSet );
+    
+    TaskSequence stopTaskSeq = new TaskSequence(HCALStates.STOPPING,HCALInputs.SETCONFIGURE);
+
+    if( !functionManager.containerlpmController.isEmpty() && stopICILPM){
+      logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Adding LPM to stop task:");
+      PrintQRnames(functionManager.containerlpmController);
+      stopTaskSeq.addLast(new SimpleTask( functionManager.containerlpmController, LPMstopInput, HCALStates.STOPPING, HCALStates.CONFIGURED, "Stopping LPM in "+functionManager.FMname));
+    } 
+    if( !functionManager.containerICIController.isEmpty() && stopICILPM){
+      logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Adding ICI to stop task because stopICILPM = " + stopICILPM);
+      PrintQRnames(functionManager.containerICIController);
+      stopTaskSeq.addLast(new SimpleTask( functionManager.containerICIController, ICIstopInput, HCALStates.STOPPING, HCALStates.CONFIGURED, "Stopping ICI in "+functionManager.FMname));
+    } 
+    if( !functionManager.containerPIController.isEmpty()){
+      logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Adding PI to stop task:");
+      PrintQRnames(functionManager.containerPIController);
+      stopTaskSeq.addLast(new SimpleTask( functionManager.containerPIController , PIstopInput , HCALStates.STOPPING, HCALStates.CONFIGURED, "Stopping PI in "+functionManager.FMname));
+    }
+    return stopTaskSeq;
   }
 
 }
