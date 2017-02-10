@@ -173,7 +173,7 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
 
 function fillMask() {
     var finalMasks=[];
-    $('#masks :checked').each(function () {
+    $('#multiPartitionSelection :checked').each(function () {
         finalMasks.push($(this).val());
     });
     //HERE
@@ -183,7 +183,7 @@ function fillMask() {
       finalMasks.push(userXMLmaskedApps[i]);
     }
     $('#MASKED_RESOURCES').val(JSON.stringify(finalMasks));
-    $('#maskTest').html(JSON.stringify(finalMasks));
+    $('#maskTest').html($('#MASKED_RESOURCES').val());
 }
 
 function makecheckboxes() {
@@ -191,13 +191,24 @@ function makecheckboxes() {
     param =  param.replace(/['"]+/g, '');
     var array = param.split(',');
     var maskDivContents = "<ul>";
+    var radioButtonDivContents = "<form action=''>";
     for (var i = 0, l = array.length; i < l; i++) {
         var option = array[i].split(':');
         var checkbox = "<li><input type='checkbox' onchange='fillMask();' value='" + option + "'>" + option + "</li>";
+        var radiobutton = "<input type='radio' name='singlePart' onchange='" + 'picksinglepartition("' + option +'");' + "' value='" + option + "'>" + option;
         maskDivContents += checkbox;
+        radioButtonDivContents += radiobutton;
     }
     maskDivContents += "</ul>";
-    $('#masks').html(maskDivContents);
+    radioButtonDivContents +="</form>";
+    $('#multiPartitionSelection').html(maskDivContents);
+    $('#singlePartitionSelection').html(radioButtonDivContents);
+}
+
+function picksinglepartition(option) {
+    $('#multiPartitionSelection :input').not("[value='"+option+"']").prop('checked', true);
+    $("#multiPartitionSelection :input[value='"+option+"']").prop('checked', false);
+    fillMask();
 }
 
 function hidecheckboxes() {
@@ -265,6 +276,7 @@ function hcalOnLoad() {
     removeduplicatecheckbox('NUMBER_OF_EVENTS');
     removeduplicatecheckbox('ACTION_MSG');
     removeduplicatecheckbox('RUN_NUMBER');
+    removeduplicatecheckbox('SINGLEPARTITION_MODE');
     copyContents(CFGSNIPPET_KEY_SELECTED, newCFGSNIPPET_KEY_SELECTED);
     makecheckbox('newCFGSNIPPET_KEY_SELECTEDcheckbox', 'CFGSNIPPET_KEY_SELECTED');
     copyContents(RUN_CONFIG_SELECTED, newRUN_CONFIG_SELECTED);
@@ -279,6 +291,8 @@ function hcalOnLoad() {
     copyContents(RUN_NUMBER, newRUN_NUMBER);
     makecheckbox('newRUN_NUMBERcheckbox', 'RUN_NUMBER');
     copyContents(HCAL_TIME_OF_FM_START, newHCAL_TIME_OF_FM_START);
+    copyContents(SINGLEPARTITION_MODE, newSINGLEPARTITION_MODE);
+    makecheckbox('newSINGLEPARTITION_MODEcheckbox', 'SINGLEPARTITION_MODE');
     hidecheckboxes();
     hideinitializebutton();
     hidelocalparams();
@@ -298,4 +312,23 @@ function hcalOnLoad() {
     moveversionnumber();
     makedropdown($('#AVAILABLE_RUN_CONFIGS').text(), $('#AVAILABLE_LOCALRUNKEYS').text());
     onClickCommandParameterCheckBox();
+
+    $('.maskModes').css("style", "display: inline");
+    $('.maskModes').click(function () {
+       $(this).siblings().css('color', 'black');
+       $(this).css('color', 'blue');
+       panelId = "#".concat($(this).attr("id")).concat("Selection");
+       $(panelId).siblings().hide();
+       $(panelId).show();
+       if ($(this).attr("id") == "multiPartition") {
+         $('#newSINGLEPARTITION_MODEcheckbox :checkbox').prop('checked', true);
+         $('#SINGLEPARTITION_MODE').val("false");
+       }
+       else if ($(this).attr("id") == "singlePartition") {
+         $('#newSINGLEPARTITION_MODEcheckbox :checkbox').prop('checked', true);
+         $('#SINGLEPARTITION_MODE').val("true");
+       }
+       $(panelId).parent().find("input").prop('checked', false);
+       fillMask();
+    });
 }

@@ -239,7 +239,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <td id="newMASK_SUMMARYcheckbox" class="label_center_black">
                                 </td>
                                 <td class="label_left_black">
-                                  <strong>Mask Summary</strong><br /><input id="showFullMasks" type="checkbox" onclick="$('#maskedResourcesField').toggle();" />Show full masks
+                                  <strong>Mask Summary</strong><br /><input id="showFullMasks" type="checkbox" onclick="$('#maskedResourcesField').toggle(); $('#singlePartitionField').toggle();" />Show full masks
                                 </td>
                                 <td id ="newMASK_SUMMARY" class="label_center_black">
                                 </td>
@@ -251,6 +251,15 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                   <strong>Masked Resources</strong>
                                 </td>
                                 <td id ="newMASKED_RESOURCES" class="label_center_black">
+                                </td>
+                              </tr>
+                              <tr id="singlePartitionField" style="display: none;">
+                                <td id="newSINGLEPARTITION_MODEcheckbox" class="label_center_black">
+                                </td>
+                                <td class="label_left_black">
+                                  <strong>Multi/Singlepartition</strong>
+                                </td>
+                                <td id ="newSINGLEPARTITION_MODE" class="label_center_black">
                                 </td>
                               </tr>
                               <tr>
@@ -316,10 +325,18 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <!--Area for masking checkboxes-->
                                 <td class="label_center_black" colspan="3" id="masked_resourses_td">
                                   <div>
-                                    <input type="checkbox" onclick="toggle_visibility('masks');"><strong>Mask FMs</strong>
+				     <div>
+                                       <div class="maskModes" id="multiPartition"><strong>Multipartition</strong></div>
+                                       <div class="maskModes" id="singlePartition"><strong>Single partition</strong></div>
+                                    </div>
                                     <br />
+                                    <div>
                                       Masked resources: <span id="maskTest"></span>
-                                    <div id="masks" class="tbl"></div>
+                                      <div>
+                                        <div id="multiPartitionSelection" class="tbl"></div>
+                                        <div id="singlePartitionSelection" class="tbl"></div>
+                                     </div>
+                                   </div>
                                   </div>
                                 </td>
                               </tr>
