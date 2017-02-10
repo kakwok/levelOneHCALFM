@@ -104,15 +104,18 @@ function setProgress(parName, progress) {
     var progressPercent = 0;
     if (parName == "HCAL_EVENTSTAKEN") {
       progressPercent = 100 * progress / numberOfEvents;
+      $(".progressbar").css('color', "white");
     }
     else if ( parName == "PROGRESS") {
       progressPercent = 100 * progress;
+      $(".progressbar").css('color', "black");
     }
     var progressBarWidth = progressPercent * (width / 100);
     //$(".progressbar").width(progressBarWidth);
     progressPercent = progressPercent.toFixed(2);
     //console.log("progressPercent is: " + progressPercent);
     $(".progressbar").width(progressBarWidth).html(progressPercent + "% &nbsp; &nbsp;");
+    $(".progressbar").css('background-color', $("#currentState").css("color"));
 }
 
 function mirrorSelection() {
