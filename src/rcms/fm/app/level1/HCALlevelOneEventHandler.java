@@ -1679,53 +1679,5 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.debug("[JohnLog " + functionManager.FMname + "] exitAction executed ...");
     }
   }
-<<<<<<< HEAD
-=======
 
-  public void SetLocalDAQinfospace(){
-    List<QualifiedResource> EvmTrigFMlist = functionManager.containerFMEvmTrig.getActiveQRList();
-    Boolean isUsingLocalDAQ = false;
-    for (QualifiedResource qr : EvmTrigFMlist){
-      if (qr.getName().contains("localDAQ")){
-        isUsingLocalDAQ = true;
-        logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: We have a localDAQ FM!");
-      }
-    }
-    if (isUsingLocalDAQ){
-      List<QualifiedResource> level2list    = functionManager.containerFMChildrenNormal.getActiveQRList();
-      Boolean foundDTCReadout = false;
-      for (QualifiedResource level2 : level2list){
-        QualifiedGroup level2group = ((FunctionManager)level2).getQualifiedGroup();
-        List<QualifiedResource> xdaqList = level2group.seekQualifiedResourcesOfType(new XdaqApplication());
-        XdaqApplicationContainer XdaqQRC = new XdaqApplicationContainer(xdaqList);
-        logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: Printing this LV2: "+level2.getName()+"'s XdaqApplication names:");
-        PrintQRnames(XdaqQRC);
-        XdaqApplicationContainer containerDTCReadout = new XdaqApplicationContainer(XdaqQRC.getApplicationsOfClass("hcal::DTCReadout"));
-        if( containerDTCReadout!=null){
-          if (!containerDTCReadout.isEmpty()){
-            logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: found a DTCReadout in "+level2.getName());
-            if (!foundDTCReadout){
-              try{
-                XDAQParameter pam = null;
-                XdaqApplication DTCReadout = ((XdaqApplicationContainer)XdaqQRC.getApplicationsOfClass("hcal::DTCReadout")).getApplications().get(0); 
-                pam = DTCReadout.getXDAQParameter();
-                pam.select(new String[]{"TriggerBlockDestClassname","TriggerBlockDestInstance","PollingReadout"});
-                pam.setValue("TriggerBlockDestClassname","DummyTriggerAdapter");
-                pam.setValue("TriggerBlockDestInstance","0");
-                pam.setValue("PollingReadout","true");
-                pam.send();
-                logger.info("[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: Just set "+DTCReadout.getName()+" to send trigger blocks");
-                foundDTCReadout=true;
-              }
-              catch (XDAQException e) {
-                String errMessage="[HCAL LVL1 "+functionManager.FMname+"] SetLocalDAQinfospace: Failed to get infospace from "+level2.getName();
-                functionManager.goToError(errMessage,e);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
->>>>>>> c7de664... Halt TCDS on destroy
 }
