@@ -42,7 +42,7 @@ function showsupervisorerror() {
 }
 
 // The scripts below use jQuery.
-$(document).ready(function () {
+function updatePage() {
     var initcolor = $('#currentState').text();
     $('#currentState').attr("class", "hcal_control_" + initcolor);
     if ($('#currentState').text() == "Configured") {$('#Destroy').hide();}
@@ -96,7 +96,7 @@ $(document).ready(function () {
     $('#dropdowndiv').on('change', 'select', function () {
         $('#masked_resourses_td').show();
     });
-});
+}
 
 function setProgress(parName, progress) {
     var numberOfEvents = $("#NUMBER_OF_EVENTS").val();
