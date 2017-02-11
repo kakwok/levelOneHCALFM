@@ -1014,8 +1014,17 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       StartTime = new Date();
 
       TaskSequence LV2startTaskSeq  = new TaskSequence(HCALStates.STARTING,HCALInputs.SETSTART);
-      LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerhcalSupervisor, HCALInputs.HCALASYNCSTART, HCALStates.STARTING, HCALStates.ACTIVE, "["+functionManager.FMname+"] Enabling hcalSupervisor"));
+      // start hcalSupervisor first
+      if( !functionManager.containerhcalSupervisor.isEmpty()) {
+        LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerhcalSupervisor, HCALInputs.HCALASYNCSTART, HCALStates.STARTING, HCALStates.ACTIVE, "["+functionManager.FMname+"] Enabling hcalSupervisor"));
+      }
 
+      // then trigger adapter
+      // TODO: move this to supervisor
+      if(!functionManager.containerTriggerAdapter.isEmpty()) {
+        LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerTriggerAdapter, HCALInputs.HCALASYNCSTART, HCALStates.STARTING, HCALStates.ACTIVE, "["+functionManager.FMname+"] Enabling TriggerAdapter"));
+      }
+      
       // Enable TCDS apps
       if( !functionManager.containerTCDSControllers.isEmpty()){
         ////////////////////////////////////////////////////////////////////////////////////
@@ -1029,21 +1038,15 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         ParameterSet<CommandParameter> LPMpSet = new ParameterSet<CommandParameter>();
         LPMpSet.put( new CommandParameter<UnsignedIntegerT> ("runNumber", new UnsignedIntegerT(functionManager.RunNumber)) );
 
-        if (functionManager.FMrole.equals("EvmTrig") || functionManager.FMrole.equals("Level2_TCDSLPM"))
-          LV2startTaskSeq = makeTCDSenableSeq(PIpSet,ICIpSet,LPMpSet,false); // last argument means don't stop ici or lpm
-          //XXX SIC: change to accept task sequence and add the simple tasks to it
-          //XXX SIC: schedule LPM FM last. need FM with ici to be started last for single partition
-          //XXX SIC: remove TA starting/stopping TCDS
-        else
-          LV2startTaskSeq = makeTCDSenableSeq(PIpSet,ICIpSet,LPMpSet,true);
+        addTCDSenableSeq(PIpSet,ICIpSet,LPMpSet,LV2startTaskSeq); // add the tcds start tasks to the start sequence
       }
+      //XXX SIC: schedule LPM FM last in level1. this is all that's needed for multi-partition (runs with LPM).
+      //XXX SIC: need FM containing ici to be started last for single partition. this won't be the EVMTA FM in localDAQ land.
+      //         with the scheduling done, the FMs just stop/start whichever TCDS apps they contain.
+      //XXX SIC: remove TA starting/stopping TCDS --> DONE in hcalTrig
 
-      // LPM FM needs to be RUNNING so that TA can enble it, so fire SETSTART first
-      if (functionManager.FMrole.equals("Level2_TCDSLPM") || functionManager.FMrole.contains("TTCci")) {
-        functionManager.fireEvent( HCALInputs.SETSTART ); //TODO revisit this, a proper fix would get rid of this.
-      } 
-      else
-        functionManager.theStateNotificationHandler.executeTaskSequence(LV2startTaskSeq);
+
+      functionManager.theStateNotificationHandler.executeTaskSequence(LV2startTaskSeq);
 
       // set action
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
@@ -1063,27 +1066,27 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // reset the non-async error state handling
       functionManager.ErrorState = false;
       
-      // only in local runs when all triggers were sent the run is stopped with 60 sec timeout
+      //// only in local runs when all triggers were sent the run is stopped with 60 sec timeout
       if (functionManager.FMrole.equals("EvmTrig")) {
 
-        // finally start the TriggerAdapters
-        if (functionManager.containerTriggerAdapter!=null) {
-          if (!functionManager.containerTriggerAdapter.isEmpty() && !functionManager.FMWasInPausedState) {
-            try {
-              //logger.info("[JohnLog4] [HCAL LVL2 " + functionManager.FMname + "] Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
-              logger.info("[HCAL LVL2 " + functionManager.FMname + "] Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
-              functionManager.containerTriggerAdapter.execute(HCALInputs.HCALSTART);
-            }
-            catch (QualifiedResourceContainerException e) {
-              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting (TriggerAdapter=Enable) failed ...";
-              logger.error(errMessage,e);
-              functionManager.sendCMSError(errMessage);
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-            }
-          }
-        }
+      //  // finally start the TriggerAdapters
+      //  if (functionManager.containerTriggerAdapter!=null) {
+      //    if (!functionManager.containerTriggerAdapter.isEmpty() && !functionManager.FMWasInPausedState) {
+      //      try {
+      //        //logger.info("[JohnLog4] [HCAL LVL2 " + functionManager.FMname + "] Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
+      //        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
+      //        functionManager.containerTriggerAdapter.execute(HCALInputs.HCALSTART);
+      //      }
+      //      catch (QualifiedResourceContainerException e) {
+      //        String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting (TriggerAdapter=Enable) failed ...";
+      //        logger.error(errMessage,e);
+      //        functionManager.sendCMSError(errMessage);
+      //        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+      //        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
+      //        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+      //      }
+      //    }
+      //  }
 
         // set actions for local runs
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
@@ -1543,17 +1546,14 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // Disable TCDS apps
       if( !functionManager.containerTCDSControllers.isEmpty()){
         ////////////////////////////////////////////////////////////////////////////////////
-        // Disable PI,ICI (LPM is disabled by TA)
+        // Disable PI,ICI,LPM
         // see: https://twiki.cern.ch/twiki/pub/CMS/TcdsNotes/tcds_control_software.pdf
         ////////////////////////////////////////////////////////////////////////////////////
         ParameterSet<CommandParameter> PIpSet  = new ParameterSet<CommandParameter>();
         ParameterSet<CommandParameter> ICIpSet = new ParameterSet<CommandParameter>();
         ParameterSet<CommandParameter> LPMpSet = new ParameterSet<CommandParameter>();
 
-        if (functionManager.FMrole.equals("EvmTrig") || functionManager.FMrole.equals("Level2_TCDSLPM"))
-          LV2stopTaskSeq = makeTCDSstopSeq(PIpSet,ICIpSet,LPMpSet,false); // last argument means don't stop ici or lpm
-        else
-          LV2stopTaskSeq = makeTCDSstopSeq(PIpSet,ICIpSet,LPMpSet,true);
+        LV2stopTaskSeq = makeTCDSstopSeq(PIpSet,ICIpSet,LPMpSet);
       }
 
       // stop HCAL
@@ -2039,9 +2039,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   /**
-  * @return the tasksequence to enable TCDS from the pSets 
+  * adds the simple tasks to the passed TaskSequence
   */
-  TaskSequence makeTCDSenableSeq(ParameterSet<CommandParameter> PIpSet,ParameterSet<CommandParameter> ICIpSet, ParameterSet<CommandParameter> LPMpSet, boolean startICILPM){
+  void addTCDSenableSeq(ParameterSet<CommandParameter> PIpSet,ParameterSet<CommandParameter> ICIpSet, ParameterSet<CommandParameter> LPMpSet, TaskSequence enableTaskSeq) {
     Input PIenableInput = new Input(HCALInputs.HCALSTART.toString());
     Input ICIenableInput= new Input(HCALInputs.HCALSTART.toString());
     Input LPMenableInput= new Input(HCALInputs.HCALSTART.toString());
@@ -2049,46 +2049,43 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
     ICIenableInput.setParameters( ICIpSet );
     LPMenableInput.setParameters( LPMpSet );
     
-    TaskSequence enableTaskSeq = new TaskSequence(HCALStates.STARTING,HCALInputs.SETSTART);
-
     if( !functionManager.containerPIController.isEmpty()){
       logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Adding PI to enable tasks:");
       PrintQRnames(functionManager.containerPIController);
       enableTaskSeq.addLast(new SimpleTask( functionManager.containerPIController , PIenableInput , HCALStates.STARTING, HCALStates.ENABLED, "Enabling PI in "+functionManager.FMname));
     }
-    if( !functionManager.containerICIController.isEmpty() && startICILPM){
-      logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Adding ICI to enable tasks as startICILPM = " + startICILPM);
+    if( !functionManager.containerICIController.isEmpty()){
+      logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Adding ICI to enable task:");
       PrintQRnames(functionManager.containerICIController);
       enableTaskSeq.addLast(new SimpleTask( functionManager.containerICIController, ICIenableInput, HCALStates.STARTING, HCALStates.ENABLED, "Enabling ICI in "+functionManager.FMname));
     } 
-    if( !functionManager.containerlpmController.isEmpty() && startICILPM){
-      logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Adding LPM to enable task as startICILPM = " + startICILPM);
+    if( !functionManager.containerlpmController.isEmpty()){
+      logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Adding LPM to enable task:");
       PrintQRnames(functionManager.containerlpmController);
       enableTaskSeq.addLast(new SimpleTask( functionManager.containerlpmController, LPMenableInput, HCALStates.STARTING, HCALStates.ENABLED, "Enabling LPM in "+functionManager.FMname));
     } 
-    return enableTaskSeq;
   }
 
   /**
   * @return the tasksequence to stop TCDS from the pSets 
   */
-  TaskSequence makeTCDSstopSeq(ParameterSet<CommandParameter> PIpSet,ParameterSet<CommandParameter> ICIpSet,ParameterSet<CommandParameter> LPMpSet, boolean stopICILPM){
+  TaskSequence makeTCDSstopSeq(ParameterSet<CommandParameter> PIpSet,ParameterSet<CommandParameter> ICIpSet,ParameterSet<CommandParameter> LPMpSet) {
     Input PIstopInput = new Input(HCALInputs.STOP.toString());
     Input ICIstopInput= new Input(HCALInputs.STOP.toString());
     Input LPMstopInput= new Input(HCALInputs.STOP.toString());
     PIstopInput.setParameters (  PIpSet );
     ICIstopInput.setParameters( ICIpSet );
-    LPMstopInput.setParameters( ICIpSet );
+    LPMstopInput.setParameters( LPMpSet );
     
     TaskSequence stopTaskSeq = new TaskSequence(HCALStates.STOPPING,HCALInputs.SETCONFIGURE);
 
-    if( !functionManager.containerlpmController.isEmpty() && stopICILPM){
+    if( !functionManager.containerlpmController.isEmpty()){
       logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Adding LPM to stop task:");
       PrintQRnames(functionManager.containerlpmController);
       stopTaskSeq.addLast(new SimpleTask( functionManager.containerlpmController, LPMstopInput, HCALStates.STOPPING, HCALStates.CONFIGURED, "Stopping LPM in "+functionManager.FMname));
     } 
-    if( !functionManager.containerICIController.isEmpty() && stopICILPM){
-      logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Adding ICI to stop task because stopICILPM = " + stopICILPM);
+    if( !functionManager.containerICIController.isEmpty()){
+      logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Adding ICI to stop task:");
       PrintQRnames(functionManager.containerICIController);
       stopTaskSeq.addLast(new SimpleTask( functionManager.containerICIController, ICIstopInput, HCALStates.STOPPING, HCALStates.CONFIGURED, "Stopping ICI in "+functionManager.FMname));
     } 
