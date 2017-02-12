@@ -12,6 +12,7 @@ import rcms.fm.fw.user.UserFunctionManager;
 import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainer;
+import rcms.fm.resource.QualifiedResourceContainerException;
 import rcms.fm.resource.qualifiedresource.XdaqApplicationContainer;
 import rcms.fm.resource.qualifiedresource.XdaqApplication;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
@@ -431,6 +432,18 @@ public class HCALFunctionManager extends UserFunctionManager {
 
     try{
       destroyXDAQ();
+      if (containerTCDSControllers !=null){
+        if (!containerTCDSControllers.isEmpty()){
+          try{
+            logger.info("[HCAL LVL2 " + FMname + "] Trying to halt TCDS on destroy.");
+            containerTCDSControllers.execute(HCALInputs.HALT);
+          }
+          catch (QualifiedResourceContainerException e) {
+            String errMessage = "[HCAL LVL2 " + FMname + "] Error! QualifiedResourceContainerException: Halt TCDS failed ..."+e.getMessage();
+            logger.error(errMessage);
+          }
+        }
+      }
     }
     catch (UserActionException e){
       String errMessage="[HCAL "+FMname+" ] Got an exception during destroyXDAQ():";

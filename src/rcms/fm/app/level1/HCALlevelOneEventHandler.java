@@ -826,7 +826,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The OfficialRunNumbers value is : "              +OfficialRunNumbers                  );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The NumberOfEvents is : "                        +TriggersToTake                      );
 
-
       // start the alarmer watch thread here, now that we have the alarmerURL
       if (alarmerthread!=null){
         if (alarmerthread.isAlive()){
@@ -1699,4 +1698,5 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.debug("[JohnLog " + functionManager.FMname + "] exitAction executed ...");
     }
   }
+
 }
