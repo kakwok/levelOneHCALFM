@@ -148,7 +148,7 @@ function clickboxes() {
     }
 }
 function preclickFMs() {
-  $('#masks :checkbox').each( function (index) { 
+  $('#multiPartitionSelection :input').each( function (index) { 
     if ( $.inArray($(this).val(), $('#dropdown option:selected').attr("maskedfm").split(";"))  !== -1) { $(this).prop('checked', true); }
     else { $(this).prop('checked', false); }
   });
@@ -333,6 +333,7 @@ function hcalOnLoad() {
          if (!$('#newSINGLEPARTITION_MODEcheckbox :checkbox').prop('checked')) {
            $('#newSINGLEPARTITION_MODEcheckbox :checkbox').click();
          }
+         preclickFMs();
          $('#SINGLEPARTITION_MODE').val("false");
        }
        else if ($(this).attr("id") == "singlePartition") {
@@ -341,7 +342,7 @@ function hcalOnLoad() {
          }
          $('#SINGLEPARTITION_MODE').val("true");
        }
-       $(panelId).parent().find("input").prop('checked', false);
+       //$(panelId).parent().find("input").prop('checked', false); // maybe this does something?
        fillMask();
     });
 }
