@@ -534,7 +534,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           CheckAndSetParameter( parameterSet , "HCAL_CFGSCRIPT"      );
           CheckAndSetParameter( parameterSet , "HCAL_TTCCICONTROL"   );
           CheckAndSetParameter( parameterSet , "HCAL_LTCCONTROL"     );
-          CheckAndSetParameter( parameterSet , "HCAL_LPMCONTROL"     );
           CheckAndSetParameter( parameterSet , "SINGLEPARTITION_MODE");
           isSinglePartition   = ((BooleanT)functionManager.getHCALparameterSet().get("SINGLEPARTITION_MODE").getValue()).getBoolean();
           // Only set the parameter being used so that RunInfo will be clear
@@ -543,6 +542,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             CheckAndSetParameter( parameterSet , "HCAL_PICONTROL_SINGLE"      );
           }
           else{
+            CheckAndSetParameter( parameterSet , "HCAL_LPMCONTROL"           );
             CheckAndSetParameter( parameterSet , "HCAL_ICICONTROL_MULTI"     );
             CheckAndSetParameter( parameterSet , "HCAL_PICONTROL_MULTI"      );
           }
