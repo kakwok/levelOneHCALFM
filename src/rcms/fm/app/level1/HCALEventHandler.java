@@ -95,12 +95,6 @@ public class HCALEventHandler extends UserEventHandler {
   String ConfigDoc     = "";
   String FullCfgScript = "not set";
 
-  String FullTTCciControlSequence =  "not set";  // Config script for TTCci
-  String FullLTCControlSequence   =  "not set";  // Config doc for LTC
-  String FullTCDSControlSequence  =  "not set";  // Config doc for iCI
-  String FullLPMControlSequence   =  "not set";  // Config doc for LPM
-  String FullPIControlSequence    =  "not set";  // Config doc for PI
-
   public boolean UsePrimaryTCDS                =  true;   // Switch to use primary/secondary TCDS system (TODO: check implementation)
   public boolean OfficialRunNumbers            =  false;  // Query the database for a run number corresponding to the SID 
   public boolean RunInfoPublish                =  false;  // Switch to publish RunInfo or not
@@ -273,7 +267,7 @@ public class HCALEventHandler extends UserEventHandler {
 
   // configuring all created HCAL applications by means of sending the HCAL CfgScript to the HCAL supervisor
   protected void sendRunTypeConfiguration( String CfgScript, String TTCciControlSequence, String LTCControlSequence,
-                                           String TCDSControlSequence, String LPMControlSequence, String PIControlSequence, 
+                                           String ICIControlSequence, String LPMControlSequence, String PIControlSequence, 
                                            String FedEnableMask, boolean UsePrimaryTCDS
                                          ) {
     if (!functionManager.containerTTCciControl.isEmpty()) {
@@ -389,12 +383,12 @@ public class HCALEventHandler extends UserEventHandler {
               pam.setValue("ConfigurationDoc",CfgScript);
               pam.setValue("Partition",functionManager.FMpartition);
               pam.setValue("RunSessionNumber",Sid.toString());
-              pam.setValue("hardwareConfigurationStringTCDS", TCDSControlSequence);
+              pam.setValue("hardwareConfigurationStringTCDS", ICIControlSequence);
               pam.setValue("hardwareConfigurationStringLPM", LPMControlSequence);
               pam.setValue("hardwareConfigurationStringPI", PIControlSequence);
               pam.setValue("fedEnableMask", FedEnableMask);
               pam.setValue("usePrimaryTCDS", new Boolean(UsePrimaryTCDS).toString());
-              logger.debug("[HCAL " + functionManager.FMname + "] sending TCDSControl sequence:\n" + TCDSControlSequence);
+              logger.debug("[HCAL " + functionManager.FMname + "] sending ICIControl sequence:\n" + ICIControlSequence);
               logger.debug("[HCAL " + functionManager.FMname + "] sending LPMControl sequence:\n" + LPMControlSequence);
               logger.debug("[HCAL " + functionManager.FMname + "] sending PIControl sequence:\n" + PIControlSequence);
               logger.debug("[HCAL " + functionManager.FMname + "] sending FedEnableMask sequence:\n" + FedEnableMask);
@@ -1047,7 +1041,7 @@ public class HCALEventHandler extends UserEventHandler {
   // make entry into the CMS run info database
   protected void publishRunInfoSummary() {
     functionManager = this.functionManager;
-    String globalParams[] = new String[] {"HCAL_LPMCONTROL", "HCAL_TCDSCONTROL", "HCAL_PICONTROL", "HCAL_TTCCICONTROL", "SUPERVISOR_ERROR", "HCAL_COMMENT", "HCAL_CFGSCRIPT", "RUN_KEY",  "HCAL_TIME_OF_FM_START"};
+    String globalParams[] = new String[] {"HCAL_LPMCONTROL", "HCAL_ICICONTROL_SINGLE","HCAL_ICICONTROL_MULTI", "HCAL_PICONTROL_SINGLE","HCAL_PICONTROL_MULTI", "HCAL_TTCCICONTROL", "SUPERVISOR_ERROR", "HCAL_COMMENT", "HCAL_CFGSCRIPT", "RUN_KEY",  "HCAL_TIME_OF_FM_START"};
     Hashtable<String, String> localParams = new Hashtable<String, String>();
 
     maskedAppsForRunInfo = ((VectorT<StringT>)functionManager.getParameterSet().get("MASKED_RESOURCES").getValue()).toString();

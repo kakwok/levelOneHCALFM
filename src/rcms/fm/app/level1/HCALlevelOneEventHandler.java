@@ -791,30 +791,40 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       }
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final CfgScript is like this: \n" + FullCfgScript);
 
-      //Get the results from parseMasterSnippet
-      FullTCDSControlSequence  = ((StringT)functionManager.getHCALparameterSet().get("HCAL_TCDSCONTROL" ).getValue()).getString();
-      FullLPMControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LPMCONTROL"  ).getValue()).getString();
-      FullPIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL"   ).getValue()).getString();
-      FullTTCciControlSequence = ((StringT)functionManager.getHCALparameterSet().get("HCAL_TTCCICONTROL").getValue()).getString();
-      FullLTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LTCCONTROL"  ).getValue()).getString();
+      //Get the results from parseMasterSnippet      
+      String TTCciControlSequence = ((StringT)functionManager.getHCALparameterSet().get("HCAL_TTCCICONTROL").getValue()).getString();
+      String LTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LTCCONTROL"  ).getValue()).getString();
       FedEnableMask            = ((StringT)functionManager.getHCALparameterSet().get("FED_ENABLE_MASK" ).getValue()).getString();
       // Get the value of runinfopublish from the results of parseMasterSnippet
       RunInfoPublish           = ((BooleanT)functionManager.getHCALparameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
       OfficialRunNumbers       = ((BooleanT)functionManager.getHCALparameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
       TriggersToTake           = ((IntegerT)functionManager.getHCALparameterSet().get("NUMBER_OF_EVENTS").getValue()).getInteger();
-
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final TCDSControlSequence is like this: \n"  +FullTCDSControlSequence             );
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final LPMControlSequence  is like this: \n"  +FullLPMControlSequence              );
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final PIControlSequence   is like this: \n"  +FullPIControlSequence               );
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final TTCciControlSequence is like this: \n" +FullTTCciControlSequence            );
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final LTCControlSequence is like this: \n"   +FullLTCControlSequence              );
+      //Switch single/Multi partition
+      boolean isSinglePartition   = ((BooleanT)functionManager.getHCALparameterSet().get("SINGLEPARTITION_MODE").getValue()).getBoolean();
+      String LPMControlSequence="not set";
+      String ICIControlSequence="not set";
+      String PIControlSequence ="not set";
+      if(isSinglePartition){
+        ICIControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_ICICONTROL_SINGLE" ).getValue()).getString();
+        PIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL_SINGLE"   ).getValue()).getString();
+      }
+      else{
+        LPMControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LPMCONTROL"  ).getValue()).getString();
+        ICIControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_ICICONTROL_MULTI" ).getValue()).getString();
+        PIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL_MULTI"   ).getValue()).getString();
+      }
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] ConfigureAction: We are in  Single Partition mode: " + isSinglePartition);
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final ICIControlSequence is like this: \n"   +ICIControlSequence              );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final LPMControlSequence  is like this: \n"  +LPMControlSequence              );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final PIControlSequence   is like this: \n"  +PIControlSequence               );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final TTCciControlSequence is like this: \n" +TTCciControlSequence            );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final LTCControlSequence is like this: \n"   +LTCControlSequence              );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final AlarmerURL is "                        +functionManager.alarmerURL          );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final AlarmerPartition is "                  +functionManager.alarmerPartition    );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The FED_ENABLE_MASK used by the level-1 is: "    +FedEnableMask                       );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The RunInfoPublish value is : "                  +RunInfoPublish                      );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The OfficialRunNumbers value is : "              +OfficialRunNumbers                  );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The NumberOfEvents is : "                        +TriggersToTake                      );
-
 
       // start the alarmer watch thread here, now that we have the alarmerURL
       if (alarmerthread!=null){
@@ -901,13 +911,22 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       pSet.put(new CommandParameter<StringT>("FED_ENABLE_MASK"        , new StringT(FedEnableMask)));
       pSet.put(new CommandParameter<StringT>("HCAL_CFGCVSBASEPATH"    , new StringT(CfgCVSBasePath)));
       pSet.put(new CommandParameter<StringT>("HCAL_CFGSCRIPT"         , new StringT(FullCfgScript)));
-      pSet.put(new CommandParameter<StringT>("HCAL_TTCCICONTROL"      , new StringT(FullTTCciControlSequence)));
-      pSet.put(new CommandParameter<StringT>("HCAL_LTCCONTROL"        , new StringT(FullLTCControlSequence)));
-      pSet.put(new CommandParameter<StringT>("HCAL_TCDSCONTROL"       , new StringT(FullTCDSControlSequence)));
-      pSet.put(new CommandParameter<StringT>("HCAL_LPMCONTROL"        , new StringT(FullLPMControlSequence)));
+      pSet.put(new CommandParameter<StringT>("HCAL_TTCCICONTROL"      , new StringT(TTCciControlSequence)));
+      pSet.put(new CommandParameter<StringT>("HCAL_LTCCONTROL"        , new StringT(LTCControlSequence)));
+      pSet.put(new CommandParameter<BooleanT>("SINGLEPARTITION_MODE"  , new BooleanT(isSinglePartition)));
+      // Only send the one to be used by LV2,so that run info will be consistent
+      if(isSinglePartition){
+        pSet.put(new CommandParameter<StringT>("HCAL_ICICONTROL_SINGLE"       , new StringT(ICIControlSequence)));
+        pSet.put(new CommandParameter<StringT>("HCAL_PICONTROL_SINGLE"        , new StringT(PIControlSequence)));
+      }
+      else{
+        pSet.put(new CommandParameter<StringT>("HCAL_ICICONTROL_MULTI"       , new StringT(ICIControlSequence)));
+        pSet.put(new CommandParameter<StringT>("HCAL_PICONTROL_MULTI"        , new StringT(PIControlSequence)));
+        pSet.put(new CommandParameter<StringT>("HCAL_LPMCONTROL"             , new StringT(LPMControlSequence)));
+      }
       pSet.put(new CommandParameter<BooleanT>("CLOCK_CHANGED"         , new BooleanT(ClockChanged)));
       pSet.put(new CommandParameter<BooleanT>("USE_RESET_FOR_RECOVER" , new BooleanT(UseResetForRecover)));
-      pSet.put(new CommandParameter<StringT>("HCAL_PICONTROL"         , new StringT(FullPIControlSequence)));
+      pSet.put(new CommandParameter<StringT>("HCAL_PICONTROL"         , new StringT(PIControlSequence)));
       pSet.put(new CommandParameter<BooleanT>("USE_PRIMARY_TCDS"      , new BooleanT(UsePrimaryTCDS)));
       pSet.put(new CommandParameter<StringT>("SUPERVISOR_ERROR"       , new StringT(SupervisorError)));
       pSet.put(new CommandParameter<BooleanT>("HCAL_RUNINFOPUBLISH"   , new BooleanT(RunInfoPublish)));
@@ -929,19 +948,26 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         TaskSequence configureTaskSeq = new TaskSequence(HCALStates.CONFIGURING,HCALInputs.SETCONFIGURE);
 
         // now configure the rest in parallel
-        List<QualifiedResource> EvmAndLPMfmList = functionManager.containerFMChildrenEvmTrig.getQualifiedResourceList();
-        EvmAndLPMfmList.addAll(qualifiedGroup.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
+        List<QualifiedResource> EvmAndLPMfmList = new ArrayList<QualifiedResource>();
+        EvmAndLPMfmList.addAll(functionManager.containerFMEvmTrig.getActiveQRList());
+        EvmAndLPMfmList.addAll(functionManager.containerFMTCDSLPM.getActiveQRList());
         QualifiedResourceContainer containerEvmAndLPM = new QualifiedResourceContainer(EvmAndLPMfmList);
-        //SimpleTask fmChildrenTask = new SimpleTask(normalFMsToConfigureContainer,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring regular priority FM children");
-        SimpleTask fmChildrenTask   = new SimpleTask(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring regular priority FM children");
-        SimpleTask EvmTrigConfigureTask = new SimpleTask(containerEvmAndLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring EvmTrig FM");
         
-        logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring these regular LV2 FMs: ");
-        PrintQRnames(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM);
-        configureTaskSeq.addLast(fmChildrenTask);
-        logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring the EvmTrig and TCDS LPM FM together: ");
-        PrintQRnames(containerEvmAndLPM);
-        configureTaskSeq.addLast(EvmTrigConfigureTask);
+        // 1) Normal FMs
+        if (!functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM.isEmpty()){
+          SimpleTask fmChildrenTask   = new SimpleTask(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring regular priority FM children");
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring these regular LV2 FMs: ");
+          PrintQRnames(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM);
+          configureTaskSeq.addLast(fmChildrenTask);
+        }
+        // 2) Need to configure LPM and EvmTrig FM in parallel 
+        // NOTE: Emptyness check is important to support global run
+        if (!containerEvmAndLPM.isEmpty()){
+          SimpleTask EvmTrigConfigureTask = new SimpleTask(containerEvmAndLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring EvmTrig FM");  
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring the EvmTrig and TCDS LPM FM together: ");
+          PrintQRnames(containerEvmAndLPM);
+          configureTaskSeq.addLast(EvmTrigConfigureTask);
+        }
         logger.info("[HCAL LVL1 " + functionManager.FMname +"] Destroying XDAQ for these LV2 FMs: "+emptyFMnames);
 
         logger.info("[HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
@@ -1610,7 +1636,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("testingTTSAction executed ...")));
-
       logger.debug("[HCAL LVL1 " + functionManager.FMname + "] testingTTSAction executed ...");
     }
   }
@@ -1673,4 +1698,5 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.debug("[JohnLog " + functionManager.FMname + "] exitAction executed ...");
     }
   }
+
 }
