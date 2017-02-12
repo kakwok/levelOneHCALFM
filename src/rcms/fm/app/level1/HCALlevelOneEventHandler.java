@@ -1085,25 +1085,40 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       if (!functionManager.containerFMChildren.isEmpty()) {
         //Schedule Task with active QR in the containers
-        List<QualifiedResource> fmChildrenList       = functionManager.containerFMChildren.getActiveQRList();
-        List<QualifiedResource> EvmTrigFMtoStartList = functionManager.containerFMChildrenEvmTrig.getActiveQRList();
+        List<QualifiedResource> fmChildrenList          = functionManager.containerFMChildren.getActiveQRList();
+        List<QualifiedResource> EvmTrigFMtoStartList    = functionManager.containerFMChildrenEvmTrig.getActiveQRList();
+        List<QualifiedResource> lpmOrTTCciFMtoStartList = functionManager.containerFMTCDSLPM.getActiveQRList();
 
-        //Find TTCci FM by looking for FMs with TCDSLPM role and name contains "TTCci"
-        List<FunctionManager> TTCciFMtoStartList  = new ArrayList<FunctionManager>();
-        for(QualifiedResource qr : functionManager.containerFMTCDSLPM.getActiveQRList()){
-          if (qr.getName().contains("TTCci"))
-            TTCciFMtoStartList.add((FunctionManager)qr);
-        }
         List<FunctionManager> normalFMsToStartList = new ArrayList<FunctionManager>();
         for(QualifiedResource qr : fmChildrenList){
           normalFMsToStartList.add((FunctionManager)qr);
         }
         normalFMsToStartList.removeAll(EvmTrigFMtoStartList);
-        normalFMsToStartList.removeAll(TTCciFMtoStartList);
+        normalFMsToStartList.removeAll(lpmOrTTCciFMtoStartList);
+        
+        if(lpmOrTTCciFMtoStartList.isEmpty()) {
+            // we have no LPM (or TTCci)
+            // this should be the case for 1) single-partition runs (in which case we have a TA, i.e., an EvmTrig FM)
+            //                             2) global (in which case there is no EvmTrig FM and all children are just started first)
+            if(!EvmTrigFMtoStartList.isEmpty()) { // 1) single partition
+              // a) local daq fm - this means the normal FM needs to be started last, as it has the iCI
+              //                 - in this case, we have both a normal FM and an EvmTrig FM
+              if(!normalFMsToStartList.isEmpty())   {
+                if(normalFMsToStartList.size()>1) {
+                  String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! This is unexpected. There is more than one child FM besides the EvmTrig FM. Can't figure out which to start last.";
+                  functionManager.goToError(errMessage);
+                }
+                lpmOrTTCciFMtoStartList.addAll(normalFMsToStartList);
+                normalFMsToStartList.clear();
+              }
+              // b) no local daq fm - the EvmTrig FM should be started last, as it has the ICI
+              //                 - in this case, we don't need to do anything, as there will be no normal FM
+            }
+        }
 
-        QualifiedResourceContainer normalFMsToStartContainer = new QualifiedResourceContainer(normalFMsToStartList);
-        QualifiedResourceContainer EvmTrigFMtoStartContainer = new QualifiedResourceContainer(EvmTrigFMtoStartList);
-        QualifiedResourceContainer TTCciFMtoStartContainer = new QualifiedResourceContainer(TTCciFMtoStartList);
+        QualifiedResourceContainer normalFMsToStartContainer    = new QualifiedResourceContainer(normalFMsToStartList);
+        QualifiedResourceContainer EvmTrigFMtoStartContainer    = new QualifiedResourceContainer(EvmTrigFMtoStartList);
+        QualifiedResourceContainer lpmOrTTCciFMtoStartContainer = new QualifiedResourceContainer(lpmOrTTCciFMtoStartList);
         
         // no reason not to always prioritize FM starts
         // include scheduling
@@ -1124,16 +1139,16 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           PrintQRnames(EvmTrigFMtoStartContainer);
           startTaskSeq.addLast(evmTrigTask);
         }
-        // 3) TTCci should start last to let watchthread working
-        if(!TTCciFMtoStartContainer.isEmpty()) {
-          SimpleTask TTCciTask = new SimpleTask(TTCciFMtoStartContainer,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting TTCci child FMs");
-          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding TTCci FMs to startTask: ");
-          PrintQRnames(TTCciFMtoStartContainer);
-          startTaskSeq.addLast(TTCciTask);
+        // 3) LPM last; TTCci should start last to let watchthread working
+        if(!lpmOrTTCciFMtoStartContainer.isEmpty()) {
+          SimpleTask lpmOrTTCciTask = new SimpleTask(lpmOrTTCciFMtoStartContainer,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting LPM or TTCci child FMs");
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding LPM or TTCci FMs to startTask: ");
+          PrintQRnames(lpmOrTTCciFMtoStartContainer);
+          startTaskSeq.addLast(lpmOrTTCciTask);
         }
 
-      logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
-      functionManager.theStateNotificationHandler.executeTaskSequence(startTaskSeq);
+        logger.info("[HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
+        functionManager.theStateNotificationHandler.executeTaskSequence(startTaskSeq);
       }
 
 
