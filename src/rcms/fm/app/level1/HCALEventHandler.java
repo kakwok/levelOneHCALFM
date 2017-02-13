@@ -725,6 +725,8 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager.containerTCDSControllers = new XdaqApplicationContainer(tcdsList);
     functionManager.containerlpmController   = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::lpm::LPMController"));
     functionManager.containerICIController   = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
+    if(!functionManager.containerICIController.isEmpty())
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("HAS_ICICONTROLLER",new BooleanT(true)));
     functionManager.containerPIController    = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
     
     functionManager.containerhcalDCCManager = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalDCCManager"));
@@ -821,23 +823,29 @@ public class HCALEventHandler extends UserEventHandler {
                 pam.send();
                 logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the RUinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
               }
-              if (pamName.equals("BUInstance")) {
+              else if (pamName.equals("BUInstance")) {
                 pam.select(new String[] {"BUInstance"});
                 pam.setValue("BUInstance", ruInstance.split("_")[1]);
                 pam.send();
                 logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the BUInstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
               }
-              if (pamName.equals("EVMinstance")) {
+              else if (pamName.equals("EVMinstance")) {
                 pam.select(new String[] {"EVMinstance"});
                 pam.setValue("EVMinstance", ruInstance.split("_")[1]);
                 pam.send();
                 logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
               }
-              if (pamName.equals("HandleTCDS")) {
+              else if (pamName.equals("HandleTCDS")) {
                 pam.select(new String[] {"HandleTCDS"});
                 pam.setValue("HandleTCDS","false");
                 pam.send();
                 logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the HandleTCDS for " + qr.getName() + " to false");
+              }
+              else if (pamName.equals("EnableDisableTTCOrTCDS")) {
+                pam.select(new String[] {"EnableDisableTTCOrTCDS"});
+                pam.setValue("EnableDisableTTCOrTCDS","false");
+                pam.send();
+                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the EnableDisableTTCOrTCDS for " + qr.getName() + " to false");
               }
             }
           }

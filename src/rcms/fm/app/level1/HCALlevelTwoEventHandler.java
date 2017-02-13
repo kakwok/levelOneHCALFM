@@ -1040,12 +1040,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
         addTCDSenableSeq(PIpSet,ICIpSet,LPMpSet,LV2startTaskSeq); // add the tcds start tasks to the start sequence
       }
-      //XXX SIC: schedule LPM FM last in level1. this is all that's needed for multi-partition (runs with LPM).
-      //XXX SIC: need FM containing ici to be started last for single partition. this won't be the EVMTA FM in localDAQ land.
-      //         with the scheduling done, the FMs just stop/start whichever TCDS apps they contain.
-      //         need to handle global correctly in LVL1. there will be no TA.
-      //XXX SIC: remove TA starting/stopping TCDS --> DONE in hcalTrig
-
 
       functionManager.theStateNotificationHandler.executeTaskSequence(LV2startTaskSeq);
 

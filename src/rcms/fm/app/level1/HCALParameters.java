@@ -95,6 +95,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.put( new FunctionManagerParameter<BooleanT> ("USE_RESET_FOR_RECOVER"            ,  new BooleanT(true)        ) );  // Switch for changing behavior of recover button
 		this.put( new FunctionManagerParameter<BooleanT> ("EXIT"                             ,  new BooleanT(false)       ) );  // Switch for changing behavior of recover button
 		this.put( new FunctionManagerParameter<BooleanT> ("TCDS_SKIP_PLLRESET"               ,  new BooleanT(true)        ) );  // Switch for PI configuration parameter: skipPLLReset
+		this.put( new FunctionManagerParameter<BooleanT> ("HAS_ICICONTROLLER"                ,  new BooleanT(false)       ) );  // Does this FM have an iciController?
 
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("AVAILABLE_RESOURCES"      ,  new VectorT<StringT>()    ) );  // Full list of qualified resources
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("MASKED_RESOURCES"         ,  new VectorT<StringT>()    ) );  // List of masked resources
