@@ -184,7 +184,7 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
     var masterSnippetArgs = "'" + masterSnippetNumber + "', 'RUN_CONFIG_SELECTED'";
     var maskedResourcesNumber = $('#MASKED_RESOURCES').attr("name").substring(20);
     var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'MASKED_RESOURCES'";
-    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection(); preclickFMs(); fillMask();";
+    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection(); preclickFMs(); fillMask(); automateSinglePartition();";
     $('#dropdown').attr("onchange", onchanges);
 }
 
@@ -316,6 +316,21 @@ function setupMaskingPanels() {
     });
 }
 
+function automateSinglePartition() {
+  // here is where you would get the single partition form the runkey
+  // for now hardcode something
+  var defaultPartition = "HCALFM_904Int_uTCA_crate52";
+  if (defaultPartition != "not set") { // or whatever its default value in the runkey is
+    if ($.inArray(defaultPartition, getAvailableResources()) > -1) {
+      $('#singlePartition').click();   
+      var selector = '#singlePartitionSelection :input[value="' + defaultPartition + '"]'
+      $(selector).click();
+    }
+    else {
+      alert("Error! It does not seem that the default partition specified by the run key is valid! The requested default partition is: " + defaultPartition);
+    }
+  }
+}
 
 function hcalOnLoad() {
   if ($('input[value="STATE"]').size() > 0) { // this is a sanity check to see if we're actually attached
