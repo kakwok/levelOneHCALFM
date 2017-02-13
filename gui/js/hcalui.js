@@ -231,6 +231,7 @@ function makecheckboxes() {
 function picksinglepartition(option) {
     $('#multiPartitionSelection :input').not("[value='"+option+"']").prop('checked', true);
     $("#multiPartitionSelection :input[value='"+option+"']").prop('checked', false);
+    $('#setGlobalParametersButton').show();
     fillMask();
 }
 
@@ -308,6 +309,7 @@ function setupMaskingPanels() {
            $('#newSINGLEPARTITION_MODEcheckbox :checkbox').click();
          }
          $('#SINGLEPARTITION_MODE').val("true");
+         $('#setGlobalParametersButton').hide();
        }
        //$(panelId).parent().find("input").prop('checked', false); // maybe this does something?
        fillMask();
