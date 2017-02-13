@@ -68,7 +68,6 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
 
 </head>
 
-<body onload='hcalOnLoad(); makecheckboxes();'>
 
 
 <!-- Table T1 begin -->
@@ -441,6 +440,9 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
     // a call to onLoad is needed since it starts the notification system
     $(document).ready(function() {
       onLoad();
+      hcalOnLoad(); 
+      makecheckboxes();
+      updatePage();
     });
   </script>
 </body>
