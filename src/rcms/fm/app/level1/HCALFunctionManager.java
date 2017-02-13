@@ -436,10 +436,13 @@ public class HCALFunctionManager extends UserFunctionManager {
         if (!containerTCDSControllers.isEmpty()){
           try{
             logger.info("[HCAL LVL2 " + FMname + "] Trying to halt TCDS on destroy.");
-            containerTCDSControllers.execute(HCALInputs.HALT);
+            int sessionId       = ((IntegerT)getParameterSet().get("SID").getValue()).getInteger();
+            for(XdaqApplication tcdsApp: containerTCDSControllers.getApplications()){
+              tcdsApp.execute(HCALInputs.HALT,Integer.toString(sessionId),rcmsStateListenerURL);
+            }
           }
-          catch (QualifiedResourceContainerException e) {
-            String errMessage = "[HCAL LVL2 " + FMname + "] Error! QualifiedResourceContainerException: Halt TCDS failed ..."+e.getMessage();
+          catch (Exception e) {
+            String errMessage = "[HCAL LVL2 " + FMname + "] Error! Exception: Halt TCDS failed during destroy..."+e.getMessage();
             logger.error(errMessage);
           }
         }
