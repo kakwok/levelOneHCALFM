@@ -64,8 +64,10 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_TTCCICONTROL"                ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration script for TTCci
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_LTCCONTROL"                  ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration script for LTC (obsolete)
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_LPMCONTROL"                  ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration script for LPM
-		this.put( new FunctionManagerParameter<StringT>  ("HCAL_TCDSCONTROL"                 ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration script for iCI
-		this.put( new FunctionManagerParameter<StringT>  ("HCAL_PICONTROL"                   ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration script for PI
+		this.put( new FunctionManagerParameter<StringT>  ("HCAL_ICICONTROL_SINGLE"           ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration script for iCI in single Partition mode
+		this.put( new FunctionManagerParameter<StringT>  ("HCAL_ICICONTROL_MULTI"            ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration script for iCI in multi-partition mode
+		this.put( new FunctionManagerParameter<StringT>  ("HCAL_PICONTROL_SINGLE"            ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration script for PI in single Partition mode
+		this.put( new FunctionManagerParameter<StringT>  ("HCAL_PICONTROL_MULTI"             ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration script for PI in multi-partition mode
 		this.put( new FunctionManagerParameter<StringT>  ("HCAL_TIME_OF_FM_START"            ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Date and time of when FM was initialized
 		this.put( new FunctionManagerParameter<IntegerT>  ("INITIALIZED_WITH_SID"            ,  new IntegerT(-1)       ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration information for l0:  SID on initialize
 		this.put( new FunctionManagerParameter<StringT>  ("INITIALIZED_WITH_GLOBAL_CONF_KEY" ,  new StringT("not set") ,  FunctionManagerParameter.Exported.READONLY) );  // Configuration information for l0: Current global configuration key
@@ -94,7 +96,8 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 
 		this.put( new FunctionManagerParameter<BooleanT> ("CLOCK_CHANGED"                    ,  new BooleanT(false)       ) );  // Information from level0 on whether the clock source has changed
 		this.put( new FunctionManagerParameter<BooleanT> ("USE_RESET_FOR_RECOVER"            ,  new BooleanT(true)        ) );  // Switch for changing behavior of recover button
-		this.put( new FunctionManagerParameter<BooleanT> ("EXIT"                             ,  new BooleanT(false)       ) );  // Switch for changing behavior of recover button
+		this.put( new FunctionManagerParameter<BooleanT> ("EXIT"                             ,  new BooleanT(false)       ) );  // Switch for triggering a halt+destroy
+		this.put( new FunctionManagerParameter<BooleanT> ("SINGLEPARTITION_MODE"             ,  new BooleanT(false)       ) );  // Switch for toggling singlepartition mode based on user selection
 
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("AVAILABLE_RESOURCES"      ,  new VectorT<StringT>()    ) );  // Full list of qualified resources
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("MASKED_RESOURCES"         ,  new VectorT<StringT>()    ) );  // List of masked resources

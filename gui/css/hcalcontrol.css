@@ -322,3 +322,10 @@ body {
   padding-top: 8px;
   padding-bottom: 3px;
 }
+.maskModes {
+  display: inline;
+  padding-left: 15px;
+  padding-right: 15px;
+  border-style: solid;
+  border-radius: 5px;
+}
