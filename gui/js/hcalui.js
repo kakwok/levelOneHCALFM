@@ -51,12 +51,12 @@ $(document).ready(function () {
     var cachedSupErr = $('#SUPERVISOR_ERROR').val();
     if ($('#currentState').text() == "Configured") {
       $('#Destroy').hide();
-      if ($('#commandSection :input[value="Halt+Destroy"]').size() == 0) {
+      if ($('input[value="Halt+Destroy"]').size() == 0) {
         $('#commandSection :input[value="Exit"]').val("Halt+Destroy");
         $('#commandSection :input[value="Halt+Destroy"]').insertAfter($('#Destroy'));
       }
       else {
-        $('#commandSection :input[value="Exit"]').remove();
+        $('input[value="Halt+Destroy"]').remove();
       }
     }
     var cachedState = $('#currentState').text();
@@ -77,8 +77,13 @@ $(document).ready(function () {
         }
         if (currentState == "Configured") {
           $('#Destroy').hide();
-          $('#commandSection :input[value="Exit"]').val("Halt+Destroy");
-          $('#commandSection :input[value="Halt+Destroy"]').insertAfter($('#Destroy'));
+          if ($('input[value="Halt+Destroy"]').size() == 0) {
+            $('#commandSection :input[value="Exit"]').val("Halt+Destroy");
+            $('#commandSection :input[value="Halt+Destroy"]').insertAfter($('#Destroy'));
+          }
+        }
+        else {
+          $('input[value="Halt+Destroy"]').remove();
         }
         if (currentState == "Error") {
           $('#Destroy').show();
@@ -97,7 +102,7 @@ $(document).ready(function () {
       cachedNevents = $('#NUMBER_OF_EVENTS').val();
       cachedSupErr = $('#SUPERVISOR_ERROR').val();
       cachedState = currentState;
-	    if ($('#EXIT').val() == "true" && currentState=="Halted") { onDestroyButton(); }
+	    if ($('#EXIT').val() == "true" && currentState=="Halted") { $('#Destroy').click(); }
       //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
     }, 750);
 
