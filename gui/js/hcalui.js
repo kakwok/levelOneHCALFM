@@ -208,6 +208,7 @@ function getAvailableResources() {
     param =  param.replace(/['"]+/g, '');
     var array = param.split(',');
     return array;
+}
 
 function makecheckboxes() {
     array = getAvailableResources();
