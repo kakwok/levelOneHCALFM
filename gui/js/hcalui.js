@@ -319,11 +319,11 @@ function setupMaskingPanels() {
 function automateSinglePartition() {
   // here is where you would get the single partition form the runkey
   // for now hardcode something
-  var defaultPartition = "HCALFM_904Int_uTCA_crate52";
+  var defaultPartition = "thisIsAfakePartition";
   if (defaultPartition != "not set") { // or whatever its default value in the runkey is
     if ($.inArray(defaultPartition, getAvailableResources()) > -1) {
       $('#singlePartition').click();   
-      var selector = '#singlePartitionSelection :input[value="' + defaultPartition + '"]'
+      var selector = '#singlePartitionSelection :input[value="' + defaultPartition + '"]';
       $(selector).click();
     }
     else {
