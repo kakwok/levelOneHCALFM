@@ -199,17 +199,18 @@ function makecheckboxes() {
     var param = $('#AVAILABLE_RESOURCES').html().replace("[", "").replace("]","");
     param =  param.replace(/['"]+/g, '');
     var array = param.split(',');
-    var maskDivContents = "<ul>";
-    var radioButtonDivContents = "<form action=''>";
+    var maskDivContents = "<strong>Partitions to mask:</strong>";
+    maskDivContents += "<ul>";
+    var radioButtonDivContents = "<strong>Partition to use:</strong><ul><form action=''>";
     for (var i = 0, l = array.length; i < l; i++) {
         var option = array[i].split(':');
         var checkbox = "<li><input type='checkbox' onchange='fillMask();' value='" + option + "'>" + option + "</li>";
-        var radiobutton = "<input type='radio' name='singlePart' onchange='" + 'picksinglepartition("' + option +'");' + "' value='" + option + "'>" + option;
+        var radiobutton = "<li><input type='radio' name='singlePart' onchange='" + 'picksinglepartition("' + option +'");' + "' value='" + option + "'>" + option+"</li>";
         maskDivContents += checkbox;
         radioButtonDivContents += radiobutton;
     }
     maskDivContents += "</ul>";
-    radioButtonDivContents +="</form>";
+    radioButtonDivContents +="</form></ul>";
     $('#multiPartitionSelection').html(maskDivContents);
     $('#singlePartitionSelection').html(radioButtonDivContents);
 }
