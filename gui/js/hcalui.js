@@ -42,7 +42,7 @@ function showsupervisorerror() {
 }
 
 // The scripts below use jQuery.
-$(document).ready(function () {
+function updatePage() {
     var initcolor = $('#currentState').text();
     $('#currentState').attr("class", "hcal_control_" + initcolor);
     if ($('#currentState').text() == "Configured") {$('#Destroy').hide();}
@@ -110,7 +110,7 @@ $(document).ready(function () {
     $('#dropdowndiv').on('change', 'select', function () {
         $('#masked_resourses_td').show();
     });
-});
+}
 
 function setProgress(parName, progress) {
     var numberOfEvents = $("#NUMBER_OF_EVENTS").val();
@@ -118,15 +118,18 @@ function setProgress(parName, progress) {
     var progressPercent = 0;
     if (parName == "HCAL_EVENTSTAKEN") {
       progressPercent = 100 * progress / numberOfEvents;
+      $(".progressbar").css('color', "white");
     }
     else if ( parName == "PROGRESS") {
       progressPercent = 100 * progress;
+      $(".progressbar").css('color', "black");
     }
     var progressBarWidth = progressPercent * (width / 100);
     //$(".progressbar").width(progressBarWidth);
     progressPercent = progressPercent.toFixed(2);
     //console.log("progressPercent is: " + progressPercent);
     $(".progressbar").width(progressBarWidth).html(progressPercent + "% &nbsp; &nbsp;");
+    $(".progressbar").css('background-color', $("#currentState").css("color"));
 }
 
 function mirrorSelection() {
@@ -204,17 +207,18 @@ function makecheckboxes() {
     var param = $('#AVAILABLE_RESOURCES').html().replace("[", "").replace("]","");
     param =  param.replace(/['"]+/g, '');
     var array = param.split(',');
-    var maskDivContents = "<ul>";
-    var radioButtonDivContents = "<form action=''>";
+    var maskDivContents = "<strong>Partitions to mask:</strong>";
+    maskDivContents += "<ul>";
+    var radioButtonDivContents = "<strong>Partition to use:</strong><ul><form action=''>";
     for (var i = 0, l = array.length; i < l; i++) {
         var option = array[i].split(':');
         var checkbox = "<li><input type='checkbox' onchange='fillMask();' value='" + option + "'>" + option + "</li>";
-        var radiobutton = "<input type='radio' name='singlePart' onchange='" + 'picksinglepartition("' + option +'");' + "' value='" + option + "'>" + option;
+        var radiobutton = "<li><input type='radio' name='singlePart' onchange='" + 'picksinglepartition("' + option +'");' + "' value='" + option + "'>" + option+"</li>";
         maskDivContents += checkbox;
         radioButtonDivContents += radiobutton;
     }
     maskDivContents += "</ul>";
-    radioButtonDivContents +="</form>";
+    radioButtonDivContents +="</form></ul>";
     $('#multiPartitionSelection').html(maskDivContents);
     $('#singlePartitionSelection').html(radioButtonDivContents);
 }
