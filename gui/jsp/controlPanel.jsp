@@ -441,8 +441,6 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
     $(document).ready(function() {
       onLoad();
       hcalOnLoad(); 
-      makecheckboxes();
-      updatePage();
       $("body").show();
     });
   </script>
