@@ -380,7 +380,7 @@ public class HCALFunctionManager extends UserFunctionManager {
     if ( !getQualifiedGroup().seekQualifiedResourcesOfType(new FunctionManager()).isEmpty()) {
       int sessionId       = ((IntegerT)getParameterSet().get("SID").getValue()).getInteger();
       Integer SIDforLV0   = ((IntegerT)getParameterSet().get("INITIALIZED_WITH_SID").getValue()).getInteger();
-      if (logSessionConnector.getSession(sessionId)!=null){
+      if (logSessionConnector!=null && logSessionConnector.getSession(sessionId)!=null){
         LogSession currentSession = logSessionConnector.getSession(sessionId);
         logger.debug("[HCAL "+FMname+"] current log session is \n"+currentSession.toString());
         if (currentSession.isOpen()){
