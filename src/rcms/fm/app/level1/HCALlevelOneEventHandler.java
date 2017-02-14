@@ -393,12 +393,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       LevelOneMonitorThread thread1 = new LevelOneMonitorThread();
       thread1.start();
 
-      // start the TriggerAdapter watchdog thread
-      System.out.println("[HCAL LVL1 " + functionManager.FMname + "] Starting TriggerAdapter watchdog thread ...");
-      logger.debug("[HCAL LVL1 " + functionManager.FMname + "] StartingTriggerAdapter watchdog thread ...");
-      TriggerAdapterWatchThread thread3 = new TriggerAdapterWatchThread();
-      thread3.start();
-
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] initAction: We are in " + RunType + " mode ...");

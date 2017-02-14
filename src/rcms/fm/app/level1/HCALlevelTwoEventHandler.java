@@ -187,13 +187,14 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         thread2.start();
       } 
 
-      // start the TriggerAdapter watchdog thread
-      System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting TriggerAdapter watchdog thread ...");
-      logger.debug("[HCAL LVL2 " + functionManager.FMname + "] StartingTriggerAdapter watchdog thread ...");
-      TriggerAdapterWatchThread thread3 = new TriggerAdapterWatchThread();
-      thread3.start();
+      // start the TriggerAdapter watchdog thread. Note: containerTriggerAdapter is filled after this. Start watchThread with role check.
+      if (functionManager.FMrole.equals("EvmTrig")){
+        System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting TriggerAdapter watchdog thread ...");
+        logger.debug("[HCAL LVL2 " + functionManager.FMname + "] StartingTriggerAdapter watchdog thread ...");
+        TriggerAdapterWatchThread thread3 = new TriggerAdapterWatchThread();
+        thread3.start();
+      }
       functionManager.parameterSender.start();
-
 
       // check run type passed from Level-1
       if(((StringT)parameterSet.get("HCAL_RUN_TYPE").getValue()).getString().equals("local")) {
@@ -1016,13 +1017,15 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       TaskSequence LV2startTaskSeq  = new TaskSequence(HCALStates.STARTING,HCALInputs.SETSTART);
       // start hcalSupervisor first
       if( !functionManager.containerhcalSupervisor.isEmpty()) {
-        LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerhcalSupervisor, HCALInputs.HCALASYNCSTART, HCALStates.STARTING, HCALStates.ACTIVE, "["+functionManager.FMname+"] Enabling hcalSupervisor"));
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Adding supervisor to LV2 start task");
+        LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerhcalSupervisor, HCALInputs.HCALASYNCSTART, HCALStates.READY, HCALStates.ACTIVE, "["+functionManager.FMname+"] Enabling hcalSupervisor"));
       }
 
       // then trigger adapter
       // TODO: move this to supervisor
       if(!functionManager.containerTriggerAdapter.isEmpty()) {
-        LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerTriggerAdapter, HCALInputs.HCALASYNCSTART, HCALStates.STARTING, HCALStates.ACTIVE, "["+functionManager.FMname+"] Enabling TriggerAdapter"));
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Adding TA to LV2 start task");
+        LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerTriggerAdapter, HCALInputs.HCALASYNCSTART, HCALStates.READY, HCALStates.ACTIVE, "["+functionManager.FMname+"] Enabling TriggerAdapter"));
       }
       
       // Enable TCDS apps
@@ -1038,7 +1041,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         ParameterSet<CommandParameter> LPMpSet = new ParameterSet<CommandParameter>();
         LPMpSet.put( new CommandParameter<UnsignedIntegerT> ("runNumber", new UnsignedIntegerT(functionManager.RunNumber)) );
 
-        addTCDSenableSeq(PIpSet,ICIpSet,LPMpSet,LV2startTaskSeq); // add the tcds start tasks to the start sequence
+        LV2startTaskSeq = appendTCDSenableSeq(PIpSet,ICIpSet,LPMpSet,LV2startTaskSeq); // add the tcds start tasks to the start sequence
       }
 
       functionManager.theStateNotificationHandler.executeTaskSequence(LV2startTaskSeq);
@@ -1049,7 +1052,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       functionManager.RunWasStarted = true; // switch to enable writing to runInfo when run was destroyed
 
-      logger.debug("startAction executed ...");
+      logger.info("startAction executed ...");
     }
   }
 
@@ -2036,7 +2039,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   /**
   * adds the simple tasks to the passed TaskSequence
   */
-  void addTCDSenableSeq(ParameterSet<CommandParameter> PIpSet,ParameterSet<CommandParameter> ICIpSet, ParameterSet<CommandParameter> LPMpSet, TaskSequence enableTaskSeq) {
+  TaskSequence appendTCDSenableSeq(ParameterSet<CommandParameter> PIpSet,ParameterSet<CommandParameter> ICIpSet, ParameterSet<CommandParameter> LPMpSet, TaskSequence enableTaskSeq) {
     Input PIenableInput = new Input(HCALInputs.HCALSTART.toString());
     Input ICIenableInput= new Input(HCALInputs.HCALSTART.toString());
     Input LPMenableInput= new Input(HCALInputs.HCALSTART.toString());
@@ -2058,7 +2061,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Adding LPM to enable task:");
       PrintQRnames(functionManager.containerlpmController);
       enableTaskSeq.addLast(new SimpleTask( functionManager.containerlpmController, LPMenableInput, HCALStates.STARTING, HCALStates.ENABLED, "Enabling LPM in "+functionManager.FMname));
-    } 
+    }
+    return enableTaskSeq;
   }
 
   /**

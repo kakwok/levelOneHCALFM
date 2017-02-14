@@ -417,13 +417,8 @@ public class HCALEventHandler extends UserEventHandler {
 
   // get the TriggerAdapter name from the HCAL supervisor only if no trigger adapter was already set
   protected void getTriggerAdapter() {
-    if (functionManager.containerTriggerAdapter==null) {
+    if (functionManager.containerTriggerAdapter.isEmpty()) {
       if (!functionManager.containerhcalSupervisor.isEmpty()) {
-
-        {
-          String debugMessage = "[HCAL " + functionManager.FMname + "] HCAL supervisor found for asking the TriggerAdapter name- good!";
-          logger.debug(debugMessage);
-        }
 
         XDAQParameter pam = null;
         String TriggerAdapter = "undefined";
@@ -452,19 +447,11 @@ public class HCALEventHandler extends UserEventHandler {
           }
           catch (XDAQTimeoutException e) {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: getTriggerAdapter()\n Perhaps the trigger adapter application is dead!?";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            functionManager.goToError(errMessage,e);
           }
           catch (XDAQException e) {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: getTriggerAdapter()";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            functionManager.goToError(errMessage,e);
           }
         }
 
@@ -472,21 +459,13 @@ public class HCALEventHandler extends UserEventHandler {
 
         if (functionManager.containerTriggerAdapter.isEmpty()) {
           String errMessage = "[HCAL " + functionManager.FMname + "] Error! Not at least one TriggerAdapter with name " +  TriggerAdapter + " found. This is not good ...";
-          logger.error(errMessage);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          functionManager.goToError(errMessage);
         }
 
       }
       else if (!functionManager.FMrole.equals("Level2_TCDSLPM")){
         String errMessage = "[HCAL " + functionManager.FMname + "] Error! No HCAL supervisor found: getTriggerAdapter()";
-        logger.error(errMessage);
-        functionManager.sendCMSError(errMessage);
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+        functionManager.goToError(errMessage);
       }
     }
   }
@@ -713,6 +692,8 @@ public class HCALEventHandler extends UserEventHandler {
     //PrintQRnames(functionManager.containerXdaqApplication);
 
     functionManager.containerhcalSupervisor = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalSupervisor"));
+    // TA container to be filled by getTriggerAdapter
+    functionManager.containerTriggerAdapter = new XdaqApplicationContainer(new ArrayList<XdaqApplication>());
 
     // TCDS apps
     functionManager.containerXdaqServiceApplication = new XdaqApplicationContainer(qg.seekQualifiedResourcesOfType(new XdaqServiceApplication()));
@@ -2275,8 +2256,8 @@ public class HCALEventHandler extends UserEventHandler {
         icount++;
         Date now = Calendar.getInstance().getTime();
 
-        // poll TriggerAdapter status every 5 sec
-        if (icount%5==0) {
+        // poll TriggerAdapter status every 1 sec
+        if (icount%1==0) {
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && ((functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString())) ||
                 (functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))) ) {
             // check the state of the TriggerAdapter
