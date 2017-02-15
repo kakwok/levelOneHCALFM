@@ -1652,7 +1652,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     public void run() {
       stopProgressThread = false;
       progress = 0.0;
-      logger.debug("[JohnLogProgress] " + functionManager.FMname + ": starting ProgressThread.");
       while ( stopProgressThread == false && functionManager.isDestroyed() == false && Math.abs(progress-1.0)>0.001) {
 
         Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
@@ -1669,7 +1668,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
               logger.warn("[HCAL " + functionManager.FMname + "] Could not update parameters for FM client: " + childFM.getResource().getName() + " The exception is:", e);
               return;
             }
-            logger.debug("Got progress from level2 FM" + childFM.getName() + " = " +((DoubleT)lvl2pars.get("PROGRESS").getValue()).getDouble());
             progress += ((DoubleT)lvl2pars.get("PROGRESS").getValue()).getDouble();
           }
         }
@@ -1679,7 +1677,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
         // delay between polls
         try { Thread.sleep(1000); }
-        catch (Exception ignored) { return; }
+        catch (Exception ignored) { 
+	  logger.warn("JohnDebug: Got an exception during progress thread polling. Exception message: " + ignored.getMessage());
+	  return;
+	}
       }
 
       // stop the Monitor watchdog thread
