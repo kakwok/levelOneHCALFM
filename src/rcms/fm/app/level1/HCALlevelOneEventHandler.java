@@ -1650,9 +1650,17 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     }
 
     public void run() {
+      logger.info("JohnDebug: just called ProgressThread::run()");
       stopProgressThread = false;
       progress = 0.0;
       logger.debug("[JohnLogProgress] " + functionManager.FMname + ": starting ProgressThread.");
+      if (stopProgressThread == false) logger.info("JohnDebug: stopProgressThread was false");
+      else logger.info("JohnDebug: stopProgressThread was NOT false");
+      if (functionManager.isDestroyed() == false) logger.info("JohnDebug: functionManager.isDestroyed() was false");
+      else logger.info("functionManager.isDestroyed() was NOT false");
+      logger.info("JohnDebug: progress is" + progress);
+      if (Math.abs(progress-1.0)>0.001) logger.info("JohnDebug: Math.abs(progress-1.0)>0.001 was true!");
+      else logger.info("JohnDebug: Math.abs(progress-1.0)>0.001 not true!");
       while ( stopProgressThread == false && functionManager.isDestroyed() == false && Math.abs(progress-1.0)>0.001) {
 
         Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
@@ -1669,7 +1677,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
               logger.warn("[HCAL " + functionManager.FMname + "] Could not update parameters for FM client: " + childFM.getResource().getName() + " The exception is:", e);
               return;
             }
-            logger.debug("Got progress from level2 FM" + childFM.getName() + " = " +((DoubleT)lvl2pars.get("PROGRESS").getValue()).getDouble());
             progress += ((DoubleT)lvl2pars.get("PROGRESS").getValue()).getDouble();
           }
         }
@@ -1679,7 +1686,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
         // delay between polls
         try { Thread.sleep(1000); }
-        catch (Exception ignored) { return; }
+        catch (Exception ignored) { 
+	  logger.warn("JohnDebug: Got an exception during progress thread polling. Exception message: " + ignored.getMessage());
+	  return;
+	}
       }
 
       // stop the Monitor watchdog thread
