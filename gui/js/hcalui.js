@@ -51,12 +51,12 @@ function updatePage() {
     var cachedSupErr = $('#SUPERVISOR_ERROR').val();
     if ($('#currentState').text() == "Configured") {
       $('#Destroy').hide();
-      if ($('#commandSection :input[value="Halt+Destroy"]').size() == 0) {
+      if ($('input[value="Halt+Destroy"]').size() == 0) {
         $('#commandSection :input[value="Exit"]').val("Halt+Destroy");
         $('#commandSection :input[value="Halt+Destroy"]').insertAfter($('#Destroy'));
       }
       else {
-        $('#commandSection :input[value="Exit"]').remove();
+        $('input[value="Halt+Destroy"]').remove();
       }
     }
     var cachedState = $('#currentState').text();
@@ -77,8 +77,13 @@ function updatePage() {
         }
         if (currentState == "Configured") {
           $('#Destroy').hide();
-          $('#commandSection :input[value="Exit"]').val("Halt+Destroy");
-          $('#commandSection :input[value="Halt+Destroy"]').insertAfter($('#Destroy'));
+          if ($('input[value="Halt+Destroy"]').size() == 0) {
+            $('#commandSection :input[value="Exit"]').val("Halt+Destroy");
+            $('#commandSection :input[value="Halt+Destroy"]').insertAfter($('#Destroy'));
+          }
+        }
+        else {
+          $('input[value="Halt+Destroy"]').remove();
         }
         if (currentState == "Error") {
           $('#Destroy').show();
@@ -97,7 +102,7 @@ function updatePage() {
       cachedNevents = $('#NUMBER_OF_EVENTS').val();
       cachedSupErr = $('#SUPERVISOR_ERROR').val();
       cachedState = currentState;
-	    if ($('#EXIT').val() == "true" && currentState=="Halted") { onDestroyButton(); }
+	    if ($('#EXIT').val() == "true" && currentState=="Halted") { $('#Destroy').click(); }
       //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
     }, 750);
 
@@ -198,10 +203,15 @@ function fillMask() {
     $('#maskTest').html($('#MASKED_RESOURCES').val());
 }
 
-function makecheckboxes() {
+function getAvailableResources() {
     var param = $('#AVAILABLE_RESOURCES').html().replace("[", "").replace("]","");
     param =  param.replace(/['"]+/g, '');
     var array = param.split(',');
+    return array;
+}
+
+function makecheckboxes() {
+    array = getAvailableResources();
     var maskDivContents = "<strong>Partitions to mask:</strong>";
     maskDivContents += "<ul>";
     var radioButtonDivContents = "<strong>Partition to use:</strong><ul><form action=''>";
@@ -278,9 +288,35 @@ function moveversionnumber() {
       $("#elogInfo").text("Run # " + $("#RUN_NUMBER").val()  + " - " + $(".control_label2").first().text() + " - Local run key: "+ $("#CFGSNIPPET_KEY_SELECTED").val()  + " - " + $("#NUMBER_OF_EVENTS").val() + " events, masks: " + maskSummary);
     }
 
+function setupMaskingPanels() {
+    $('.maskModes').css("style", "display: inline");
+    $('.maskModes').click(function () {
+       $(this).siblings().css('color', 'black');
+       $(this).css('color', 'blue');
+       panelId = "#".concat($(this).attr("id")).concat("Selection");
+       $(panelId).siblings().hide();
+       $(panelId).show();
+       if ($(this).attr("id") == "multiPartition") {
+         if (!$('#newSINGLEPARTITION_MODEcheckbox :checkbox').prop('checked')) {
+           $('#newSINGLEPARTITION_MODEcheckbox :checkbox').click();
+         }
+         preclickFMs();
+         $('#SINGLEPARTITION_MODE').val("false");
+       }
+       else if ($(this).attr("id") == "singlePartition") {
+         if (!$('#newSINGLEPARTITION_MODEcheckbox :checkbox').prop('checked')) {
+           $('#newSINGLEPARTITION_MODEcheckbox :checkbox').click();
+         }
+         $('#SINGLEPARTITION_MODE').val("true");
+       }
+       //$(panelId).parent().find("input").prop('checked', false); // maybe this does something?
+       fillMask();
+    });
+}
 
 
 function hcalOnLoad() {
+  if ($('input[value="STATE"]').size() > 0) { // this is a sanity check to see if we're actually attached
     activate_relevant_table('AllParamTables');
     removeduplicatecheckbox('CFGSNIPPET_KEY_SELECTED');
     removeduplicatecheckbox('RUN_CONFIG_SELECTED');
@@ -325,28 +361,8 @@ function hcalOnLoad() {
     moveversionnumber();
     makedropdown($('#AVAILABLE_RUN_CONFIGS').text(), $('#AVAILABLE_LOCALRUNKEYS').text());
     onClickCommandParameterCheckBox();
-
-    $('.maskModes').css("style", "display: inline");
-    $('.maskModes').click(function () {
-       $(this).siblings().css('color', 'black');
-       $(this).css('color', 'blue');
-       panelId = "#".concat($(this).attr("id")).concat("Selection");
-       $(panelId).siblings().hide();
-       $(panelId).show();
-       if ($(this).attr("id") == "multiPartition") {
-         if (!$('#newSINGLEPARTITION_MODEcheckbox :checkbox').prop('checked')) {
-           $('#newSINGLEPARTITION_MODEcheckbox :checkbox').click();
-         }
-         preclickFMs();
-         $('#SINGLEPARTITION_MODE').val("false");
-       }
-       else if ($(this).attr("id") == "singlePartition") {
-         if (!$('#newSINGLEPARTITION_MODEcheckbox :checkbox').prop('checked')) {
-           $('#newSINGLEPARTITION_MODEcheckbox :checkbox').click();
-         }
-         $('#SINGLEPARTITION_MODE').val("true");
-       }
-       //$(panelId).parent().find("input").prop('checked', false); // maybe this does something?
-       fillMask();
-    });
+    setupMaskingPanels();
+    makecheckboxes();
+    updatePage();
+  }
 }
