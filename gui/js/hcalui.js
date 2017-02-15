@@ -303,12 +303,15 @@ function setupMaskingPanels() {
          }
          preclickFMs();
          $('#SINGLEPARTITION_MODE').val("false");
+	 $('#singlePartitionSelection :input').prop('checked', false);
+         $('#setGlobalParametersButton').show();
        }
        else if ($(this).attr("id") == "singlePartition") {
          if (!$('#newSINGLEPARTITION_MODEcheckbox :checkbox').prop('checked')) {
            $('#newSINGLEPARTITION_MODEcheckbox :checkbox').click();
          }
          $('#SINGLEPARTITION_MODE').val("true");
+	 $('#singlePartitionSelection :input').prop('checked', false);
          $('#setGlobalParametersButton').hide();
        }
        //$(panelId).parent().find("input").prop('checked', false); // maybe this does something?
