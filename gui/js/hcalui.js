@@ -102,7 +102,7 @@ function updatePage() {
       cachedNevents = $('#NUMBER_OF_EVENTS').val();
       cachedSupErr = $('#SUPERVISOR_ERROR').val();
       cachedState = currentState;
-	    if ($('#EXIT').val() == "true" && currentState=="Halted") { $('#Destroy').click(); }
+	    if ($('#EXIT').val() == "true" && currentState=="Halted" && $.fingerprint() == $('#DRIVER_IDENTIFIER').val()) { $('#Destroy').click(); }
       //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
     }, 750);
 
@@ -321,7 +321,7 @@ function spectatorMode(onOff) {
     $('input').not("#FMPilotForm > input").attr("disabled", true);
     $('#dropdown').css("pointer-events: none;");
     $('#dropdown').attr("disabled", true);
-    var spectatorAllowed = ["Detach", "UpdatedRefresh", "showTreeButton", "showStatusTableButton", "refreshGlobalParametersButton", "globalParametersCheckbox", "drive"];
+    var spectatorAllowed = ["Detach", "UpdatedRefresh", "showTreeButton", "showStatusTableButton", "refreshGlobalParametersButton", "globalParametersCheckbox", "showFullMasks", "drive"];
     $.each(spectatorAllowed, function(index, id) {
       $('#' + id).css("pointer events: default;");
       $('#' + id).attr("disabled", false);
@@ -336,12 +336,20 @@ function spectatorMode(onOff) {
     $('#dropdown').attr("disabled", false);
     $('#spectate').show();
     $('#drive').hide();
+    if ( !($('#DRIVER_IDENTIFIER').val() == "not set" ||  $.fingerprint() == $('#DRIVER_IDENTIFIER').val())) $('#takeOver').show();
   }
 }
 
 function fillDriverID() {
-  $('#DRIVER_IDENTIFIER').val($.fingerprint);
+  $('#DRIVER_IDENTIFIER').val($.fingerprint());
 }
+
+function takeOverDriving() {
+  $('#newDRIVER_IDENTIFIERcheckbox :checkbox').click();
+  fillDriverID()
+  $('#setGlobalParametersButton').click();
+}
+
 
 
 function hcalOnLoad() {
@@ -395,5 +403,17 @@ function hcalOnLoad() {
     setupMaskingPanels();
     makecheckboxes();
     updatePage();
+    if ($('#DRIVER_IDENTIFIER').val() != "not set") {
+      if ($.fingerprint() != $('#DRIVER_IDENTIFIER').val()) {
+        $('#spectate').click(); 
+	      console.log("did not match fingerprint to driver identifier. fingerprint: " + $.fingerprint() + " ,  driver identifier: " + $('#DRIVER_IDENTIFIER').val());
+      }
+      else if ($.fingerprint() == $('#DRIVER_IDENTIFIER').val()) $('#drive').click();
+      else console.log("Could not determine whether the browser session is one that was or was not driving the run.");
+    }
+    else {
+      $('#drive').hide();
+      $('#spectate').hide();
+    }
   }
 }

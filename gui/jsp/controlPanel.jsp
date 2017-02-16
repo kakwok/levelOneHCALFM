@@ -366,7 +366,8 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                           <!--Buttons for main table -->
                           <center>
                             <input id="spectate" class="button1" type="button" onclick="spectatorMode(true);" value="Spectate run">
-                            <input id="drive" class="button1" type="button" onclick="spectatorMode(false)" value="Control run">
+                            <input id="drive" class="button1" type="button" onclick="spectatorMode(false)" value="Enable control">
+                            <input id="takeOver" class="button1" type="button" onclick="takeOverDriving()" value="Take control" style="display: none">
                           </center>
 			  <br>
                           <center>
