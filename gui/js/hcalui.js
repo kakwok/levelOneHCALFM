@@ -153,6 +153,7 @@ function clickboxes() {
         $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').click();
         $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').click();
         $('#newMASKED_RESOURCEScheckbox :checkbox').click();
+        $('#newDRIVER_IDENTIFIERcheckbox :checkbox').click();
     }
 }
 function preclickFMs() {
@@ -184,7 +185,7 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
     var masterSnippetArgs = "'" + masterSnippetNumber + "', 'RUN_CONFIG_SELECTED'";
     var maskedResourcesNumber = $('#MASKED_RESOURCES').attr("name").substring(20);
     var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'MASKED_RESOURCES'";
-    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection(); preclickFMs(); fillMask();";
+    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection(); preclickFMs(); fillMask(); fillDriverID();";
     $('#dropdown').attr("onchange", onchanges);
 }
 
@@ -338,6 +339,10 @@ function spectatorMode(onOff) {
   }
 }
 
+function fillDriverID() {
+  $('#DRIVER_IDENTIFIER').val($.fingerprint);
+}
+
 
 function hcalOnLoad() {
   if ($('input[value="STATE"]').size() > 0) { // this is a sanity check to see if we're actually attached
@@ -366,6 +371,8 @@ function hcalOnLoad() {
     copyContents(HCAL_TIME_OF_FM_START, newHCAL_TIME_OF_FM_START);
     copyContents(SINGLEPARTITION_MODE, newSINGLEPARTITION_MODE);
     makecheckbox('newSINGLEPARTITION_MODEcheckbox', 'SINGLEPARTITION_MODE');
+    copyContents(DRIVER_IDENTIFIER, newDRIVER_IDENTIFIER);
+    makecheckbox('newDRIVER_IDENTIFIERcheckbox', 'DRIVER_IDENTIFIER');
     hidecheckboxes();
     hideinitializebutton();
     hidelocalparams();

@@ -34,6 +34,8 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   <rcms.control:customResourceRenderer indentation="1" type="css" path="/css/common.css" />
   <rcms.control:customResourceRenderer indentation="1" type="css" path="/css/hcalcontrol.css" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/jquery.min.js" />
+  <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/md5.js" />
+  <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/jquery.browser-fingerprint-1.1.js" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/hcalui.js" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/GUI.js" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/stateNotification.js" />
@@ -252,13 +254,22 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <td id ="newMASKED_RESOURCES" class="label_center_black">
                                 </td>
                               </tr>
-                              <tr id="singlePartitionField">
+                              <tr id="singlePartitionField" style="display: none;">
                                 <td id="newSINGLEPARTITION_MODEcheckbox" class="label_center_black">
                                 </td>
                                 <td class="label_left_black">
                                   <strong>Multi/Singlepartition</strong>
                                 </td>
                                 <td id ="newSINGLEPARTITION_MODE" class="label_center_black">
+                                </td>
+                              </tr>
+                              <tr id="driverIdField"> 
+                                <td id="newDRIVER_IDENTIFIERcheckbox" class="label_center_black">
+                                </td>
+                                <td class="label_left_black">
+                                  <strong>Driver Identifier</strong>
+                                </td>
+                                <td id ="newDRIVER_IDENTIFIER" class="label_center_black">
                                 </td>
                               </tr>
                               <tr>
