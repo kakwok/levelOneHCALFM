@@ -795,39 +795,31 @@ public class HCALEventHandler extends UserEventHandler {
             if (ruInstance==""){
               logger.warn("HCAL LVL2 " + functionManager.FMname + "]: HCALparameter RU_INSTANCE is not set before calling initXDAQinfospace()"); 
             }
-            for (String pamName : pam.getNames()){
-              // TODO: Understand why this block will sometimes cause null pointer exception 
-              logger.debug("[HCAL LVL2 " + functionManager.FMname + "]: Getting this pamName "+pamName+ " from this QR"+ qr.getName() );
-              if (pamName.equals("RUinstance")) {
-                pam.select(new String[] {"RUinstance"});
-                pam.setValue("RUinstance", ruInstance.split("_")[1]);
-                pam.send();
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the RUinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
-              }
-              else if (pamName.equals("BUInstance")) {
-                pam.select(new String[] {"BUInstance"});
-                pam.setValue("BUInstance", ruInstance.split("_")[1]);
-                pam.send();
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the BUInstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
-              }
-              else if (pamName.equals("EVMinstance")) {
-                pam.select(new String[] {"EVMinstance"});
-                pam.setValue("EVMinstance", ruInstance.split("_")[1]);
-                pam.send();
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
-              }
-              else if (pamName.equals("HandleTCDS")) {
-                pam.select(new String[] {"HandleTCDS"});
-                pam.setValue("HandleTCDS","false");
-                pam.send();
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the HandleTCDS for " + qr.getName() + " to false");
-              }
-              else if (pamName.equals("EnableDisableTTCOrTCDS")) {
-                pam.select(new String[] {"EnableDisableTTCOrTCDS"});
-                pam.setValue("EnableDisableTTCOrTCDS","false");
-                pam.send();
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the EnableDisableTTCOrTCDS for " + qr.getName() + " to false");
-              }
+            logger.warn("HCAL LVL2 " + functionManager.FMname + "]: initXDAQinfospace() :"+qr.getName()+" with pamNames:"+ pam.getNames().toString());
+
+            List<String> pamNames      = pam.getNames();
+            List<String> pamNamesToSet = new ArrayList<String>();
+            if (pamNames.contains("RUInstance")) {              pamNamesToSet.add("RUInstance")              ;}
+            if (pamNames.contains("BUInstance")) {              pamNamesToSet.add("BUInstance")              ;}
+            if (pamNames.contains("EVMInstance")){              pamNamesToSet.add("EVMInstance")             ;}
+            if (pamNames.contains("HandleTCDS")) {              pamNamesToSet.add("HandleTCDS")              ;}
+            if (pamNames.contains("EnableDisableTTCOrTCDS")) {  pamNamesToSet.add("EnableDisableTTCOrTCDS")  ;}
+            
+            // WARNING: Cannot reuse pam for the same Xdaq, select the paramters needed in array and then send.
+            if(pamNamesToSet.size()!=0){        
+              String[] pamNamesToSet_str = new String[pamNamesToSet.size()];
+              pamNamesToSet_str = pamNamesToSet.toArray(pamNamesToSet_str);
+
+              pam.select(pamNamesToSet_str);
+              if (pamNamesToSet.contains("RUInstance")) {              pam.setValue("RUInstance", ruInstance.split("_")[1])              ;}
+              if (pamNamesToSet.contains("BUInstance")) {              pam.setValue("BUInstance", ruInstance.split("_")[1])              ;}
+              if (pamNamesToSet.contains("EVMInstance")){              pam.setValue("EVMInstance", ruInstance.split("_")[1])             ;}
+              if (pamNamesToSet.contains("HandleTCDS")) {              pam.setValue("HandleTCDS","false")                                ;}
+              if (pamNamesToSet.contains("EnableDisableTTCOrTCDS")) {  pam.setValue("EnableDisableTTCOrTCDS","false")                    ;}
+ 
+              logger.info("[HCAL LVL2 " + functionManager.FMname + "]: initXDAQinfospace(): Setting parameters:"+pamNamesToSet.toString()+" in infospace of "+qr.getName() );
+
+              pam.send();
             }
           }
           catch (XDAQTimeoutException e) {
