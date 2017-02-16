@@ -354,6 +354,11 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                           <br />
                           <!--Buttons for main table -->
                           <center>
+                            <input id="spectate" class="button1" type="button" onclick="spectatorMode(true);" value="Spectate run">
+                            <input id="drive" class="button1" type="button" onclick="spectatorMode(false)" value="Control run">
+                          </center>
+			  <br>
+                          <center>
                             <input id="setGlobalParametersButton" class="button1" type="button" onclick="onClickSetGlobalParameters()" value="Set Enabled Parameters" name="setGlobalParametersButton">
                             <input id="refreshGlobalParametersButton" class="button1" type="button" onclick="onClickRefreshGlobalParameter()" value="Refresh Parameters" name="refreshGlobalParametersButton">
                           </center>
@@ -364,7 +369,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
 
                       <tr>
                         <td align="center" class="label_center_black">
-                          <input type="checkbox" onclick="toggle_visibility('GlobalParamsTable');"> <strong>&nbsp; View Global Parameters</strong>
+                          <input id="globalParametersCheckbox" type="checkbox" onclick="toggle_visibility('GlobalParamsTable');"> <strong>&nbsp; View Global Parameters</strong>
                           <br /><br />
                           <table id="GlobalParamsTable" class="tbl">
                             <tr>

@@ -314,6 +314,30 @@ function setupMaskingPanels() {
     });
 }
 
+function spectatorMode(onOff) {
+  if (onOff) {
+    $('input').css("pointer-events: none;");
+    $('input').not("#FMPilotForm > input").attr("disabled", true);
+    $('#dropdown').css("pointer-events: none;");
+    $('#dropdown').attr("disabled", true);
+    var spectatorAllowed = ["Detach", "UpdatedRefresh", "showTreeButton", "showStatusTableButton", "refreshGlobalParametersButton", "globalParametersCheckbox", "drive"];
+    $.each(spectatorAllowed, function(index, id) {
+      $('#' + id).css("pointer events: default;");
+      $('#' + id).attr("disabled", false);
+    });
+    $("#spectate").hide();
+    $("#drive").show();
+  }
+  else {
+    $('input').css("pointer-events: default;");
+    $('input').not("input[type='text']").attr("disabled", false);
+    $('#dropdown').css("pointer-events: default;");
+    $('#dropdown').attr("disabled", false);
+    $('#spectate').show();
+    $('#drive').hide();
+  }
+}
+
 
 function hcalOnLoad() {
   if ($('input[value="STATE"]').size() > 0) { // this is a sanity check to see if we're actually attached
