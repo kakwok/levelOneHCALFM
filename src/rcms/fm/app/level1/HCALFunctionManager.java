@@ -81,9 +81,6 @@ public class HCALFunctionManager extends UserFunctionManager {
   public XdaqApplicationContainer containerTriggerAdapter      = null;
   public XdaqApplicationContainer containerTTCciControl        = null;
   public XdaqApplicationContainer containerLTCControl          = null;
-  public XdaqApplicationContainer containerEVM                 = null;
-  public XdaqApplicationContainer containerBU                  = null;
-  public XdaqApplicationContainer containerRU                  = null;
   public XdaqApplicationContainer containerFUResourceBroker    = null;
   public XdaqApplicationContainer containerFUEventProcessor    = null;
   public XdaqApplicationContainer containerStorageManager      = null;
