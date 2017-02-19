@@ -424,6 +424,11 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       String LVL1TCDSControlSequence   = "not set";
       String LVL1LPMControlSequence   = "not set";
       String LVL1PIControlSequence = "not set";
+      // Set the default value everytime we configure
+      boolean isSinglePartition   = false; 
+      String ICIControlSequence   = "not set";
+      String PIControlSequence    = "not set";
+
 
       // get the parameters of the command
       ParameterSet<CommandParameter> parameterSet = getUserFunctionManager().getLastInput().getParameterSet();
@@ -523,11 +528,19 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           CheckAndSetParameter( parameterSet , "HCAL_CFGSCRIPT"      );
           CheckAndSetParameter( parameterSet , "HCAL_TTCCICONTROL"   );
           CheckAndSetParameter( parameterSet , "HCAL_LTCCONTROL"     );
-          CheckAndSetParameter( parameterSet , "HCAL_TCDSCONTROL"    );
-          CheckAndSetParameter( parameterSet , "HCAL_LPMCONTROL"     );
-          CheckAndSetParameter( parameterSet , "HCAL_PICONTROL"      );
           CheckAndSetParameter( parameterSet , "TCDS_SKIP_PLLRESET"  );
-
+          CheckAndSetParameter( parameterSet , "SINGLEPARTITION_MODE");
+          isSinglePartition   = ((BooleanT)functionManager.getHCALparameterSet().get("SINGLEPARTITION_MODE").getValue()).getBoolean();
+          // Only set the parameter being used so that RunInfo will be clear
+          if(isSinglePartition){
+            CheckAndSetParameter( parameterSet , "HCAL_ICICONTROL_SINGLE"     );
+            CheckAndSetParameter( parameterSet , "HCAL_PICONTROL_SINGLE"      );
+          }
+          else{
+            CheckAndSetParameter( parameterSet , "HCAL_LPMCONTROL"           );
+            CheckAndSetParameter( parameterSet , "HCAL_ICICONTROL_MULTI"     );
+            CheckAndSetParameter( parameterSet , "HCAL_PICONTROL_MULTI"      );
+          }
         }
         catch (UserActionException e){
           String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] ConfigureAction: "+e.getMessage();
@@ -538,15 +551,20 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // Fill the local variable with the value received from LV1
       CfgCVSBasePath           = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
       FullCfgScript            = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT"     ).getValue()).getString();
-      FullTTCciControlSequence = ((StringT)functionManager.getHCALparameterSet().get("HCAL_TTCCICONTROL"  ).getValue()).getString();
-      FullLTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LTCCONTROL"    ).getValue()).getString();
-      FullTCDSControlSequence  = ((StringT)functionManager.getHCALparameterSet().get("HCAL_TCDSCONTROL"   ).getValue()).getString();
-      FullLPMControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LPMCONTROL"    ).getValue()).getString();
-      FullPIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL"     ).getValue()).getString();
       // We default skipPLLreset to true for now. 
       BooleanT skipPLLreset    = ((BooleanT)functionManager.getHCALparameterSet().get("TCDS_SKIP_PLLRESET").getValue());
-
-
+      String TTCciControlSequence = ((StringT)functionManager.getHCALparameterSet().get("HCAL_TTCCICONTROL"  ).getValue()).getString();
+      String LTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LTCCONTROL"    ).getValue()).getString();
+      String LPMControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LPMCONTROL"    ).getValue()).getString();
+      if(isSinglePartition){
+        ICIControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_ICICONTROL_SINGLE" ).getValue()).getString();
+        PIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL_SINGLE"   ).getValue()).getString();
+      }
+      else{
+        ICIControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_ICICONTROL_MULTI" ).getValue()).getString();
+        PIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL_MULTI"   ).getValue()).getString();
+      }
+      
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] configureAction: We are in " + RunType + " mode ...");
@@ -733,9 +751,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
             LV2configureTaskSeq = makeTCDSconfigSeq(LPMpSet,PIpSet,ICIpSet);
           }
-          // configuring all created HCAL applications by means of sending the RunType to the HCAL supervisor
           // This sets up the infospaces
-          sendRunTypeConfiguration(FullCfgScript,FullTTCciControlSequence,FullLTCControlSequence,FullTCDSControlSequence,FullLPMControlSequence,FullPIControlSequence, FedEnableMask, UsePrimaryTCDS);
+          sendRunTypeConfiguration(FullCfgScript,TTCciControlSequence,LTCControlSequence,ICIControlSequence,LPMControlSequence,PIControlSequence, FedEnableMask, UsePrimaryTCDS);
           // configure supervisor
           if(!functionManager.containerhcalSupervisor.isEmpty()){
             String description ="Configuring supervisor of LV2 FM:"+functionManager.FMname;
@@ -1667,77 +1684,30 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // check parameter set, if it is not set see if we are in local mode
       if (parameterSet.size()!=0)  {
 
-        // get the HCAL CfgScript from LVL1 if the LVL1 has sent something
-        if (parameterSet.get("HCAL_CFGCVSBASEPATH") != null) {
-          CfgCVSBasePath = ((StringT)parameterSet.get("HCAL_CFGCVSBASEPATH").getValue()).getString();
+        try{
+          CheckAndSetParameter( parameterSet , "HCAL_CFGSCRIPT"      );
+          CheckAndSetParameter( parameterSet , "HCAL_TTCCICONTROL"   );
+          CheckAndSetParameter( parameterSet , "HCAL_LTCCONTROL"     );
+          CheckAndSetParameter( parameterSet , "HCAL_CFGCVSBASEPATH" );
         }
-        else {
-          logger.info("[Martin log HCAL LVL2 " + functionManager.FMname + "]  Did not receive a LVL1 CfgCVSBasePath! This is OK if this FM do not look for files in CVS ");
+        catch (UserActionException e){
+          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] prepareTTStestModeAction: "+e.getMessage();
+          logger.warn(warnMessage);
         }
-
-
-        // get the HCAL CfgScript from LVL1 if the LVL1 has sent something
-        if (parameterSet.get("HCAL_CFGSCRIPT") != null) {
-          LVL1CfgScript = ((StringT)parameterSet.get("HCAL_CFGSCRIPT").getValue()).getString();
-        }
-        else {
-          logger.error("[HCAL LVL2 " + functionManager.FMname + "]  Did not receive a LVL1 CfgScript! Check if LVL1 is passing it to LV2");
-        }
-
-        // get the HCAL TTCciControl from LVL1 if the LVL1 has sent something
-        if (parameterSet.get("HCAL_TTCCICONTROL") != null) {
-          LVL1TTCciControlSequence = ((StringT)parameterSet.get("HCAL_TTCCICONTROL").getValue()).getString();
-        }
-        else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 TTCci control sequence. This is OK only if a TTCci is not used in this config.");
-        }
-
-        // get the HCAL LTCControl from LVL1 if the LVL1 has sent something
-        if (parameterSet.get("HCAL_LTCCONTROL") != null) {
-          LVL1LTCControlSequence = ((StringT)parameterSet.get("HCAL_LTCCONTROL").getValue()).getString();
-        }
-        else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 LTC control sequence. This is OK only if a LTC is not used in this config.");
-        }
-
+        
         // set the function manager parameters
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_RUN_TYPE",new StringT(RunType)));
       }
 
-      if (CfgCVSBasePath.equals("not set")) {
-        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! The CfgCVSBasePath is not set in the LVL1! Check if LVL1 is passing it to LV2");
-      }
-      else {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] CfgCVSBasePath was received.\nHere it is:\n" + CfgCVSBasePath);
-      }
-
-
-      if (LVL1CfgScript.equals("not set")) {
-        logger.error("[HCAL LVL2 " + functionManager.FMname + "] Warning! The LVL1CfgScript is not set in the LVL1! Check if LVL1 is passing it to LV2");
-      }
-      else {
-        FullCfgScript = LVL1CfgScript;
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] LVL1CfgScript was received.\nHere it is:\n" + FullCfgScript);
-      }
-
-      if (LVL1TTCciControlSequence.equals("not set")) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Warning! The LVL1 TTCci control sequence is not set. This is OK only if a TTCci is not used in this config.");
-      }
-      else {
-        FullTTCciControlSequence = LVL1TTCciControlSequence;
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] LVL1 TTCci control sequence was received.\nHere it is:\n" + FullTTCciControlSequence);
-      }
-
-      if (LVL1LTCControlSequence.equals("not set")) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Warning! The LVL1 LTC control sequence is not set.\nThis is OK only if a LTC is not used in this config.");
-      }
-      else {
-        FullLTCControlSequence = LVL1LTCControlSequence;
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] LVL1 LTC control sequence was received.\nHere it is:\n" + FullLTCControlSequence);
-      }
+      CfgCVSBasePath           = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
+      FullCfgScript            = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT"     ).getValue()).getString();
+      String TTCciControlSequence = ((StringT)functionManager.getHCALparameterSet().get("HCAL_TTCCICONTROL"  ).getValue()).getString();
+      String LTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LTCCONTROL"    ).getValue()).getString();
+      
 
       // configuring all created HCAL applications by means of sending the RunType to the HCAL supervisor
-      sendRunTypeConfiguration(FullCfgScript,FullTTCciControlSequence,FullLTCControlSequence,FullTCDSControlSequence,FullLPMControlSequence,FullPIControlSequence,FedEnableMask,UsePrimaryTCDS);
+      // KKH: resurrect this if you want to fix prepareTTStestmode
+      //sendRunTypeConfiguration(FullCfgScript,FullTTCciControlSequence,FullLTCControlSequence,FullTCDSControlSequence,FullLPMControlSequence,FullPIControlSequence,FedEnableMask,UsePrimaryTCDS);
 
       if (!functionManager.containerhcalDCCManager.isEmpty()) {
 

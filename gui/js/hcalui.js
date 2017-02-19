@@ -42,7 +42,7 @@ function showsupervisorerror() {
 }
 
 // The scripts below use jQuery.
-$(document).ready(function () {
+function updatePage() {
     var initcolor = $('#currentState').text();
     $('#currentState').attr("class", "hcal_control_" + initcolor);
     if ($('#currentState').text() == "Configured") {$('#Destroy').hide();}
@@ -51,8 +51,13 @@ $(document).ready(function () {
     var cachedSupErr = $('#SUPERVISOR_ERROR').val();
     if ($('#currentState').text() == "Configured") {
       $('#Destroy').hide();
-      $('#commandSection :input[value="Exit"]').val("Halt+Destroy");
-      $('#commandSection :input[value="Halt+Destroy"]').insertAfter($('#Destroy'));
+      if ($('input[value="Halt+Destroy"]').size() == 0) {
+        $('#commandSection :input[value="Exit"]').val("Halt+Destroy");
+        $('#commandSection :input[value="Halt+Destroy"]').insertAfter($('#Destroy'));
+      }
+      else {
+        $('input[value="Halt+Destroy"]').remove();
+      }
     }
     var cachedState = $('#currentState').text();
     //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
@@ -72,12 +77,21 @@ $(document).ready(function () {
         }
         if (currentState == "Configured") {
           $('#Destroy').hide();
-          $('#commandSection :input[value="Exit"]').val("Halt+Destroy");
-          $('#commandSection :input[value="Halt+Destroy"]').insertAfter($('#Destroy'));
+          if ($('input[value="Halt+Destroy"]').size() == 0) {
+            $('#commandSection :input[value="Exit"]').val("Halt+Destroy");
+            $('#commandSection :input[value="Halt+Destroy"]').insertAfter($('#Destroy'));
+          }
+        }
+        else {
+          $('input[value="Halt+Destroy"]').remove();
         }
         if (currentState == "Error") {
           $('#Destroy').show();
           $('#Destroy').siblings('input[value="Halt+Destroy"]').hide();
+        }
+        if (cachedState == "Configured") {
+          $('#commandSection :input[value="Halt+Destroy"]').remove();
+          $('#Destroy').show();
         }
       }
       if ($('#SUPERVISOR_ERROR').val() !=  cachedSupErr) { showsupervisorerror(); }
@@ -88,7 +102,7 @@ $(document).ready(function () {
       cachedNevents = $('#NUMBER_OF_EVENTS').val();
       cachedSupErr = $('#SUPERVISOR_ERROR').val();
       cachedState = currentState;
-	    if ($('#EXIT').val() == "true" && currentState=="Halted") { onDestroyButton(); }
+	    if ($('#EXIT').val() == "true" && currentState=="Halted") { $('#Destroy').click(); }
       //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
     }, 750);
 
@@ -96,7 +110,7 @@ $(document).ready(function () {
     $('#dropdowndiv').on('change', 'select', function () {
         $('#masked_resourses_td').show();
     });
-});
+}
 
 function setProgress(parName, progress) {
     var numberOfEvents = $("#NUMBER_OF_EVENTS").val();
@@ -104,15 +118,18 @@ function setProgress(parName, progress) {
     var progressPercent = 0;
     if (parName == "HCAL_EVENTSTAKEN") {
       progressPercent = 100 * progress / numberOfEvents;
+      $(".progressbar").css('color', "white");
     }
     else if ( parName == "PROGRESS") {
       progressPercent = 100 * progress;
+      $(".progressbar").css('color', "black");
     }
     var progressBarWidth = progressPercent * (width / 100);
     //$(".progressbar").width(progressBarWidth);
     progressPercent = progressPercent.toFixed(2);
     //console.log("progressPercent is: " + progressPercent);
     $(".progressbar").width(progressBarWidth).html(progressPercent + "% &nbsp; &nbsp;");
+    $(".progressbar").css('background-color', $("#currentState").css("color"));
 }
 
 function mirrorSelection() {
@@ -139,7 +156,7 @@ function clickboxes() {
     }
 }
 function preclickFMs() {
-  $('#masks :checkbox').each( function (index) { 
+  $('#multiPartitionSelection :input').each( function (index) { 
     if ( $.inArray($(this).val(), $('#dropdown option:selected').attr("maskedfm").split(";"))  !== -1) { $(this).prop('checked', true); }
     else { $(this).prop('checked', false); }
   });
@@ -173,7 +190,7 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
 
 function fillMask() {
     var finalMasks=[];
-    $('#masks :checked').each(function () {
+    $('#multiPartitionSelection :checked').each(function () {
         finalMasks.push($(this).val());
     });
     //HERE
@@ -183,21 +200,38 @@ function fillMask() {
       finalMasks.push(userXMLmaskedApps[i]);
     }
     $('#MASKED_RESOURCES').val(JSON.stringify(finalMasks));
-    $('#maskTest').html(JSON.stringify(finalMasks));
+    $('#maskTest').html($('#MASKED_RESOURCES').val());
 }
 
-function makecheckboxes() {
+function getAvailableResources() {
     var param = $('#AVAILABLE_RESOURCES').html().replace("[", "").replace("]","");
     param =  param.replace(/['"]+/g, '');
     var array = param.split(',');
-    var maskDivContents = "<ul>";
+    return array;
+}
+
+function makecheckboxes() {
+    array = getAvailableResources();
+    var maskDivContents = "<strong>Partitions to mask:</strong>";
+    maskDivContents += "<ul>";
+    var radioButtonDivContents = "<strong>Partition to use:</strong><ul><form action=''>";
     for (var i = 0, l = array.length; i < l; i++) {
         var option = array[i].split(':');
         var checkbox = "<li><input type='checkbox' onchange='fillMask();' value='" + option + "'>" + option + "</li>";
+        var radiobutton = "<li><input type='radio' name='singlePart' onchange='" + 'picksinglepartition("' + option +'");' + "' value='" + option + "'>" + option+"</li>";
         maskDivContents += checkbox;
+        radioButtonDivContents += radiobutton;
     }
     maskDivContents += "</ul>";
-    $('#masks').html(maskDivContents);
+    radioButtonDivContents +="</form></ul>";
+    $('#multiPartitionSelection').html(maskDivContents);
+    $('#singlePartitionSelection').html(radioButtonDivContents);
+}
+
+function picksinglepartition(option) {
+    $('#multiPartitionSelection :input').not("[value='"+option+"']").prop('checked', true);
+    $("#multiPartitionSelection :input[value='"+option+"']").prop('checked', false);
+    fillMask();
 }
 
 function hidecheckboxes() {
@@ -254,9 +288,35 @@ function moveversionnumber() {
       $("#elogInfo").text("Run # " + $("#RUN_NUMBER").val()  + " - " + $(".control_label2").first().text() + " - Local run key: "+ $("#CFGSNIPPET_KEY_SELECTED").val()  + " - " + $("#NUMBER_OF_EVENTS").val() + " events, masks: " + maskSummary);
     }
 
+function setupMaskingPanels() {
+    $('.maskModes').css("style", "display: inline");
+    $('.maskModes').click(function () {
+       $(this).siblings().css('color', 'black');
+       $(this).css('color', 'blue');
+       panelId = "#".concat($(this).attr("id")).concat("Selection");
+       $(panelId).siblings().hide();
+       $(panelId).show();
+       if ($(this).attr("id") == "multiPartition") {
+         if (!$('#newSINGLEPARTITION_MODEcheckbox :checkbox').prop('checked')) {
+           $('#newSINGLEPARTITION_MODEcheckbox :checkbox').click();
+         }
+         preclickFMs();
+         $('#SINGLEPARTITION_MODE').val("false");
+       }
+       else if ($(this).attr("id") == "singlePartition") {
+         if (!$('#newSINGLEPARTITION_MODEcheckbox :checkbox').prop('checked')) {
+           $('#newSINGLEPARTITION_MODEcheckbox :checkbox').click();
+         }
+         $('#SINGLEPARTITION_MODE').val("true");
+       }
+       //$(panelId).parent().find("input").prop('checked', false); // maybe this does something?
+       fillMask();
+    });
+}
 
 
 function hcalOnLoad() {
+  if ($('input[value="STATE"]').size() > 0) { // this is a sanity check to see if we're actually attached
     activate_relevant_table('AllParamTables');
     removeduplicatecheckbox('CFGSNIPPET_KEY_SELECTED');
     removeduplicatecheckbox('RUN_CONFIG_SELECTED');
@@ -265,6 +325,7 @@ function hcalOnLoad() {
     removeduplicatecheckbox('NUMBER_OF_EVENTS');
     removeduplicatecheckbox('ACTION_MSG');
     removeduplicatecheckbox('RUN_NUMBER');
+    removeduplicatecheckbox('SINGLEPARTITION_MODE');
     copyContents(CFGSNIPPET_KEY_SELECTED, newCFGSNIPPET_KEY_SELECTED);
     makecheckbox('newCFGSNIPPET_KEY_SELECTEDcheckbox', 'CFGSNIPPET_KEY_SELECTED');
     copyContents(RUN_CONFIG_SELECTED, newRUN_CONFIG_SELECTED);
@@ -279,6 +340,8 @@ function hcalOnLoad() {
     copyContents(RUN_NUMBER, newRUN_NUMBER);
     makecheckbox('newRUN_NUMBERcheckbox', 'RUN_NUMBER');
     copyContents(HCAL_TIME_OF_FM_START, newHCAL_TIME_OF_FM_START);
+    copyContents(SINGLEPARTITION_MODE, newSINGLEPARTITION_MODE);
+    makecheckbox('newSINGLEPARTITION_MODEcheckbox', 'SINGLEPARTITION_MODE');
     hidecheckboxes();
     hideinitializebutton();
     hidelocalparams();
@@ -298,4 +361,8 @@ function hcalOnLoad() {
     moveversionnumber();
     makedropdown($('#AVAILABLE_RUN_CONFIGS').text(), $('#AVAILABLE_LOCALRUNKEYS').text());
     onClickCommandParameterCheckBox();
+    setupMaskingPanels();
+    makecheckboxes();
+    updatePage();
+  }
 }
