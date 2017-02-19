@@ -739,15 +739,15 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           ////////////////////////////////////////////////////////////////////////////////////
           if( !functionManager.containerTCDSControllers.isEmpty()){
             ParameterSet<CommandParameter> LPMpSet = new ParameterSet<CommandParameter>();
-            LPMpSet.put( new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(FullLPMControlSequence))                 );
-            LPMpSet.put( new CommandParameter<StringT> ("fedEnableMask"              , new StringT(FedEnableMask))                          );
+            LPMpSet.put( new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(LPMControlSequence))                 );
+            LPMpSet.put( new CommandParameter<StringT> ("fedEnableMask"              , new StringT(FedEnableMask))                      );
             ParameterSet<CommandParameter> PIpSet  = new ParameterSet<CommandParameter>();
-            PIpSet.put(  new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(FullPIControlSequence))                  );
-            PIpSet.put(  new CommandParameter<BooleanT>("usePrimaryTCDS"             , new BooleanT(UsePrimaryTCDS))                        );
-            PIpSet.put(  new CommandParameter<StringT> ("fedEnableMask"              , new StringT(FedEnableMask))                          );
-            PIpSet.put(  new CommandParameter<BooleanT>("skipPLLReset"               , skipPLLreset)                                        );
+            PIpSet.put(  new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(PIControlSequence))                  );
+            PIpSet.put(  new CommandParameter<BooleanT>("usePrimaryTCDS"             , new BooleanT(UsePrimaryTCDS))                    );
+            PIpSet.put(  new CommandParameter<StringT> ("fedEnableMask"              , new StringT(FedEnableMask))                      );
+            PIpSet.put(  new CommandParameter<BooleanT>("skipPLLReset"               , skipPLLreset)                                    );
             ParameterSet<CommandParameter> ICIpSet = new ParameterSet<CommandParameter>();
-            ICIpSet.put( new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(FullTCDSControlSequence)) );
+            ICIpSet.put( new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(ICIControlSequence)) );
 
             LV2configureTaskSeq = makeTCDSconfigSeq(LPMpSet,PIpSet,ICIpSet);
           }
