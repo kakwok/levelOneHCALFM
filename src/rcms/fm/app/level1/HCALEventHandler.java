@@ -792,7 +792,7 @@ public class HCALEventHandler extends UserEventHandler {
             if (ruInstance==""){
               logger.warn("HCAL LVL2 " + functionManager.FMname + "]: HCALparameter RU_INSTANCE is not set before calling initXDAQinfospace()"); 
             }
-            logger.warn("HCAL LVL2 " + functionManager.FMname + "]: initXDAQinfospace() :"+qr.getName()+" with pamNames:"+ pam.getNames().toString());
+            logger.debug("HCAL LVL2 " + functionManager.FMname + "]: initXDAQinfospace() :"+qr.getName()+" with pamNames:"+ pam.getNames().toString());
 
             List<String> pamNames      = pam.getNames();
             List<String> pamNamesToSet = new ArrayList<String>();

@@ -22,6 +22,7 @@ import rcms.fm.fw.user.UserActionException;
 import rcms.resourceservice.db.resource.Resource;
 import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
 import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
+import rcms.fm.resource.CommandException;
 import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainerException;
@@ -1015,20 +1016,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       StartTime = new Date();
 
       TaskSequence LV2startTaskSeq  = new TaskSequence(HCALStates.STARTING,HCALInputs.SETSTART);
-      // start hcalSupervisor first
-      if( !functionManager.containerhcalSupervisor.isEmpty()) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Adding supervisor to LV2 start task");
-        LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerhcalSupervisor, HCALInputs.HCALASYNCSTART, HCALStates.READY, HCALStates.ACTIVE, "["+functionManager.FMname+"] Enabling hcalSupervisor"));
-      }
-
-      // then trigger adapter
-      // TODO: move this to supervisor
-      if(!functionManager.containerTriggerAdapter.isEmpty()) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Adding TA to LV2 start task");
-        LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerTriggerAdapter, HCALInputs.HCALASYNCSTART, HCALStates.READY, HCALStates.ACTIVE, "["+functionManager.FMname+"] Enabling TriggerAdapter"));
-      }
-      
-      // Enable TCDS apps
+     
+      // Enable TCDS apps 
       if( !functionManager.containerTCDSControllers.isEmpty()){
         ////////////////////////////////////////////////////////////////////////////////////
         // Enable PI,ICI (LPM is enabled by TA)
@@ -1041,7 +1030,48 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         ParameterSet<CommandParameter> LPMpSet = new ParameterSet<CommandParameter>();
         LPMpSet.put( new CommandParameter<UnsignedIntegerT> ("runNumber", new UnsignedIntegerT(functionManager.RunNumber)) );
 
-        LV2startTaskSeq = appendTCDSenableSeq(PIpSet,ICIpSet,LPMpSet,LV2startTaskSeq); // add the tcds start tasks to the start sequence
+        LV2startTaskSeq = appendTCDSenableSeq(PIpSet,ICIpSet,LPMpSet,LV2startTaskSeq); 
+      }
+      // Start hcalSupervisor 
+      if( !functionManager.containerhcalSupervisor.isEmpty()) {
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Adding supervisor to LV2 start task");
+        LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerhcalSupervisor, HCALInputs.HCALASYNCSTART, HCALStates.READY, HCALStates.ACTIVE, "["+functionManager.FMname+"] Enabling hcalSupervisor"));
+      }
+
+      // SendBgos to ICI if we are in singlePartition mode
+      if (!functionManager.containerICIController.isEmpty() ){
+        logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Sending start Bgo to ICI:");
+        Input ICIbgoInput= new Input("SendBgo");
+        ParameterSet<CommandParameter> OC0pSet  = new ParameterSet<CommandParameter>();
+        OC0pSet.put(  new CommandParameter<StringT> ("bgoName", new StringT("OC0"))   );
+        ParameterSet<CommandParameter> EC0pSet  = new ParameterSet<CommandParameter>();
+        EC0pSet.put(  new CommandParameter<StringT> ("bgoName", new StringT("EC0"))   );
+
+        Integer sid = ((IntegerT)functionManager.getParameterSet().get("SID").getValue()).getInteger();
+        for (XdaqApplication ici: functionManager.containerICIController.getApplications()){
+          try{
+            ICIbgoInput.setParameters( OC0pSet );
+            logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Sending OCO to ICI:");    
+            ici.executeIgnoreReturnState(ICIbgoInput, sid.toString(), null);
+            try { Thread.sleep(1000); }
+            catch (Exception ignored) { return; }
+            logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Sending ECO to ICI:");    
+            ICIbgoInput.setParameters( EC0pSet );
+            ici.executeIgnoreReturnState(ICIbgoInput, sid.toString(), null);
+          }
+          catch(CommandException e){
+            logger.error("[HCAL LVL2 "+ functionManager.FMname+"] ICISendBgo: "+e.getMessage());
+          }
+        }
+
+        //LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerICIController, ICIbgoInput, HCALStates.STARTING, HCALStates.ENABLED, "["+functionManager.FMname+"] Sending BgoTrain to ICI"));
+        // LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerICIController, ICIbgoInput, HCALStates.STARTING, HCALStates.ENABLED, "["+functionManager.FMname+"] Sending BgoTrain to ICI"));
+      }
+      // start Trigger adapter
+      // TODO: move this to supervisor
+      if(!functionManager.containerTriggerAdapter.isEmpty()) {
+       // logger.info("[HCAL LVL2 " + functionManager.FMname + "] Adding TA to LV2 start task");
+       // LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerTriggerAdapter, HCALInputs.HCALASYNCSTART, HCALStates.READY, HCALStates.ACTIVE, "["+functionManager.FMname+"] Enabling TriggerAdapter"));
       }
 
       functionManager.theStateNotificationHandler.executeTaskSequence(LV2startTaskSeq);
@@ -1067,24 +1097,24 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       //// only in local runs when all triggers were sent the run is stopped with 60 sec timeout
       if (functionManager.FMrole.equals("EvmTrig")) {
 
-      //  // finally start the TriggerAdapters
-      //  if (functionManager.containerTriggerAdapter!=null) {
-      //    if (!functionManager.containerTriggerAdapter.isEmpty() && !functionManager.FMWasInPausedState) {
-      //      try {
-      //        //logger.info("[JohnLog4] [HCAL LVL2 " + functionManager.FMname + "] Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
-      //        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
-      //        functionManager.containerTriggerAdapter.execute(HCALInputs.HCALSTART);
-      //      }
-      //      catch (QualifiedResourceContainerException e) {
-      //        String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting (TriggerAdapter=Enable) failed ...";
-      //        logger.error(errMessage,e);
-      //        functionManager.sendCMSError(errMessage);
-      //        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-      //        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-      //        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-      //      }
-      //    }
-      //  }
+        // finally start the TriggerAdapters
+        if (functionManager.containerTriggerAdapter!=null) {
+          if (!functionManager.containerTriggerAdapter.isEmpty() && !functionManager.FMWasInPausedState) {
+            try {
+              //logger.info("[JohnLog4] [HCAL LVL2 " + functionManager.FMname + "] Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
+              logger.info("[HCAL LVL2 " + functionManager.FMname + "] Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
+              functionManager.containerTriggerAdapter.execute(HCALInputs.HCALSTART);
+            }
+            catch (QualifiedResourceContainerException e) {
+              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting (TriggerAdapter=Enable) failed ...";
+              logger.error(errMessage,e);
+              functionManager.sendCMSError(errMessage);
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
+              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            }
+          }
+        }
 
         // set actions for local runs
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
