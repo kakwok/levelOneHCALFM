@@ -2251,7 +2251,7 @@ public class HCALEventHandler extends UserEventHandler {
               XDAQParameter pam = null;
               String status   = "undefined";
               String stateName   = "undefined";
-              String progress = "undefined";
+              String progressFromSupervisor = "undefined";
               String taname   = "undefined";
 
               // ask for the status of the HCAL supervisor
@@ -2263,18 +2263,29 @@ public class HCALEventHandler extends UserEventHandler {
 
                   status = pam.getValue("PartitionState");
                   stateName = pam.getValue("stateName");
-                  progress = pam.getValue("overallProgress");
+                  progressFromSupervisor = pam.getValue("overallProgress");
 
                   if (status==null || stateName==null) {
                     String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the hcalSupervisor for the PartitionState and stateName to see if it is alive or not resulted in a NULL pointer - this is bad!";
                     functionManager.goToError(errMessage);
                   }
-                  if (progress == null) {
+                  if (progressFromSupervisor == null) {
                     // TODO: do something more drastic in this case?
                     logger.error("[JohnLogProgress] " + functionManager.FMname + " Something went wrong when asking the hcalSupervisor for her overallProgress...");
                   }
                   else {
-                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DoubleT>("PROGRESS", new DoubleT(progress)));
+		    logger.debug("JohnDebug: progressFromSupervisor " + qr.getName() + "in " + functionManager.FMname + " was " + progressFromSupervisor);
+                    try {
+		      if (!Double.isNaN(Double.parseDouble(progressFromSupervisor))) {
+                        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DoubleT>("PROGRESS", new DoubleT(Double.parseDouble(progressFromSupervisor))));
+                      }
+		      else {
+		        logger.debug("JohnDebug: progressFromSupervisor was NaN. Not setting progress to NaN.");
+	              }
+                    }
+                    catch(NumberFormatException e) {
+		      logger.debug("JohnDebug: progressFromSupervisor was NOT parseable to a double. Will not set progress");
+                    }
                   }
 
                   logger.debug("[HCAL " + functionManager.FMname + "] asking for the HCAL supervisor PartitionState to see if it is still alive.\n The PartitionState is: " + status);

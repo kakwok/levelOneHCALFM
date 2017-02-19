@@ -69,7 +69,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
 </head>
 
 
-
+<body style="display: none">
 <!-- Table T1 begin -->
 <table width="100%" border="0" cellpadding="0" cellspacing="0" style="position:absolute; top:0; background-color: #3a5165;">
 
@@ -441,8 +441,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
     $(document).ready(function() {
       onLoad();
       hcalOnLoad(); 
-      makecheckboxes();
-      updatePage();
+      $("body").show();
     });
   </script>
 </body>
