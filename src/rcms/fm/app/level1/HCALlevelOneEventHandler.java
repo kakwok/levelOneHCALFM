@@ -204,6 +204,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           if ( ((Element)nodes.item(i)).hasAttribute("maskedFM")){
             RunKeySetting.put(new StringT("maskedFM")  ,new StringT(nodes.item(i).getAttributes().getNamedItem("maskedFM"  ).getNodeValue()));
           }
+          if ( ((Element)nodes.item(i)).hasAttribute("defaultPartition")){
+            RunKeySetting.put(new StringT("defaultPartition")  ,new StringT(nodes.item(i).getAttributes().getNamedItem("defaultPartition"  ).getNodeValue()));
+          }
+
           logger.debug("[HCAL " + functionManager.FMname + "]: RunkeySetting  is :"+ RunKeySetting.toString());
 
           LocalRunKeys.add(runkeyName);
