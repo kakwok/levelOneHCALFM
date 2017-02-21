@@ -740,7 +740,7 @@ public class HCALEventHandler extends UserEventHandler {
     // If LV1 is in multipartition mode but do not have a LV2 TCDSLPM child, goToError
     if (!functionManager.containerFMChildren.isEmpty()){
       boolean isSinglePartition   = ((BooleanT)functionManager.getHCALparameterSet().get("SINGLEPARTITION_MODE").getValue()).getBoolean();
-      if(functionManager.containerFMTCDSLPM.isEmpty() && !isSinglePartition) {
+      if(functionManager.containerFMTCDSLPM.isEmpty() && !isSinglePartition && RunType.equals("local")) {
         String errMessage="[HCAL LVL1" + functionManager.FMname+"] Multipartition mode is used but no TCDSLPM FM is found.";
         functionManager.goToError(errMessage);
       }
