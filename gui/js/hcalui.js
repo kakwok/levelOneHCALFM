@@ -174,7 +174,9 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
     for (var i = 0; i<localRunKeysArray.length; i++) {
         maskedFM = "";
         if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('maskedFM')) { maskedFM=runConfigMap[localRunKeysArray[i]].maskedFM; }
-        dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' >" + localRunKeysArray[i] + "</option>";
+        defaultPartition = "";
+        if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('defaultPartition')) { defaultPartition=runConfigMap[localRunKeysArray[i]].defaultPartition; }
+        dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' + defaultPartition='" + defaultPartition + "' >" + localRunKeysArray[i] + "</option>";
     }
     dropdownoption = dropdownoption + "</select>";
     $('#dropdowndiv').html(dropdownoption);
@@ -320,10 +322,8 @@ function setupMaskingPanels() {
 }
 
 function automateSinglePartition() {
-  // here is where you would get the single partition form the runkey
-  // for now hardcode something
-  var defaultPartition = "thisIsAfakePartition";
-  if (defaultPartition != "not set") { // or whatever its default value in the runkey is
+  var defaultPartition = $('#dropdown option:selected').attr("defaultPartition");
+  if (defaultPartition != "") {
     if ($.inArray(defaultPartition, getAvailableResources()) > -1) {
       $('#singlePartition').click();   
       var selector = '#singlePartitionSelection :input[value="' + defaultPartition + '"]';
@@ -332,6 +332,10 @@ function automateSinglePartition() {
     else {
       alert("Error! It does not seem that the default partition specified by the run key is valid! The requested default partition is: " + defaultPartition);
     }
+  }
+  else {
+    $('#singlePartitionSelection :input').prop('checked', false);
+    $('#setGlobalParametersButton').hide();
   }
 }
 
