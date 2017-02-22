@@ -200,14 +200,15 @@ function fillMask() {
       finalMasks.push(userXMLmaskedApps[i]);
     }
     $('#MASKED_RESOURCES').val(JSON.stringify(finalMasks));
-    var masksToShow = "";
+    var masksToShow = "[";
     var availableResources = getAvailableResources();
     $.each(finalMasks, function(index, maskedResource) {
       if ( $.inArray(maskedResource, availableResources) > -1){
         masksToShow += maskedResource + ", ";
       }
     });
-    masksToShow = masksToShow.slice(0, -2);
+    masksToShow += "]";
+    masksToShow = masksToShow.replace(", ]", "]");
     $('#maskTest').text(masksToShow);
 }
 
