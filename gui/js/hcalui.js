@@ -330,7 +330,7 @@ function automateSinglePartition() {
       $(selector).click();
     }
     else {
-      alert("Error! It does not seem that the default partition specified by the run key is valid! The requested default partition is: " + defaultPartition);
+      alert("Error! It seems that the singlePartitionFM specified by the run key does not match with any FM name! The requested singlePartitionFM is: " + defaultPartition);
     }
   }
   else {
