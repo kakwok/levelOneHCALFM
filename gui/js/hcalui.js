@@ -174,9 +174,9 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
     for (var i = 0; i<localRunKeysArray.length; i++) {
         maskedFM = "";
         if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('maskedFM')) { maskedFM=runConfigMap[localRunKeysArray[i]].maskedFM; }
-        defaultPartition = "";
-        if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('defaultPartition')) { defaultPartition=runConfigMap[localRunKeysArray[i]].defaultPartition; }
-        dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' + defaultPartition='" + defaultPartition + "' >" + localRunKeysArray[i] + "</option>";
+        singlePartitionFM = "";
+        if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('singlePartitionFM')) { singlePartitionFM=runConfigMap[localRunKeysArray[i]].singlePartitionFM; }
+        dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' + singlePartitionFM='" + singlePartitionFM + "' >" + localRunKeysArray[i] + "</option>";
     }
     dropdownoption = dropdownoption + "</select>";
     $('#dropdowndiv').html(dropdownoption);
@@ -322,15 +322,15 @@ function setupMaskingPanels() {
 }
 
 function automateSinglePartition() {
-  var defaultPartition = $('#dropdown option:selected').attr("defaultPartition");
-  if (defaultPartition != "") {
-    if ($.inArray(defaultPartition, getAvailableResources()) > -1) {
+  var singlePartitionFM = $('#dropdown option:selected').attr("singlePartitionFM");
+  if (singlePartitionFM != "") {
+    if ($.inArray(singlePartitionFM, getAvailableResources()) > -1) {
       $('#singlePartition').click();   
-      var selector = '#singlePartitionSelection :input[value="' + defaultPartition + '"]';
+      var selector = '#singlePartitionSelection :input[value="' + singlePartitionFM + '"]';
       $(selector).click();
     }
     else {
-      alert("Error! It does not seem that the default partition specified by the run key is valid! The requested default partition is: " + defaultPartition);
+      alert("Error! The runkey attribute singlePartitionFM does not match any LV2 FM's name! The requested single Partition FM is: " + singlePartitionFM);
     }
   }
   else {
