@@ -197,7 +197,7 @@ function fillMask() {
     //$('#dropdown option:selected').text()
     var userXMLmaskedApps = $('#dropdown option:selected').attr("maskedresources").split("|");
     for (var i = 0; i < userXMLmaskedApps.length; i++) {
-      finalMasks.push(userXMLmaskedApps[i]);
+      if (userXMLmaskedApps[i] != "") finalMasks.push(userXMLmaskedApps[i]);
     }
     $('#MASKED_RESOURCES').val(JSON.stringify(finalMasks));
     var masksToShow = "[";
