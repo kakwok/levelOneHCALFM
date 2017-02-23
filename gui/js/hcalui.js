@@ -174,9 +174,9 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
     for (var i = 0; i<localRunKeysArray.length; i++) {
         maskedFM = "";
         if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('maskedFM')) { maskedFM=runConfigMap[localRunKeysArray[i]].maskedFM; }
-        defaultPartition = "";
-        if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('defaultPartition')) { defaultPartition=runConfigMap[localRunKeysArray[i]].defaultPartition; }
-        dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' + defaultPartition='" + defaultPartition + "' >" + localRunKeysArray[i] + "</option>";
+        singlePartitionFM = "";
+        if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('singlePartitionFM')) { singlePartitionFM=runConfigMap[localRunKeysArray[i]].singlePartitionFM; }
+        dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' + singlePartitionFM='" + singlePartitionFM + "' >" + localRunKeysArray[i] + "</option>";
     }
     dropdownoption = dropdownoption + "</select>";
     $('#dropdowndiv').html(dropdownoption);
@@ -305,7 +305,7 @@ function setupMaskingPanels() {
          }
          preclickFMs();
          $('#SINGLEPARTITION_MODE').val("false");
-	 $('#singlePartitionSelection :input').prop('checked', false);
+         $('#singlePartitionSelection :input').prop('checked', false);
          $('#setGlobalParametersButton').show();
        }
        else if ($(this).attr("id") == "singlePartition") {
@@ -313,7 +313,7 @@ function setupMaskingPanels() {
            $('#newSINGLEPARTITION_MODEcheckbox :checkbox').click();
          }
          $('#SINGLEPARTITION_MODE').val("true");
-	 $('#singlePartitionSelection :input').prop('checked', false);
+       	 $('#singlePartitionSelection :input').prop('checked', false);
          $('#setGlobalParametersButton').hide();
        }
        //$(panelId).parent().find("input").prop('checked', false); // maybe this does something?
@@ -322,11 +322,11 @@ function setupMaskingPanels() {
 }
 
 function automateSinglePartition() {
-  var defaultPartition = $('#dropdown option:selected').attr("defaultPartition");
-  if (defaultPartition != "") {
-    if ($.inArray(defaultPartition, getAvailableResources()) > -1) {
+  var singlePartitionFM = $('#dropdown option:selected').attr("singlePartitionFM");
+  if (singlePartitionFM != "") {
+    if ($.inArray(singlePartitionFM, getAvailableResources()) > -1) {
       $('#singlePartition').click();   
-      var selector = '#singlePartitionSelection :input[value="' + defaultPartition + '"]';
+      var selector = '#singlePartitionSelection :input[value="' + singlePartitionFM + '"]';
       $(selector).click();
     }
     else {
@@ -334,8 +334,8 @@ function automateSinglePartition() {
     }
   }
   else {
-    $('#singlePartitionSelection :input').prop('checked', false);
-    $('#setGlobalParametersButton').hide();
+    $('#multiPartition').click();   
+    $('#setGlobalParametersButton').show();
   }
 }
 
