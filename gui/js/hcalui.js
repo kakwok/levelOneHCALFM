@@ -174,7 +174,9 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
     for (var i = 0; i<localRunKeysArray.length; i++) {
         maskedFM = "";
         if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('maskedFM')) { maskedFM=runConfigMap[localRunKeysArray[i]].maskedFM; }
-        dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' >" + localRunKeysArray[i] + "</option>";
+        singlePartitionFM = "";
+        if (runConfigMap[localRunKeysArray[i]].hasOwnProperty('singlePartitionFM')) { singlePartitionFM=runConfigMap[localRunKeysArray[i]].singlePartitionFM; }
+        dropdownoption = dropdownoption + "<option value='" + runConfigMap[localRunKeysArray[i]].snippet + "' maskedresources='" + runConfigMap[localRunKeysArray[i]].maskedapps +"' maskedFM='" + maskedFM + "' + singlePartitionFM='" + singlePartitionFM + "' >" + localRunKeysArray[i] + "</option>";
     }
     dropdownoption = dropdownoption + "</select>";
     $('#dropdowndiv').html(dropdownoption);
@@ -184,7 +186,7 @@ function makedropdown(availableRunConfigs, availableLocalRunKeys) {
     var masterSnippetArgs = "'" + masterSnippetNumber + "', 'RUN_CONFIG_SELECTED'";
     var maskedResourcesNumber = $('#MASKED_RESOURCES').attr("name").substring(20);
     var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'MASKED_RESOURCES'";
-    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection(); preclickFMs(); fillMask();";
+    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection(); preclickFMs(); fillMask(); automateSinglePartition();";
     $('#dropdown').attr("onchange", onchanges);
 }
 
@@ -303,7 +305,7 @@ function setupMaskingPanels() {
          }
          preclickFMs();
          $('#SINGLEPARTITION_MODE').val("false");
-	 $('#singlePartitionSelection :input').prop('checked', false);
+         $('#singlePartitionSelection :input').prop('checked', false);
          $('#setGlobalParametersButton').show();
        }
        else if ($(this).attr("id") == "singlePartition") {
@@ -311,7 +313,7 @@ function setupMaskingPanels() {
            $('#newSINGLEPARTITION_MODEcheckbox :checkbox').click();
          }
          $('#SINGLEPARTITION_MODE').val("true");
-	 $('#singlePartitionSelection :input').prop('checked', false);
+       	 $('#singlePartitionSelection :input').prop('checked', false);
          $('#setGlobalParametersButton').hide();
        }
        //$(panelId).parent().find("input").prop('checked', false); // maybe this does something?
@@ -319,6 +321,23 @@ function setupMaskingPanels() {
     });
 }
 
+function automateSinglePartition() {
+  var singlePartitionFM = $('#dropdown option:selected').attr("singlePartitionFM");
+  if (singlePartitionFM != "") {
+    if ($.inArray(singlePartitionFM, getAvailableResources()) > -1) {
+      $('#singlePartition').click();   
+      var selector = '#singlePartitionSelection :input[value="' + singlePartitionFM + '"]';
+      $(selector).click();
+    }
+    else {
+      alert("Error! It seems that the singlePartitionFM specified by the run key does not match with any FM name! The requested singlePartitionFM is: " + defaultPartition);
+    }
+  }
+  else {
+    $('#multiPartition').click();   
+    $('#setGlobalParametersButton').show();
+  }
+}
 
 function hcalOnLoad() {
   if ($('input[value="STATE"]').size() > 0) { // this is a sanity check to see if we're actually attached
