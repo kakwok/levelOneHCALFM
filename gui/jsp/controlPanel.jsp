@@ -341,7 +341,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                     </div>
                                     <br />
                                     <div>
-                                      Masked resources: <span id="maskTest"></span>
+                                      Masked FMs: <span id="maskTest"></span>
                                       <div>
                                         <div id="multiPartitionSelection" class="tbl"></div>
                                         <div id="singlePartitionSelection" class="tbl"></div>
