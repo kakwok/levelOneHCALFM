@@ -199,17 +199,23 @@ function fillMask() {
     //$('#dropdown option:selected').text()
     var userXMLmaskedApps = $('#dropdown option:selected').attr("maskedresources").split("|");
     for (var i = 0; i < userXMLmaskedApps.length; i++) {
-      finalMasks.push(userXMLmaskedApps[i]);
+      if (userXMLmaskedApps[i] != "") finalMasks.push(userXMLmaskedApps[i]);
     }
     $('#MASKED_RESOURCES').val(JSON.stringify(finalMasks));
-    $('#maskTest').html($('#MASKED_RESOURCES').val());
+    var masksToShow = "[";
+    var availableResources = getAvailableResources();
+    $.each(finalMasks, function(index, maskedResource) {
+      if ( $.inArray(maskedResource, availableResources) > -1){
+        masksToShow += maskedResource + ", ";
+      }
+    });
+    masksToShow += "]";
+    masksToShow = masksToShow.replace(", ]", "]");
+    $('#maskTest').text(masksToShow);
 }
 
 function getAvailableResources() {
-    var param = $('#AVAILABLE_RESOURCES').html().replace("[", "").replace("]","");
-    param =  param.replace(/['"]+/g, '');
-    var array = param.split(',');
-    return array;
+    return JSON.parse($('#AVAILABLE_RESOURCES').val());
 }
 
 function makecheckboxes() {
