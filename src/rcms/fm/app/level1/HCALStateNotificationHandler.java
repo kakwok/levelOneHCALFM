@@ -45,11 +45,12 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
     //State notification callback
     public void processNotice( Object notice ) throws UserActionException {
 
-      StateNotification notification = (StateNotification)notice;
+      //StateNotification notification = (StateNotification)notice;
       //logger.warn("["+fm.FMname+"]: State notification received "+
       //    "from " + notification.getIdentifier() +
       //    " from state: " + notification.getFromState()+
-      //    " to: " + notification.getToState());
+      //    " to: " + notification.getToState()+
+      //    " with reason: " + notification.getReason());
       
       String actualState = fm.getState().getStateString();
       //logger.warn("["+fm.FMname+"]: FM is in state: "+actualState);
@@ -64,10 +65,16 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
           appName = fm.findApplicationName( notification.getIdentifier() );
         } catch(Exception e){}
         String actionMsg = appName+"["+notification.getIdentifier()+"] is in ERROR";
-        String errMsg =  actionMsg;
-        if (!fm.containerhcalSupervisor.isEmpty()) {
+        //Default errMessage
+        String errMsg    = actionMsg;
+        //Check if notification comes from my supervisor
+        if (!fm.containerhcalSupervisor.isEmpty() && appName.contains("hcalSupervisor")) {
           ((HCALlevelTwoFunctionManager)fm).getSupervisorErrorMessage();
           errMsg = "[HCAL Level2 " + fm.getName().toString() + "] got an error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get("SUPERVISOR_ERROR").getValue()).getString();
+        }
+        // Handles error from TCDS
+        else if (!fm.containerTCDSControllers.isEmpty()){
+          errMsg = "[HCAL LV2 " + fm.FMname+ "] "+ appName+" is in ERROR, the reason is: "+ notification.getReason();
         }
         else if (!fm.containerFMChildren.isEmpty()) {
           errMsg = "[HCAL LVL1 " + fm.FMname + "] Error received: " + notification.getReason();

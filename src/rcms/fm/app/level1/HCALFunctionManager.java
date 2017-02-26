@@ -835,6 +835,7 @@ public class HCALFunctionManager extends UserFunctionManager {
   String findApplicationName( String id ) throws Exception {
 
     List<XdaqApplication> apps = containerXdaqApplication.getApplications();
+    apps.addAll(containerXdaqServiceApplication.getApplications());
     Iterator appIterator = apps.iterator();
     while( appIterator.hasNext( ) ) {
       XdaqApplication app = (XdaqApplication)appIterator.next();
