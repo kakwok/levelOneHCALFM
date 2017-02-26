@@ -45,7 +45,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
     //State notification callback
     public void processNotice( Object notice ) throws UserActionException {
 
-      //StateNotification notification = (StateNotification)notice;
+      StateNotification notification = (StateNotification)notice;
       //logger.warn("["+fm.FMname+"]: State notification received "+
       //    "from " + notification.getIdentifier() +
       //    " from state: " + notification.getFromState()+
