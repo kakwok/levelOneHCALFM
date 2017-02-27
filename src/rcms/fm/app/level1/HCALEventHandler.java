@@ -790,9 +790,9 @@ public class HCALEventHandler extends UserEventHandler {
 
             List<String> pamNames      = pam.getNames();
             List<String> pamNamesToSet = new ArrayList<String>();
-            if (pamNames.contains("RUInstance")) {              pamNamesToSet.add("RUInstance")              ;}
+            if (pamNames.contains("RUinstance")) {              pamNamesToSet.add("RUinstance")              ;}
             if (pamNames.contains("BUInstance")) {              pamNamesToSet.add("BUInstance")              ;}
-            if (pamNames.contains("EVMInstance")){              pamNamesToSet.add("EVMInstance")             ;}
+            if (pamNames.contains("EVMinstance")){              pamNamesToSet.add("EVMinstance")             ;}
             if (pamNames.contains("HandleTCDS")) {              pamNamesToSet.add("HandleTCDS")              ;}
             if (pamNames.contains("EnableDisableTTCOrTCDS")) {  pamNamesToSet.add("EnableDisableTTCOrTCDS")  ;}
             
@@ -802,9 +802,9 @@ public class HCALEventHandler extends UserEventHandler {
               pamNamesToSet_str = pamNamesToSet.toArray(pamNamesToSet_str);
 
               pam.select(pamNamesToSet_str);
-              if (pamNamesToSet.contains("RUInstance")) {              pam.setValue("RUInstance", ruInstance.split("_")[1])              ;}
+              if (pamNamesToSet.contains("RUinstance")) {              pam.setValue("RUinstance", ruInstance.split("_")[1])              ;}
               if (pamNamesToSet.contains("BUInstance")) {              pam.setValue("BUInstance", ruInstance.split("_")[1])              ;}
-              if (pamNamesToSet.contains("EVMInstance")){              pam.setValue("EVMInstance", ruInstance.split("_")[1])             ;}
+              if (pamNamesToSet.contains("EVMinstance")){              pam.setValue("EVMinstance", ruInstance.split("_")[1])             ;}
               if (pamNamesToSet.contains("HandleTCDS")) {              pam.setValue("HandleTCDS","false")                                ;}
               if (pamNamesToSet.contains("EnableDisableTTCOrTCDS")) {  pam.setValue("EnableDisableTTCOrTCDS","false")                    ;}
  
