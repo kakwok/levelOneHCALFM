@@ -1104,51 +1104,51 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         List<QualifiedResource> EvmTrigFMtoStartList    = functionManager.containerFMChildrenEvmTrig.getActiveQRList();
         List<QualifiedResource> lpmOrTTCciFMtoStartList = functionManager.containerFMTCDSLPM.getActiveQRList();
 
-        List<FunctionManager> iciFMsToStartList    = new ArrayList<FunctionManager>();
+        //List<FunctionManager> iciFMsToStartList    = new ArrayList<FunctionManager>();
         List<FunctionManager> normalFMsToStartList = new ArrayList<FunctionManager>();
         // add FMs with ICI to iciFMtoStartList; other normalFMs go into normalFMsToStartList
         for(QualifiedResource qr : fmChildrenList){
-          ParameterSet<FunctionManagerParameter> paraSet = new ParameterSet<FunctionManagerParameter>();
-          try {
-            paraSet = ((FunctionManager)qr).getParameter();
-          }
-          catch (ParameterServiceException e) {
-            String errMsg = "[HCAL " + functionManager.FMname + "] Could not get HAS_ICICONTROLLER parameter for FM client: " + qr.getResource().getName();
-            functionManager.goToError(errMsg,e);
-          }
-          if(((BooleanT)paraSet.get("HAS_ICICONTROLLER").getValue()).getBoolean())
-            iciFMsToStartList.add((FunctionManager)qr);
-          else
+          //ParameterSet<FunctionManagerParameter> paraSet = new ParameterSet<FunctionManagerParameter>();
+          //try {
+          //  paraSet = ((FunctionManager)qr).getParameter();
+          //}
+          //catch (ParameterServiceException e) {
+          //  String errMsg = "[HCAL " + functionManager.FMname + "] Could not get HAS_ICICONTROLLER parameter for FM client: " + qr.getResource().getName();
+          //  functionManager.goToError(errMsg,e);
+          //}
+          //if(((BooleanT)paraSet.get("HAS_ICICONTROLLER").getValue()).getBoolean())
+          //  iciFMsToStartList.add((FunctionManager)qr);
+          //else
             normalFMsToStartList.add((FunctionManager)qr);
         }
         normalFMsToStartList.removeAll(EvmTrigFMtoStartList);
         normalFMsToStartList.removeAll(lpmOrTTCciFMtoStartList);
-        iciFMsToStartList.removeAll(EvmTrigFMtoStartList); // evmTrig might be a normal FM with an ICI
+        //iciFMsToStartList.removeAll(EvmTrigFMtoStartList); // evmTrig might be a normal FM with an ICI
         
         // if we have an LPM, then we're done for multipartition; just start it last (as below)
 
-        if(lpmOrTTCciFMtoStartList.isEmpty()) {
-            // we have no LPM (or TTCci)
-            // this should be the case for 1) single-partition runs (in which case we have a TA, i.e., an EvmTrig FM)
-            //                             2) global (in which case there is no EvmTrig FM and all children are just started as normal)
-            if(!EvmTrigFMtoStartList.isEmpty()) { // 1) single partition
-              // a) local daq fm - this means the FM with the ici needs to be started last
-              //                 - in this case, we have at least one normal FM and an EvmTrig FM
-              if(!iciFMsToStartList.isEmpty())     {
-                if(iciFMsToStartList.size()!=1) { // here we should have only one FM with an ICI (def. of single partition)
-                  String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! This is unexpected. There is more than one child FM containing an ICIController. Can't figure out which to start last.";
-                  functionManager.goToError(errMessage);
-                }
-                lpmOrTTCciFMtoStartList.addAll(iciFMsToStartList); // reuse the LPM list to get this one started last
-              }
-              // b) no local daq fm - the EvmTrig FM should be started last, as it has the ICI
-              //                 - in this case, we don't need to do anything, as there will be no other ICI FM to start
-            }
-            else { // 2) global
-              // in this case, we add the FMs with ICIs back to the normalFMsToStartList
-              normalFMsToStartList.addAll(iciFMsToStartList);
-            }
-        }
+        //if(lpmOrTTCciFMtoStartList.isEmpty()) {
+        //    // we have no LPM (or TTCci)
+        //    // this should be the case for 1) single-partition runs (in which case we have a TA, i.e., an EvmTrig FM)
+        //    //                             2) global (in which case there is no EvmTrig FM and all children are just started as normal)
+        //    if(!EvmTrigFMtoStartList.isEmpty()) { // 1) single partition
+        //      // a) local daq fm - this means the FM with the ici needs to be started last
+        //      //                 - in this case, we have at least one normal FM and an EvmTrig FM
+        //      if(!iciFMsToStartList.isEmpty())     {
+        //        if(iciFMsToStartList.size()!=1) { // here we should have only one FM with an ICI (def. of single partition)
+        //          String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! This is unexpected. There is more than one child FM containing an ICIController. Can't figure out which to start last.";
+        //          functionManager.goToError(errMessage);
+        //        }
+        //        lpmOrTTCciFMtoStartList.addAll(iciFMsToStartList); // reuse the LPM list to get this one started last
+        //      }
+        //      // b) no local daq fm - the EvmTrig FM should be started last, as it has the ICI
+        //      //                 - in this case, we don't need to do anything, as there will be no other ICI FM to start
+        //    }
+        //    else { // 2) global
+        //      // in this case, we add the FMs with ICIs back to the normalFMsToStartList
+        //      normalFMsToStartList.addAll(iciFMsToStartList);
+        //    }
+        //}
 
         QualifiedResourceContainer normalFMsToStartContainer    = new QualifiedResourceContainer(normalFMsToStartList);
         QualifiedResourceContainer EvmTrigFMtoStartContainer    = new QualifiedResourceContainer(EvmTrigFMtoStartList);

@@ -127,7 +127,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       for( QualifiedResource qr : xdaqExecList) {
         XdaqExecutive exec = (XdaqExecutive)qr;
         //logger.info("[JohnLog3] " + functionManager.FMname + " Found qualified resource: " + qr.getName());
-        //logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Found qualified resource: " + qr.getName());
         XdaqExecutiveConfiguration config =  exec.getXdaqExecutiveConfiguration();
         String oldExecXML = config.getXml();
         try {
@@ -147,7 +146,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           System.out.println("Set the utcp connectOnRequest attribute.");
           config.setXml(newExecXML);
           //logger.info("[JohnLog3] " + functionManager.FMname + ": Just set the xml for executive " + qr.getName());
-          logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the xml for executive " + qr.getName());
         }
         catch (UserActionException e) {
           String errMessage = e.getMessage();
@@ -1061,27 +1059,29 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         Input ICIbgoInput= new Input("SendBgo");
         ParameterSet<CommandParameter> OC0pSet  = new ParameterSet<CommandParameter>();
         OC0pSet.put(  new CommandParameter<StringT> ("bgoName", new StringT("OC0"))   );
+         ICIbgoInput.setParameters( OC0pSet );
+        LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerICIController, ICIbgoInput, HCALStates.STARTING, HCALStates.ENABLED, "["+functionManager.FMname+"] Sending BgoTrain to ICI"));
         ParameterSet<CommandParameter> EC0pSet  = new ParameterSet<CommandParameter>();
         EC0pSet.put(  new CommandParameter<StringT> ("bgoName", new StringT("EC0"))   );
+        ICIbgoInput.setParameters( EC0pSet );
+        LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerICIController, ICIbgoInput, HCALStates.STARTING, HCALStates.ENABLED, "["+functionManager.FMname+"] Sending BgoTrain to ICI"));
 
-        Integer sid = ((IntegerT)functionManager.getParameterSet().get("SID").getValue()).getInteger();
-        for (XdaqApplication ici: functionManager.containerICIController.getApplications()){
-          try{
-            ICIbgoInput.setParameters( OC0pSet );
-            logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Sending OCO to ICI:");    
-            ici.executeIgnoreReturnState(ICIbgoInput, sid.toString(), null);
-            try { Thread.sleep(1000); }
-            catch (Exception ignored) { return; }
-            logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Sending ECO to ICI:");    
-            ICIbgoInput.setParameters( EC0pSet );
-            ici.executeIgnoreReturnState(ICIbgoInput, sid.toString(), null);
-          }
-          catch(CommandException e){
-            logger.error("[HCAL LVL2 "+ functionManager.FMname+"] ICISendBgo: "+e.getMessage());
-          }
-        }
-
-        //LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerICIController, ICIbgoInput, HCALStates.STARTING, HCALStates.ENABLED, "["+functionManager.FMname+"] Sending BgoTrain to ICI"));
+        //Integer sid = ((IntegerT)functionManager.getParameterSet().get("SID").getValue()).getInteger();
+        //for (XdaqApplication ici: functionManager.containerICIController.getApplications()){
+        //  try{
+        //    ICIbgoInput.setParameters( OC0pSet );
+        //    logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Sending OCO to ICI:");    
+        //    ici.executeIgnoreReturnState(ICIbgoInput, sid.toString(), null);
+        //    try { Thread.sleep(1000); }
+        //    catch (Exception ignored) { return; }
+        //    logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Sending ECO to ICI:");    
+        //    ICIbgoInput.setParameters( EC0pSet );
+        //    ici.executeIgnoreReturnState(ICIbgoInput, sid.toString(), null);
+        //  }
+        //  catch(CommandException e){
+        //    logger.error("[HCAL LVL2 "+ functionManager.FMname+"] ICISendBgo: "+e.getMessage());
+        //  }
+        //}
         // LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerICIController, ICIbgoInput, HCALStates.STARTING, HCALStates.ENABLED, "["+functionManager.FMname+"] Sending BgoTrain to ICI"));
       }
       // start Trigger adapter
