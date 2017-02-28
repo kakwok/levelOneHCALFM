@@ -1055,16 +1055,17 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       // SendBgos to ICI if we are in singlePartition mode
       if (!functionManager.containerICIController.isEmpty() ){
-        logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Sending start Bgo to ICI:");
-        Input ICIbgoInput= new Input("SendBgo");
+        logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Sending B-gos to ICIController");
+        Input oc0bgoInput= new Input("SendBgo");
         ParameterSet<CommandParameter> OC0pSet  = new ParameterSet<CommandParameter>();
         OC0pSet.put(  new CommandParameter<StringT> ("bgoName", new StringT("OC0"))   );
-         ICIbgoInput.setParameters( OC0pSet );
-        LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerICIController, ICIbgoInput, HCALStates.STARTING, HCALStates.ENABLED, "["+functionManager.FMname+"] Sending BgoTrain to ICI"));
+        oc0bgoInput.setParameters( OC0pSet );
+        LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerICIController, oc0bgoInput, HCALStates.STARTING, HCALStates.ENABLED, "["+functionManager.FMname+"] Sending OC0 to ICI"));
+        Input ec0bgoInput= new Input("SendBgo");
         ParameterSet<CommandParameter> EC0pSet  = new ParameterSet<CommandParameter>();
         EC0pSet.put(  new CommandParameter<StringT> ("bgoName", new StringT("EC0"))   );
-        ICIbgoInput.setParameters( EC0pSet );
-        LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerICIController, ICIbgoInput, HCALStates.STARTING, HCALStates.ENABLED, "["+functionManager.FMname+"] Sending BgoTrain to ICI"));
+        ec0bgoInput.setParameters( EC0pSet );
+        LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerICIController, ec0bgoInput, HCALStates.STARTING, HCALStates.ENABLED, "["+functionManager.FMname+"] Sending EC0 to ICI"));
 
         //Integer sid = ((IntegerT)functionManager.getParameterSet().get("SID").getValue()).getInteger();
         //for (XdaqApplication ici: functionManager.containerICIController.getApplications()){
