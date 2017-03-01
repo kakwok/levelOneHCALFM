@@ -213,7 +213,6 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
         }
       }
 
-logger.warn("SETHLOG OTHER NOTIFICATION RECEIVED; JUST BEFORE TASKSEQUENCE NULL CHECK");
       if(taskSequence == null) {
 
         setTimeoutThread(false);
@@ -224,13 +223,11 @@ logger.warn("SETHLOG OTHER NOTIFICATION RECEIVED; JUST BEFORE TASKSEQUENCE NULL 
         return;
       }
 
-logger.warn("SETHLOG MADE IT TO THE WHILE LOOP");
       // do a while loop to cover synchronous tasks which finish immediately (adapted from top FM code)
       //
       //
       while (activeTask==null || activeTask.isCompleted()) {
-logger.warn("SETHLOG WHILE ACTIVETASK IS NULL OR COMPLETED");
-        if (taskSequence.isCompleted()) {
+        if (taskSequence.isEmpty()) {
           String completionMsg = "Transition completed";
           fm.setAction(completionMsg);
           logger.info(completionMsg);
@@ -244,7 +241,6 @@ logger.warn("SETHLOG WHILE ACTIVETASK IS NULL OR COMPLETED");
           break;
         }
         else {
-logger.warn("SETHLOG IN WHILE; TASKSEQUENCE NOT COMPLETE; STEP TO NEXT TASK");
           activeTask = (Task) taskSequence.removeFirst();
           logger.info("Start new task: " + activeTask.getDescription());
           fm.setAction("Executing: " + activeTask.getDescription());
@@ -306,11 +302,6 @@ logger.warn("SETHLOG IN WHILE; TASKSEQUENCE NOT COMPLETE; STEP TO NEXT TASK");
         State FMState = fm.getState();
  
         fm.setAction("Transition Completed");
- 
-        if (taskSequence.getCompletionEvent().equals(HCALInputs.SETCONFIGURE) ) {
-            //String transMsg = String.format( "services configured ["+fm.getConfiguredServices()+"]");
-            //fm.setTransitionMessage( transMsg );
-        }
  
         //fm.setTransitionEndTime();
         setTimeoutThread(false);
