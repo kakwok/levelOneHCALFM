@@ -622,6 +622,25 @@ public class HCALEventHandler extends UserEventHandler {
     //Always set TCDS executive to initialized and the Job control to Active false
     maskTCDSExecAndJC(qg);
 
+    // Fill containers of TCDS apps
+    functionManager.containerXdaqServiceApplication = new XdaqApplicationContainer(qg.seekQualifiedResourcesOfType(new XdaqServiceApplication()));
+    PrintQRnames(functionManager.containerXdaqServiceApplication);
+    XdaqApplicationContainer XdaqServiceAppContainer    = functionManager.containerXdaqServiceApplication ;
+
+    List<XdaqApplication> tcdsList = new ArrayList<XdaqApplication>();
+    tcdsList.addAll(XdaqServiceAppContainer.getApplicationsOfClass("tcds::lpm::LPMController"));
+    tcdsList.addAll(XdaqServiceAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
+    tcdsList.addAll(XdaqServiceAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
+    functionManager.containerTCDSControllers = new XdaqApplicationContainer(tcdsList);
+    functionManager.containerlpmController   = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::lpm::LPMController"));
+    functionManager.containerICIController   = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
+    if(!functionManager.containerICIController.isEmpty())
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("HAS_ICICONTROLLER",new BooleanT(true)));
+    functionManager.containerPIController    = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
+
+    // Halt TCDS apps
+    functionManager.haltTCDSControllers();
+
     try {
       qg.init();
     }
@@ -634,6 +653,7 @@ public class HCALEventHandler extends UserEventHandler {
       String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to initialize resources. "; 
       functionManager.goToError(errMessage,e);
     }
+
     ////////////////////////////////////////
     // Fill containers for levelOne FM
     ////////////////////////////////////////
@@ -689,20 +709,6 @@ public class HCALEventHandler extends UserEventHandler {
     // TA container to be filled by getTriggerAdapter
     functionManager.containerTriggerAdapter = new XdaqApplicationContainer(new ArrayList<XdaqApplication>());
 
-    // TCDS apps
-    functionManager.containerXdaqServiceApplication = new XdaqApplicationContainer(qg.seekQualifiedResourcesOfType(new XdaqServiceApplication()));
-    XdaqApplicationContainer XdaqServiceAppContainer    = functionManager.containerXdaqServiceApplication ;
-
-    List<XdaqApplication> tcdsList = new ArrayList<XdaqApplication>();
-    tcdsList.addAll(XdaqServiceAppContainer.getApplicationsOfClass("tcds::lpm::LPMController"));
-    tcdsList.addAll(XdaqServiceAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
-    tcdsList.addAll(XdaqServiceAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
-    functionManager.containerTCDSControllers = new XdaqApplicationContainer(tcdsList);
-    functionManager.containerlpmController   = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::lpm::LPMController"));
-    functionManager.containerICIController   = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
-    if(!functionManager.containerICIController.isEmpty())
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("HAS_ICICONTROLLER",new BooleanT(true)));
-    functionManager.containerPIController    = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
     
     functionManager.containerhcalDCCManager = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalDCCManager"));
     functionManager.containerTTCciControl   = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("ttc::TTCciControl"));
@@ -2538,12 +2544,18 @@ public class HCALEventHandler extends UserEventHandler {
 
   void maskTCDSExecAndJC(QualifiedGroup qg){
      // mark TCDS execs as initialized and mask their JobControl
-    List<QualifiedResource> xdaqExecutiveList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
+    List<QualifiedResource> xdaqExecutiveList   = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
+    List<QualifiedResource> xdaqServiceAppsList = qg.seekQualifiedResourcesOfType(new XdaqServiceApplication());
     for (QualifiedResource qr : xdaqExecutiveList) {
       if (qr.getResource().getHostName().contains("tcds") ) {
         qr.setInitialized(true);
         qg.seekQualifiedResourceOnPC(qr, new JobControl()).setActive(false);
       }
     }   
+    for (QualifiedResource qr : xdaqServiceAppsList) {
+      if (qr.getResource().getHostName().contains("tcds") ) {
+        qr.setInitialized(true);
+      }
+    }
   } 
 }
