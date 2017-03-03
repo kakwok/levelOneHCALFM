@@ -697,12 +697,21 @@ public class HCALEventHandler extends UserEventHandler {
     tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::ici::ICIController"));
     tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::pi::PIController"));
     functionManager.containerTCDSControllers = new XdaqApplicationContainer(tcdsList);
-    functionManager.containerlpmController   = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::lpm::LPMController"));
-    functionManager.containerICIController   = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::ici::ICIController"));
-    functionManager.containerPIController    = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::pi::PIController"));
+    functionManager.containerlpmController   = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::lpm::LPMController"));
+    functionManager.containerICIController   = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
+    functionManager.containerPIController    = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
+    
 
     // Halt TCDS apps
-    functionManager.haltTCDSControllers();
+    try{
+      functionManager.haltTCDSControllers();
+    }catch(UserActionException e){
+      String errMessage ="[HCAL LV2 "+functionManager.FMname+"] Failed to haltTCDS controllers";
+      //TODO: throw an exception to stop LV2's initAction to continue
+      //throw e;
+      functionManager.goToError(errMessage,e);
+      return;
+    }
 
     try {
       qg.init();
@@ -2777,6 +2786,7 @@ public class HCALEventHandler extends UserEventHandler {
         qg.seekQualifiedResourceOnPC(qr, new JobControl()).setActive(false);
       }
     }   
+    // mark TCDS service apps as initialized 
     for (QualifiedResource qr : xdaqServiceAppsList) {
       if (qr.getResource().getHostName().contains("tcds") ) {
         qr.setInitialized(true);
