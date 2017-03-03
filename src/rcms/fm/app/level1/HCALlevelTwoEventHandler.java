@@ -335,6 +335,14 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // init all XDAQ executives
       // also halt all LPM applications inside here
       initXDAQ();
+      
+      // Halt TCDS controllers to release the lease
+      try{
+        functionManager.haltTCDSControllers();
+      }catch (UserActionException e){
+        String errMessage = "[HCAL LVL2 "+ functionManager.FMname +"] resetAction: Failed to haltTCDS controllers";
+        functionManager.goToError(errMessage,e);
+      }
 
       //Set instance numbers and HandleLPM in the infospace
       initXDAQinfospace();
@@ -391,8 +399,13 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: recoverAction()";
         functionManager.goToError(errMessage);
       }
-      // halt LPM
-      functionManager.haltLPMControllers();
+      // halt TCDS Controllers
+      try{
+        functionManager.haltTCDSControllers();
+      }catch(UserActionException e){
+        String errMessage = "[HCAL LVL2 "+functionManager.FMname +"] RecoverAction: failed to haltTCDSControllers";
+        functionManager.goToError(errMessage,e);
+      }
 
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
