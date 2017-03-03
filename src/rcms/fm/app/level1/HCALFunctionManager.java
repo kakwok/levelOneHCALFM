@@ -13,6 +13,7 @@ import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainer;
 import rcms.fm.resource.QualifiedResourceContainerException;
+import rcms.fm.resource.CommandException;
 import rcms.fm.resource.qualifiedresource.XdaqApplicationContainer;
 import rcms.fm.resource.qualifiedresource.XdaqApplication;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
@@ -46,6 +47,7 @@ import java.util.Date;
 import java.util.TimeZone;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.util.Map;
 import java.net.URL;
 import java.net.MalformedURLException;
 
@@ -436,11 +438,11 @@ public class HCALFunctionManager extends UserFunctionManager {
         if (!containerTCDSControllers.isEmpty()){
           try{
             logger.info("[HCAL LVL2 " + FMname + "] Trying to halt TCDS on destroy.");
-            containerTCDSControllers.execute(HCALInputs.HALT);
+            haltTCDSControllers();
           }
-          catch (QualifiedResourceContainerException e) {
-            String errMessage = "[HCAL LVL2 " + FMname + "] Error! QualifiedResourceContainerException: Halt TCDS failed ..."+e.getMessage();
-            logger.error(errMessage);
+          catch (UserActionException e) {
+            String errMessage = "[HCAL LVL2 " + FMname + "] DestroyAction: "+e.getMessage();
+            logger.warn(errMessage);
           }
         }
       }
@@ -871,7 +873,7 @@ public class HCALFunctionManager extends UserFunctionManager {
   /**----------------------------------------------------------------------
    * halt the TCDS controllers 
    */
-  public void haltTCDSControllers() {
+  public void haltTCDSControllers() throws UserActionException{
     try{
       if (!containerlpmController.isEmpty()) {
         logger.info("[HCAL LVL2 " + FMname + "]  Sending halt to LPM ");
@@ -889,8 +891,12 @@ public class HCALFunctionManager extends UserFunctionManager {
       }
     }
     catch (QualifiedResourceContainerException e) {
-      String errMessage = "[HCAL LVL2 " + FMname + "] Error! QualifiedResourceContainerException: Failed halting LPM/PI/ICI...";
-      goToError(errMessage,e);
+      String errMessage = " haltTCDSControllers: ";
+      Map<QualifiedResource, CommandException> CommandExceptionMap = e.getCommandExceptionMap();
+      for (QualifiedResource qr : CommandExceptionMap.keySet()){
+        errMessage += " Failed to halt "+ qr.getName() + " with reason: " +  CommandExceptionMap.get(qr).getFaultString() +"\n";
+      }
+      throw new UserActionException(errMessage);
     }
   }
  

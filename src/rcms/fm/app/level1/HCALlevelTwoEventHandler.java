@@ -312,7 +312,12 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       initXDAQ();
       
       // Halt TCDS controllers to release the lease
-      functionManager.haltTCDSControllers();
+      try{
+        functionManager.haltTCDSControllers();
+      }catch (UserActionException e){
+        String errMessage = "[HCAL LVL2 "+ functionManager.FMname +"] resetAction: Failed to haltTCDS controllers";
+        functionManager.goToError(errMessage,e);
+      }
 
       //Set instance numbers and other items in the infospace
       initXDAQinfospace();
@@ -370,7 +375,12 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         functionManager.goToError(errMessage);
       }
       // halt TCDS Controllers
-      functionManager.haltTCDSControllers();
+      try{
+        functionManager.haltTCDSControllers();
+      }catch(UserActionException e){
+        String errMessage = "[HCAL LVL2 "+functionManager.FMname +"] RecoverAction: failed to haltTCDSControllers";
+        functionManager.goToError(errMessage,e);
+      }
 
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));

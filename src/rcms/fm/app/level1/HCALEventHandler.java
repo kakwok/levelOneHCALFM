@@ -624,7 +624,6 @@ public class HCALEventHandler extends UserEventHandler {
 
     // Fill containers of TCDS apps
     functionManager.containerXdaqServiceApplication = new XdaqApplicationContainer(qg.seekQualifiedResourcesOfType(new XdaqServiceApplication()));
-    PrintQRnames(functionManager.containerXdaqServiceApplication);
     XdaqApplicationContainer XdaqServiceAppContainer    = functionManager.containerXdaqServiceApplication ;
 
     List<XdaqApplication> tcdsList = new ArrayList<XdaqApplication>();
@@ -637,9 +636,18 @@ public class HCALEventHandler extends UserEventHandler {
     if(!functionManager.containerICIController.isEmpty())
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("HAS_ICICONTROLLER",new BooleanT(true)));
     functionManager.containerPIController    = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
+    
 
     // Halt TCDS apps
-    functionManager.haltTCDSControllers();
+    try{
+      functionManager.haltTCDSControllers();
+    }catch(UserActionException e){
+      String errMessage ="[HCAL LV2 "+functionManager.FMname+"] Failed to haltTCDS controllers";
+      //TODO: throw an exception to stop LV2's initAction to continue
+      //throw e;
+      functionManager.goToError(errMessage,e);
+      return;
+    }
 
     try {
       qg.init();
@@ -2552,6 +2560,7 @@ public class HCALEventHandler extends UserEventHandler {
         qg.seekQualifiedResourceOnPC(qr, new JobControl()).setActive(false);
       }
     }   
+    // mark TCDS service apps as initialized 
     for (QualifiedResource qr : xdaqServiceAppsList) {
       if (qr.getResource().getHostName().contains("tcds") ) {
         qr.setInitialized(true);
