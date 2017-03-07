@@ -220,13 +220,15 @@ function getAvailableResources() {
 
 function makecheckboxes() {
     array = getAvailableResources();
-    var maskDivContents = "<strong>Partitions to mask:</strong>";
+    var maskDivContents = "<strong>Partitions to use:</strong>";
     maskDivContents += "<ul>";
     var radioButtonDivContents = "<strong>Partition to use:</strong><ul><form action=''>";
     for (var i = 0, l = array.length; i < l; i++) {
         var option = array[i].split(':');
-        var checkbox = "<li><input type='checkbox' onchange='fillMask();' value='" + option + "'>" + option + "</li>";
-        var radiobutton = "<li><input type='radio' name='singlePart' onchange='" + 'picksinglepartition("' + option +'");' + "' value='" + option + "'>" + option+"</li>";
+        var checkbox = "<li><input type='checkbox' onchange='fillMask();' value='" + option + "'>";
+        checkbox += "<div class='control__indicator'>&nbsp;</div>" + option + "</li>";
+        var radiobutton = "<li><input type='radio' name='singlePart' onchange='" + 'picksinglepartition("' + option +'");' + "' value='" + option + "'>";
+        radiobutton += "<div class='radio__indicator'>&nbsp;</div>" + option + "</li>";
         maskDivContents += checkbox;
         radioButtonDivContents += radiobutton;
     }
