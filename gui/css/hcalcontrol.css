@@ -329,12 +329,16 @@ body {
   border-style: solid;
   border-radius: 5px;
 }
-.control__indicator {
+.control_wrapper {
   position: relative;
+  left: -16px;
+  display: inline;
+  pointer-events: none;
+}
+.control__indicator {
   width: 11px;
   height: 11px;
   background: #00dd00;
-  left: -16px;
   display: inline;
   padding-left: 9px;
   z-index: 10;
@@ -344,12 +348,16 @@ body {
   border: 2px solid darkgrey;
   padding-top: 3px;
 }
-.radio__indicator {
+.radio_wrapper {
   position: relative;
+  left: -16px;
+  display: inline;
+  pointer-events: none;
+}
+.radio__indicator {
   width: 11px;
   height: 11px;
   background: #ff0000;
-  left: -16px;
   display: inline;
   padding-left: 9px;
   z-index: 10;
@@ -363,13 +371,13 @@ body {
   z-index: 11;
   opacity: 0;
 }
-#multiPartitionSelection input:checked ~ .control__indicator{
+#multiPartitionSelection input:checked ~ .control_wrapper > .control__indicator{
   background: #ff0000;
 }
 #singlePartitionSelection input{
   z-index: 11;
   opacity: 0;
 }
-#singlePartitionSelection input:checked ~ .radio__indicator{
+#singlePartitionSelection input:checked ~ .radio_wrapper > .radio__indicator{
   background: #00dd00;
 }
