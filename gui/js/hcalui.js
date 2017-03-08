@@ -226,9 +226,9 @@ function makecheckboxes() {
     for (var i = 0, l = array.length; i < l; i++) {
         var option = array[i].split(':');
         var checkbox = "<li><input type='checkbox' onchange='fillMask();' value='" + option + "'>";
-        checkbox += "<div class='control_wrapper'><div class='control__indicator'>&nbsp;</div>" + option + "</div></li>";
+        checkbox += "<div class='control_wrapper'><div class='control__indicator'><span></span></div>" + option + "</div></li>";
         var radiobutton = "<li><input type='radio' name='singlePart' onchange='" + 'picksinglepartition("' + option +'");' + "' value='" + option + "'>";
-        radiobutton += "<div class='radio_wrapper'><div class='radio__indicator'>&nbsp;</div>" + option + "</div></li>";
+        radiobutton += "<div class='radio_wrapper'><div class='radio__indicator'><span></span></div>" + option + "</div></li>";
         maskDivContents += checkbox;
         radioButtonDivContents += radiobutton;
     }
