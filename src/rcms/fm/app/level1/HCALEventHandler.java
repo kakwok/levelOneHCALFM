@@ -676,7 +676,7 @@ public class HCALEventHandler extends UserEventHandler {
       String hostName = qr.getResource().getHostName();
       // ===WARNING!!!=== This hostname is hardcoded and should NOT be!!!
       // TODO This needs to be moved out into userXML or a snippet!!!
-      if (hostName.equals("tcds-control-hcal.cms") || hostName.equals("tcds-control-904.cms904") ) {
+      if (hostName.contains("tcds") ) {
         usingTCDS = true;
         logger.info("[HCAL " + functionManager.FMname + "] initXDAQ() -- the TCDS executive on hostName " + hostName + " is being handled in a special way.");
         qr.setInitialized(true);
@@ -685,7 +685,7 @@ public class HCALEventHandler extends UserEventHandler {
 
     List<QualifiedResource> jobControlList = qg.seekQualifiedResourcesOfType(new JobControl());
     for (QualifiedResource qr: jobControlList) {
-      if (qr.getResource().getHostName().equals("tcds-control-hcal.cms") || qr.getResource().getHostName().equals("tcds-control-904.cms904") ) {
+      if (qr.getResource().getHostName().contains("tcds")  ) {
         logger.info("[HCAL " + functionManager.FMname + "] Masking the  application with name " + qr.getName() + " running on host " + qr.getResource().getHostName() );
         qr.setActive(false);
       }
@@ -737,7 +737,6 @@ public class HCALEventHandler extends UserEventHandler {
       String debugMessage = ("[HCAL " + functionManager.FMname + "] No FM childs found.\nThis is probably OK for a level 2 HCAL FM.\nThis FM has the role: " + functionManager.FMrole);
       logger.debug(debugMessage);
     }
-
     // see if we have any "special" FMs
     List<FunctionManager> evmTrigList = new ArrayList<FunctionManager>();
     List<FunctionManager> normalList = new ArrayList<FunctionManager>();
