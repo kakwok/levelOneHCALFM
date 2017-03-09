@@ -1075,6 +1075,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       }
 
+      publishRunInfoSummary();
+
       // prepare run number,etc. to be passed to level 2
       ParameterSet<CommandParameter> pSet = new ParameterSet<CommandParameter>();
       pSet.put(new CommandParameter<IntegerT>("RUN_NUMBER", new IntegerT(functionManager.RunNumber)));

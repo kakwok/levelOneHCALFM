@@ -775,41 +775,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // check parameter set
       if (parameterSet.size()==0) {
 
-        logger.error("[HCAL LVL2 " + functionManager.FMname +"] Did not receive parameters from LV1!");
-        //functionManager.RunNumber = ((IntegerT)functionManager.getHCALparameterSet().get("RUN_NUMBER").getValue()).getInteger();
-        //RunSeqNumber = ((IntegerT)functionManager.getHCALparameterSet().get("RUN_SEQ_NUMBER").getValue()).getInteger();
-        //TriggersToTake = ((IntegerT)functionManager.getHCALparameterSet().get("NUMBER_OF_EVENTS").getValue()).getInteger();
-
-        //if (!RunType.equals("local")) {
-        //  String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! command parameter problem for the startAction ...";
-				//	functionManager.goToError(errMessage);
-        //}
-        //else {
-        //  logger.info("[HCAL LVL2 " + functionManager.FMname + "] startAction: We are in local mode ...");
-
-        //  if (TestMode.equals("OfficialRunNumbers") || TestMode.equals("RunInfoPublish")) {
-
-        //    RunNumberData rnd = getOfficialRunNumber();
-
-        //    functionManager.RunNumber    = rnd.getRunNumber();
-        //    RunSeqNumber = rnd.getSequenceNumber();
-
-        //    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_NUMBER", new IntegerT(functionManager.RunNumber)));
-        //    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_SEQ_NUMBER", new IntegerT(RunSeqNumber)));
-
-        //    logger.debug("[HCAL LVL2 " + functionManager.FMname + "] TestMode! ... run number: " + functionManager.RunNumber + ", SequenceNumber: " + RunSeqNumber);
-        //  }
-
-        //  if (TestMode.equals("RunInfoPublish")) {
-        //    logger.warn("[HCAL LVL2 A] TestMode! Publishing RunInfo summary ...");
-        //    StartTime = new Date();
-        //    StopTime = new Date();
-        //    publishRunInfoSummary();
-        //    publishRunInfoSummaryfromXDAQ();
-        //    logger.warn("[HCAL LVL2 A] TestMode! ... RunInfo summary should be published.");
-        //  }
-
-        //}
+        String errMessage = "[HCAL LVL2 " + functionManager.FMname +"] Did not receive parameters from LV1 in StartAction!";
+	functionManager.goToError(errMessage);
       }
       else {
 
@@ -847,14 +814,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         //  if (RunType.equals("local")) { logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a run sequence number.\nThis is OK for global runs."); }
         //}
         
-        if (TestMode.equals("RunInfoPublish")) {
-          logger.warn("[HCAL LVL2 B] TestMode! Publishing RunInfo summary ...");
-          StartTime = new Date();
-          StopTime = new Date();
-          publishRunInfoSummary();
-          publishRunInfoSummaryfromXDAQ();
-          logger.warn("[HCAL LVL2 B] TestMode! ... RunInfo summary should be published.");
-        }
+        publishRunInfoSummary();
+        publishRunInfoSummaryfromXDAQ();
       }
       VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
       if (EmptyFMs.contains(new StringT(functionManager.FMname))){
