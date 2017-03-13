@@ -2513,7 +2513,7 @@ public class HCALEventHandler extends UserEventHandler {
               }
             }
             for (String ignoredPartition : ignoredPartitions) {
-              logger.warn("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: Alarms from this masked or empty partition will be ignored: "+ignoredPartition);
+              logger.debug("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: Alarms from this masked or empty partition will be ignored: "+ignoredPartition);
             }
 
             // ask for the status of the HCAL alarmer
@@ -2563,8 +2563,8 @@ public class HCALEventHandler extends UserEventHandler {
 
             // Actions taken based on alarmer results
             if (!totalStatus) {
-              // Print partition results
-              logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread : Printing partition statuses:");
+              // Print debug partition results
+              logger.debug("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread : Printing partition statuses:");
               for (String partitionName : watchedPartitions) {
                 String thisPartitionAlarmerResults = "[HCAL " + functionManager.FMname + "] David log : Partition " + partitionName + " / alarm " + partitionName + "_Status => ";
                 if (partitionStatuses.get(partitionName)) {
@@ -2575,8 +2575,16 @@ public class HCALEventHandler extends UserEventHandler {
                 if (ignoredPartitions.contains(partitionName)) {
                   thisPartitionAlarmerResults = thisPartitionAlarmerResults + " (but FM is EMPTY/MASKED, so ignoring)";
                 }
-                logger.warn(thisPartitionAlarmerResults);
+                logger.debug(thisPartitionAlarmerResults);
               }
+              // Print simple result
+              String PartitionAlarmerResult = "[HCAL " + functionManager.FMname + "] AlarmerWatchThread : Following partition status is not OK: ";
+              for (String partitionName : watchedPartitions){
+                if (!partitionStatuses.get(partitionName) && !ignoredPartitions.contains(partitionName)){
+                  PartitionAlarmerResult += partitionName + " " ;
+                }
+              }
+              logger.warn(PartitionAlarmerResult);
 
               // Put a message in the fishy box
               String badAlarmerMessage = "><))),> : RunningDegraded state due to:";
