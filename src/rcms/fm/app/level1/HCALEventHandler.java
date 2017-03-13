@@ -2443,6 +2443,7 @@ public class HCALEventHandler extends UserEventHandler {
       List<QualifiedResource> fmChildrenList    = functionManager.containerFMChildren.getActiveQRList();
       List<String>  watchedAlarms     = new ArrayList<String>();
       List<String>  watchedPartitions = new ArrayList<String>();
+      String        FMstate           =  functionManager.getState().getStateString();
       for(QualifiedResource qr : fmChildrenList){
         String LV2FMname             = qr.getName(); //e.g. HCAL_HO
         try{
@@ -2483,8 +2484,8 @@ public class HCALEventHandler extends UserEventHandler {
       while ((stopAlarmerWatchThread == false) && (functionManager != null) && (functionManager.isDestroyed() == false)) {
         Date now = Calendar.getInstance().getTime();
 
-        if (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()) ||
-            functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()) ) {
+        FMstate = functionManager.getState().getStateString();
+        if (FMstate.equals(HCALStates.RUNNING.toString()) || FMstate.equals(HCALStates.RUNNINGDEGRADED.toString()) ) {
           try {
             if (delayAlarmerWatchThread){
               try { Thread.sleep(60000); }   // delay the first poll by 60s when we enter Running state
@@ -2593,22 +2594,26 @@ public class HCALEventHandler extends UserEventHandler {
               }
               badAlarmerMessage += ". Please contact HCAL DOC!";
 
-              // go to degraded state if needed
-              if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
-                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: due to bad alarmer status (see previous messages), going to RUNNINGDEGRADED state");
-                functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
-                functionManager.setAction(badAlarmerMessage);
+              // get fresh FM state after first delay poll 
+              FMstate = functionManager.getState().getStateString();
+              if (FMstate.equals(HCALStates.RUNNING.toString()) || FMstate.equals(HCALStates.RUNNINGDEGRADED.toString()) ) {
+                // total status not OK and FMstate != RunningDegraded => go to degraded state 
+                if(!FMstate.equals(HCALStates.RUNNINGDEGRADED.toString())) {
+                  logger.warn("[HCAL " + functionManager.FMname + "] AlarmerWatchThread: due to bad alarmer status (see previous messages), going to RUNNINGDEGRADED state");
+                  functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
+                  functionManager.setAction(badAlarmerMessage);
+                }
+                else {
+                  logger.debug("[HCAL " + functionManager.FMname + "] AlarmerWatchThread: due to bad alarmer status (see previous messages), going to stay in RUNNINGDEGRADED state");
+                  functionManager.setAction(badAlarmerMessage);
+                }
               }
-              else {
-                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: due to bad alarmer status (see previous messages), going to stay in RUNNINGDEGRADED state");
-                functionManager.setAction(badAlarmerMessage);
-              }
-
             } else {
+              FMstate = functionManager.getState().getStateString();
               // Alarmer status is OK. If RUNNINGDEGRADED, unset.
-              if(functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
+              if(FMstate.equals(HCALStates.RUNNINGDEGRADED.toString())) {
                 // if we got back to OK, go back to RUNNING
-                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: Alarmer status is OK. Going to get out of RUNNINGDEGRADED state now");
+                logger.warn("[HCAL " + functionManager.FMname + "] AlarmerWatchThread: Alarmer status is OK. Going to get out of RUNNINGDEGRADED state now");
                 functionManager.fireEvent(HCALInputs.UNSETRUNNINGDEGRADED);
               }
             }
