@@ -120,10 +120,10 @@ public class HCALxmlHandler {
   }
 
   public String getHCALuserXMLelementContent(String tagName,Boolean isGrandMaster) throws UserActionException {
-    try {
       String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
       String MasterSnippetList = ((StringT) functionManager.getHCALparameterSet().get("HCAL_MASTERSNIPPETLIST").getValue()).getString();
       Element hcalUserXML = null;
+    try {
       if (!isGrandMaster){
         hcalUserXML = getHCALuserXML();
       }
