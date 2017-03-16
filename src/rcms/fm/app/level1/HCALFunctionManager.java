@@ -641,26 +641,13 @@ public class HCALFunctionManager extends UserFunctionManager {
         svCalc.add(sv);
       }
 
-      if (!containerFMChildren.isEmpty())
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.STOPPING);
-        sv.registerConditionState(containerFMChildrenNoEvmTrigNoTCDSLPM,HCALStates.RUNNING);
-        // need this gone for 904 to work
-        // why was it here for P5 anyway?
-        //sv.registerConditionState(containerFMTCDSLPM,HCALStates.CONFIGURED);
-        sv.registerConditionState(containerFMEvmTrig,HCALStates.STOPPING);
+        sv.registerConditionState(containerFMChildrenNormal,HCALStates.RUNNING);
+        sv.registerConditionState(containerFMEvmTrig,HCALStates.CONFIGURED);
         svCalc.add(sv);
       }
-
-//FIXME combine the two stopping SVs
-      //{
-      //  StateVector sv = new StateVector();
-      //  sv.setResultState(HCALStates.STOPPING);
-      //  sv.registerConditionState(containerFMChildrenNoEvmTrig,HCALStates.RUNNING);
-      //  sv.registerConditionState(containerFMEvmTrig,HCALStates.STOPPING);
-      //  svCalc.add(sv);
-      //}
 
       if (!containerFMChildren.isEmpty())
       {
