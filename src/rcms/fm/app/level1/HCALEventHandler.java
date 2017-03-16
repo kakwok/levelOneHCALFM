@@ -2171,21 +2171,15 @@ public class HCALEventHandler extends UserEventHandler {
             if (functionManager.containerTriggerAdapter!=null) {
               if (!functionManager.containerTriggerAdapter.isEmpty()) {
                 XDAQParameter pam = null;
-                String status = "undefined";
                 Double NextEventNumber = -1.0;
 
-                // ask for the status of the TriggerAdapter and wait until it is Ready, Failed
+                // Poll the nextEventNumber from TA to update the GUI run progress
                 for (QualifiedResource qr : functionManager.containerTriggerAdapter.getApplications() ){
                   try {
                     pam =((XdaqApplication)qr).getXDAQParameter();
 
-                    pam.select(new String[] {"stateName", "NextEventNumber"});
+                    pam.select(new String[] {"NextEventNumber"});
                     pam.get();
-                    status = pam.getValue("stateName");
-                    if (status==null) {
-                      String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the TA for the stateName when Running resulted in a NULL pointer - this is bad!";
-                      functionManager.goToError(errMessage);
-                    }
 
                     String NextEventNumberString = pam.getValue("NextEventNumber");
                     if (NextEventNumberString!=null) {
@@ -2203,40 +2197,20 @@ public class HCALEventHandler extends UserEventHandler {
                       functionManager.goToError(errMessage);
                     }
                     if(icount%5==0){
-                    logger.info("[HCAL " + functionManager.FMname + "] state of the TriggerAdapter stateName is: " + status + ".\nThe NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")");
+                      logger.info("[HCAL " + functionManager.FMname + "] The NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")");
                     }
 
-                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("The state of the TriggerAdapter is: " + status + ".\nThe NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")")));
+                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("The NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")")));
 
                   }
                   catch (XDAQTimeoutException e) {
                     String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: TriggerAdapterWatchThread()\n Perhaps this application is dead!?";
                     functionManager.goToError(errMessage,e);
-
                   }
                   catch (XDAQException e) {
                     String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: TriggerAdapterWatchThread()";
                     functionManager.goToError(errMessage,e);
                   }
-                }
-
-                if (status.equalsIgnoreCase("Failed")) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! TriggerAdapter reports error state: " + status + ". Please check log messages which were sent earlier than this one for more details ... (E9)";
-                  functionManager.goToError(errMessage);
-                }
-
-                if (status.equals("Ready")) {
-                  logger.info("[HCAL " + functionManager.FMname + "] The Trigger adapter reports: " + status + " , which means that all Triggers were sent ...");
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Stopping the TA ...")));
-
-                  if (!SpecialFMsAreControlled) {
-                    logger.warn("[SethLog HCAL " + functionManager.FMname + "] Do functionManager.fireEvent(HCALInputs.STOP)");
-                    functionManager.fireEvent(HCALInputs.STOP);
-                  }
-
-                  logger.debug("[HCAL " + functionManager.FMname + "] TriggerAdapter should have reported to be in the Ready state, which means the events are taken ...");
-                  logger.info("[HCAL " + functionManager.FMname + "] All L1As were sent, i.e. Trigger adapter is in the Ready state, changing back to Configured state ...");
                 }
               }
               else {
