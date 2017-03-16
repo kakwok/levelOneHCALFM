@@ -707,12 +707,14 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
               XDAQParameter pam = null;
               pam =((XdaqApplication)qr).getXDAQParameter();
 
-              pam.select(new String[] {"IsLocalRun", "TriggerKey", "ReportStateToRCMS"});
+              pam.select(new String[] {"IsLocalRun", "TriggerKey", "ReportStateToRCMS","IgnoreTriggerForEnable"});
               pam.setValue("IsLocalRun", String.valueOf(RunType.equals("local")));
               logger.info("[HCAL " + functionManager.FMname + "] Set IsLocalRun to: " + String.valueOf(RunType.equals("local")));
               pam.setValue("TriggerKey", TpgKey);
               pam.setValue("ReportStateToRCMS", "true");
               logger.info("[HCAL " + functionManager.FMname + "] Set ReportStateToRCMS to: true.");
+              pam.setValue("IgnoreTriggerForEnable", "false");
+              logger.info("[HCAL " + functionManager.FMname + "] Set IgnoreTriggerForEnable to: true.");
 
               pam.send();
             }
@@ -794,40 +796,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       if (parameterSet.size()==0) {
 
         logger.error("[HCAL LVL2 " + functionManager.FMname +"] Did not receive parameters from LV1!");
-        //functionManager.RunNumber = ((IntegerT)functionManager.getHCALparameterSet().get("RUN_NUMBER").getValue()).getInteger();
-        //RunSeqNumber = ((IntegerT)functionManager.getHCALparameterSet().get("RUN_SEQ_NUMBER").getValue()).getInteger();
-        //TriggersToTake = ((IntegerT)functionManager.getHCALparameterSet().get("NUMBER_OF_EVENTS").getValue()).getInteger();
 
-        //if (!RunType.equals("local")) {
-        //  String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! command parameter problem for the startAction ...";
-				//	functionManager.goToError(errMessage);
-        //}
-        //else {
-        //  logger.info("[HCAL LVL2 " + functionManager.FMname + "] startAction: We are in local mode ...");
-
-        //  if (TestMode.equals("OfficialRunNumbers") || TestMode.equals("RunInfoPublish")) {
-
-        //    RunNumberData rnd = getOfficialRunNumber();
-
-        //    functionManager.RunNumber    = rnd.getRunNumber();
-        //    RunSeqNumber = rnd.getSequenceNumber();
-
-        //    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_NUMBER", new IntegerT(functionManager.RunNumber)));
-        //    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_SEQ_NUMBER", new IntegerT(RunSeqNumber)));
-
-        //    logger.debug("[HCAL LVL2 " + functionManager.FMname + "] TestMode! ... run number: " + functionManager.RunNumber + ", SequenceNumber: " + RunSeqNumber);
-        //  }
-
-        //  if (TestMode.equals("RunInfoPublish")) {
-        //    logger.warn("[HCAL LVL2 A] TestMode! Publishing RunInfo summary ...");
-        //    StartTime = new Date();
-        //    StopTime = new Date();
-        //    publishRunInfoSummary();
-        //    publishRunInfoSummaryfromXDAQ();
-        //    logger.warn("[HCAL LVL2 A] TestMode! ... RunInfo summary should be published.");
-        //  }
-
-        //}
       }
       else {
 
@@ -1022,71 +991,20 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
         String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: startAction()";
 				functionManager.goToError(errMessage);
+      }else{
+        logger.info("[HCAL LVL2 " + functionManager.FMname +"] Firing Running for LPM");
+        functionManager.fireEvent(HCALInputs.SETSTART);
       }
       
       // define start time
       StartTime = new Date();
 
       TaskSequence LV2startTaskSeq  = new TaskSequence(HCALStates.STARTING,HCALInputs.SETSTART);
-     
-      // Enable TCDS apps 
-      if( !functionManager.containerTCDSControllers.isEmpty()){
-        ////////////////////////////////////////////////////////////////////////////////////
-        // Enable PI,ICI (LPM is enabled by TA)
-        // see: https://twiki.cern.ch/twiki/pub/CMS/TcdsNotes/tcds_control_software.pdf
-        ////////////////////////////////////////////////////////////////////////////////////
-        ParameterSet<CommandParameter> PIpSet  = new ParameterSet<CommandParameter>();
-        PIpSet.put(  new CommandParameter<UnsignedIntegerT> ("runNumber", new UnsignedIntegerT(functionManager.RunNumber))   );
-        ParameterSet<CommandParameter> ICIpSet = new ParameterSet<CommandParameter>();
-        ICIpSet.put( new CommandParameter<UnsignedIntegerT> ("runNumber", new UnsignedIntegerT(functionManager.RunNumber)) );
-        ParameterSet<CommandParameter> LPMpSet = new ParameterSet<CommandParameter>();
-        LPMpSet.put( new CommandParameter<UnsignedIntegerT> ("runNumber", new UnsignedIntegerT(functionManager.RunNumber)) );
 
-        LV2startTaskSeq = appendTCDSenableSeq(PIpSet,ICIpSet,LPMpSet,LV2startTaskSeq); 
-      }
       // Start hcalSupervisor 
       if( !functionManager.containerhcalSupervisor.isEmpty()) {
         logger.info("[HCAL LVL2 " + functionManager.FMname + "] Adding supervisor to LV2 start task");
         LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerhcalSupervisor, HCALInputs.HCALASYNCSTART, HCALStates.READY, HCALStates.ACTIVE, "["+functionManager.FMname+"] Enabling hcalSupervisor"));
-      }
-
-      // SendBgos to ICI if we are in singlePartition mode
-      if (!functionManager.containerICIController.isEmpty() ){
-        logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Sending B-gos to ICIController");
-        Input oc0bgoInput= new Input("SendBgo");
-        ParameterSet<CommandParameter> OC0pSet  = new ParameterSet<CommandParameter>();
-        OC0pSet.put(  new CommandParameter<StringT> ("bgoName", new StringT("OC0"))   );
-        oc0bgoInput.setParameters( OC0pSet );
-        LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerICIController, oc0bgoInput, HCALStates.STARTING, HCALStates.ENABLED, "["+functionManager.FMname+"] Sending OC0 to ICI"));
-        Input ec0bgoInput= new Input("SendBgo");
-        ParameterSet<CommandParameter> EC0pSet  = new ParameterSet<CommandParameter>();
-        EC0pSet.put(  new CommandParameter<StringT> ("bgoName", new StringT("EC0"))   );
-        ec0bgoInput.setParameters( EC0pSet );
-        LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerICIController, ec0bgoInput, HCALStates.STARTING, HCALStates.ENABLED, "["+functionManager.FMname+"] Sending EC0 to ICI"));
-
-        //Integer sid = ((IntegerT)functionManager.getParameterSet().get("SID").getValue()).getInteger();
-        //for (XdaqApplication ici: functionManager.containerICIController.getApplications()){
-        //  try{
-        //    ICIbgoInput.setParameters( OC0pSet );
-        //    logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Sending OCO to ICI:");    
-        //    ici.executeIgnoreReturnState(ICIbgoInput, sid.toString(), null);
-        //    try { Thread.sleep(1000); }
-        //    catch (Exception ignored) { return; }
-        //    logger.info("[HCAL LVL2 "+ functionManager.FMname + "] Sending ECO to ICI:");    
-        //    ICIbgoInput.setParameters( EC0pSet );
-        //    ici.executeIgnoreReturnState(ICIbgoInput, sid.toString(), null);
-        //  }
-        //  catch(CommandException e){
-        //    logger.error("[HCAL LVL2 "+ functionManager.FMname+"] ICISendBgo: "+e.getMessage());
-        //  }
-        //}
-        // LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerICIController, ICIbgoInput, HCALStates.STARTING, HCALStates.ENABLED, "["+functionManager.FMname+"] Sending BgoTrain to ICI"));
-      }
-      // start Trigger adapter
-      // TODO: move this to supervisor
-      if(!functionManager.containerTriggerAdapter.isEmpty()) {
-       // logger.info("[HCAL LVL2 " + functionManager.FMname + "] Adding TA to LV2 start task");
-       // LV2startTaskSeq.addLast(new SimpleTask( functionManager.containerTriggerAdapter, HCALInputs.HCALASYNCSTART, HCALStates.READY, HCALStates.ACTIVE, "["+functionManager.FMname+"] Enabling TriggerAdapter"));
       }
 
       functionManager.theStateNotificationHandler.executeTaskSequence(LV2startTaskSeq);
@@ -1108,57 +1026,10 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       // reset the non-async error state handling
       functionManager.ErrorState = false;
-      
-      //// only in local runs when all triggers were sent the run is stopped with 60 sec timeout
-      if (functionManager.FMrole.equals("EvmTrig")) {
 
-        // finally start the TriggerAdapters
-        if (functionManager.containerTriggerAdapter!=null) {
-          if (!functionManager.containerTriggerAdapter.isEmpty() && !functionManager.FMWasInPausedState) {
-            try {
-              //logger.info("[JohnLog4] [HCAL LVL2 " + functionManager.FMname + "] Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
-              logger.info("[HCAL LVL2 " + functionManager.FMname + "] Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
-              functionManager.containerTriggerAdapter.execute(HCALInputs.HCALSTART);
-            }
-            catch (QualifiedResourceContainerException e) {
-              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting (TriggerAdapter=Enable) failed ...";
-              logger.error(errMessage,e);
-              functionManager.sendCMSError(errMessage);
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-            }
-          }
-        }
-
-        // set actions for local runs
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("waiting for run to finish ...")));
-
-        logger.debug("[HCAL LVL2 " + functionManager.FMname + "] runningAction executed ...");
-
-      }
-      else {
-        // set actions for gloabl runs
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("running like hell ...")));
-      }
-      //XdaqApplicationContainer lpmContainer =  new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::lpm::LPMController"));      
-      //if (!lpmContainer.isEmpty()) {
-      //  logger.info("[JohnLog4] " + functionManager.FMname + ": Sending Enable to the LPMController.");
-      //  try {
-      //    lpmContainer.execute(HCALInputs.HCALSTART);
-      //  }
-      //  catch (QualifiedResourceContainerException e) {
-      //    String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting (LPMController=Enable) failed ... Message: " + e.getMessage();
-      //    logger.error(errMessage,e);
-      //    functionManager.sendCMSError(errMessage);
-      //    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-      //    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-      //    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-      //  }
-      //}
-      // patch for pause-resume behavior
+      // set actions for gloabl runs
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("running like hell ...")));
       functionManager.FMWasInPausedState = false;
     }
   }
@@ -1596,7 +1467,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         ParameterSet<CommandParameter> ICIpSet = new ParameterSet<CommandParameter>();
         ParameterSet<CommandParameter> LPMpSet = new ParameterSet<CommandParameter>();
 
-        LV2stopTaskSeq = makeTCDSstopSeq(PIpSet,ICIpSet,LPMpSet);
+       //LV2stopTaskSeq = makeTCDSstopSeq(PIpSet,ICIpSet,LPMpSet);
       }
 
       // stop HCAL
