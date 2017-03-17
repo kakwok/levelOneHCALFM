@@ -1425,35 +1425,35 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         return;
       }
       // stop the triggering
-      if (functionManager.FMrole.equals("EvmTrig")) {
-        if (functionManager.containerTriggerAdapter!=null) {
-          if (!functionManager.containerTriggerAdapter.isEmpty()) {
+      //if (functionManager.FMrole.equals("EvmTrig")) {
+      //  if (functionManager.containerTriggerAdapter!=null) {
+      //    if (!functionManager.containerTriggerAdapter.isEmpty()) {
 
-            {
-              String debugMessage = "[HCAL LVL2 " + functionManager.FMname + "] TriggerAdapter for stoppingAction() found- good!";
-              logger.debug(debugMessage);
-            }
+      //      {
+      //        String debugMessage = "[HCAL LVL2 " + functionManager.FMname + "] TriggerAdapter for stoppingAction() found- good!";
+      //        logger.debug(debugMessage);
+      //      }
 
-            try {
-              functionManager.containerTriggerAdapter.execute(HCALInputs.HCALDISABLE);
-            }
-            catch (QualifiedResourceContainerException e) {
-              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: step 1/2 (TriggerAdapter Disable) failed ...";
-              functionManager.goToError(errMessage,e);
-            }
+      //      try {
+      //        functionManager.containerTriggerAdapter.execute(HCALInputs.HCALDISABLE);
+      //      }
+      //      catch (QualifiedResourceContainerException e) {
+      //        String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: step 1/2 (TriggerAdapter Disable) failed ...";
+      //        functionManager.goToError(errMessage,e);
+      //      }
 
-            // waits for the TriggerAdapter to be in the Ready or Failed state, the timeout is 10s
-            waitforTriggerAdapter(10);
+      //      // waits for the TriggerAdapter to be in the Ready or Failed state, the timeout is 10s
+      //      waitforTriggerAdapter(10);
 
-          }
-          else {
-            if (functionManager.FMrole.equals("EvmTrig")) {
-              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No TriggerAdapter found: stoppingAction()";
-              functionManager.goToError(errMessage);
-            }
-          }
-        }
-      }
+      //    }
+      //    else {
+      //      if (functionManager.FMrole.equals("EvmTrig")) {
+      //        String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No TriggerAdapter found: stoppingAction()";
+      //        functionManager.goToError(errMessage);
+      //      }
+      //    }
+      //  }
+      //}
       
       TaskSequence LV2stopTaskSeq = new TaskSequence(HCALStates.STOPPING,HCALInputs.SETCONFIGURE);
 
@@ -1473,13 +1473,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // stop HCAL
       if (!functionManager.containerhcalSupervisor.isEmpty()) {
 
-        {
-          String debugMessage = "[HCAL LVL2 " + functionManager.FMname + "] HCAL supervisor for stopRunning found- good!";
-          logger.debug(debugMessage);
-        }
-
-        // define stop time
-        StopTime = new Date();
+        String debugMessage = "[HCAL LVL2 " + functionManager.FMname + "] Stopping supervisor";
+        logger.info(debugMessage);
 
         LV2stopTaskSeq.addLast(new SimpleTask( functionManager.containerhcalSupervisor, HCALInputs.HCALASYNCDISABLE, HCALStates.STOPPING, HCALStates.READY, "["+functionManager.FMname+"] Stopping hcalSupervisor"));
 

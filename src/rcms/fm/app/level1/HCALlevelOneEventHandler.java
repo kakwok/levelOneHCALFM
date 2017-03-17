@@ -1439,78 +1439,65 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       publishRunInfoSummary();
       functionManager.HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
 
-      if (!functionManager.containerFMChildren.isEmpty()) {
+      //if (!functionManager.containerFMChildren.isEmpty()) {
 
-        // define stop time
-        StopTime = new Date();
+      //  // define stop time
+      //  StopTime = new Date();
 
-        // Ancient history: "old" behavior where the LUMI FMs were stopped always no matter what state of the deflector shield ...
-        /*
-           {
-           Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
-           FunctionManager fmChild = null;
-           while (it.hasNext()) {
-           fmChild = (FunctionManager) it.next();
-
-           if (! (fmChild.refreshState().toString().equals(HCALStates.STOPPING.toString()) || fmChild.refreshState().toString().equals(HCALStates.CONFIGURED.toString())) ) {
-           try {
-           logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Will send " + HCALInputs.STOP + " to the FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
-           fmChild.execute(HCALInputs.STOP);
-           }
-           catch (CommandException e) {
-           String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + HCALInputs.STOP + " during stoppingAction() failed ...";
-           logger.error(errMessage,e);
-           functionManager.sendCMSError(errMessage);
-           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - problems ...")));
-           if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-           }
-           }   else {
-           logger.debug("[HCAL LVL1 " + functionManager.FMname + "] This FM is already \"Configured\".\nWill sent not send" + HCALInputs.STOP + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
-           }
-           }
-           }
-           */
-
-        // stop all FMs
-        Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
-        //logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] ContainerFMChildren has size: " + functionManager.containerFMChildren.getQualifiedResourceList().size());
-        FunctionManager fmChild = null;
-        while (it.hasNext()) {
-          fmChild = (FunctionManager) it.next();
-          if (fmChild.isActive()) {
-            //logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] FOUND ACTIVE FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
-            if (! (fmChild.refreshState().toString().equals(HCALStates.STOPPING.toString()) || fmChild.refreshState().toString().equals(HCALStates.CONFIGURED.toString())) ) {
-              try {
-                //logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Will send " + HCALInputs.STOP + " to the FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
-                //logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] Will send " + HCALInputs.STOP + " to the FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
-                fmChild.execute(HCALInputs.STOP);
-              }
-              catch (CommandException e) {
-                String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + HCALInputs.STOP + " during stoppingAction() failed ...";
-                logger.error(errMessage,e);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - problems ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
-            }
-            else {
-              logger.debug("[HCAL LVL1 " + functionManager.FMname + "] This FM is already \"Configured\".\nWill sent not send" + HCALInputs.STOP + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
-            }
-          }
-        }
+      //  // stop all FMs
+      //  Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
+      //  //logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] ContainerFMChildren has size: " + functionManager.containerFMChildren.getQualifiedResourceList().size());
+      //  FunctionManager fmChild = null;
+      //  while (it.hasNext()) {
+      //    fmChild = (FunctionManager) it.next();
+      //    if (fmChild.isActive()) {
+      //      if (! (fmChild.refreshState().toString().equals(HCALStates.STOPPING.toString()) || fmChild.refreshState().toString().equals(HCALStates.CONFIGURED.toString())) ) {
+      //        try {
+      //          fmChild.execute(HCALInputs.STOP);
+      //        }
+      //        catch (CommandException e) {
+      //          String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + HCALInputs.STOP + " during stoppingAction() failed ...";
+      //          logger.error(errMessage,e);
+      //          functionManager.sendCMSError(errMessage);
+      //          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+      //          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - problems ...")));
+      //          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+      //        }
+      //      }
+      //      else {
+      //        logger.debug("[HCAL LVL1 " + functionManager.FMname + "] This FM is already \"Configured\".\nWill sent not send" + HCALInputs.STOP + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
+      //      }
+      //    }
+      //  }
 
 
+      //}
+      //else {
+      //  if (!functionManager.ErrorState) {
+      //    logger.debug("[HCAL LVL1 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETCONFIGURE);
+      //    if (!functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())) {
+      //      functionManager.fireEvent(HCALInputs.SETCONFIGURE);
+      //    }
+      //  }
+      //}
+      TaskSequence LVL1StopTaskSeq = new TaskSequence(HCALStates.STOPPING,HCALInputs.SETCONFIGURE);
+      // 1) Stop the EVMTrig FM first
+      if(!functionManager.containerFMEvmTrig.isEmpty()){
+        SimpleTask EvmFMstopTask = new SimpleTask(functionManager.containerFMEvmTrig,HCALInputs.STOP,HCALStates.STOPPING,HCALStates.CONFIGURED,"Stopping EVMtrig FM");
+        logger.info("[HCAL LVL1 " + functionManager.FMname +"]  StoppingAction: Adding EVM trig FMs to stopTask: ");
+        PrintQRnames(functionManager.containerFMEvmTrig);
+        LVL1StopTaskSeq.addLast(EvmFMstopTask);
       }
-      else {
-        if (!functionManager.ErrorState) {
-          logger.debug("[HCAL LVL1 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETCONFIGURE);
-          if (!functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())) {
-            functionManager.fireEvent(HCALInputs.SETCONFIGURE);
-          }
-        }
+      // 2) Stop all other LV2s in parallel 
+      if(!functionManager.containerFMChildrenNormal.isEmpty()){
+        SimpleTask normalFMstopTask = new SimpleTask(functionManager.containerFMChildrenNormal,HCALInputs.STOP,HCALStates.STOPPING,HCALStates.CONFIGURED,"Stopping normal FMs");
+        logger.info("[HCAL LVL1 " + functionManager.FMname +"]  StoppingAction: Adding non-EVM trig FMs to stopTask: ");
+        PrintQRnames(functionManager.containerFMChildrenNormal);
+        LVL1StopTaskSeq.addLast(normalFMstopTask);
       }
+
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
+      functionManager.theStateNotificationHandler.executeTaskSequence(LVL1StopTaskSeq);
 
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));

@@ -2532,6 +2532,7 @@ public class HCALEventHandler extends UserEventHandler {
       if (qr.getResource().getHostName().contains("tcds") ) {
         qr.setInitialized(true);
         qg.seekQualifiedResourceOnPC(qr, new JobControl()).setActive(false);
+        logger.info("[HCAL LV2 " + functionManager.FMname +"] Setting TCDS Exective to initialized: "+qr.getName()+" and its JC to Active(false): "+ qg.seekQualifiedResourceOnPC(qr, new JobControl()).getName());
       }
     }   
     // mark TCDS service apps as initialized 
