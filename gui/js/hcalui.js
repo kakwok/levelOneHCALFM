@@ -383,6 +383,20 @@ function automateSinglePartition() {
     $('#setGlobalParametersButton').show();
   }
 }
+function checkSpectator() {
+    if ($('#DRIVER_IDENTIFIER').val() != "not set") {
+      if ($.fingerprint() != $('#DRIVER_IDENTIFIER').val()) {
+        $('#spectate').click(); 
+	      console.log("did not match fingerprint to driver identifier. fingerprint: " + $.fingerprint() + " ,  driver identifier: " + $('#DRIVER_IDENTIFIER').val());
+      }
+      else if ($.fingerprint() == $('#DRIVER_IDENTIFIER').val()) $('#drive').click();
+      else console.log("Could not determine whether the browser session is one that was or was not driving the run.");
+    }
+    else {
+      $('#drive').hide();
+      $('#spectate').hide();
+    }
+}
 
 function hcalOnLoad() {
   if ($('input[value="STATE"]').size() > 0) { // this is a sanity check to see if we're actually attached
@@ -435,17 +449,6 @@ function hcalOnLoad() {
     setupMaskingPanels();
     makecheckboxes();
     updatePage();
-    if ($('#DRIVER_IDENTIFIER').val() != "not set") {
-      if ($.fingerprint() != $('#DRIVER_IDENTIFIER').val()) {
-        $('#spectate').click(); 
-	      console.log("did not match fingerprint to driver identifier. fingerprint: " + $.fingerprint() + " ,  driver identifier: " + $('#DRIVER_IDENTIFIER').val());
-      }
-      else if ($.fingerprint() == $('#DRIVER_IDENTIFIER').val()) $('#drive').click();
-      else console.log("Could not determine whether the browser session is one that was or was not driving the run.");
-    }
-    else {
-      $('#drive').hide();
-      $('#spectate').hide();
-    }
+    checkSpectator();
   }
 }
