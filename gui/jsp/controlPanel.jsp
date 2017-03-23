@@ -263,7 +263,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <td id ="newSINGLEPARTITION_MODE" class="label_center_black">
                                 </td>
                               </tr>
-                              <tr id="driverIdField"> 
+                              <tr id="driverIdField" style="display: none;"> 
                                 <td id="newDRIVER_IDENTIFIERcheckbox" class="label_center_black">
                                 </td>
                                 <td class="label_left_black">
@@ -365,9 +365,8 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                           <br />
                           <!--Buttons for main table -->
                           <center>
-                            <input id="spectate" class="button1" type="button" onclick="spectatorMode(true);" value="Spectate run">
-                            <input id="drive" class="button1" type="button" onclick="spectatorMode(false)" value="Enable control">
-                            <input id="takeOver" class="button1" type="button" onclick="takeOverDriving()" value="Take control" style="display: none">
+                            <input id="spectate" class="button1" type="button" onclick="spectatorMode(true);" value="Spectate">
+                            <input id="drive" class="button1" type="button" onclick="spectatorMode(false); takeOverDriving()" value="Take Control">
                           </center>
 			  <br>
                           <center>
