@@ -258,7 +258,12 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <td id="newSINGLEPARTITION_MODEcheckbox" class="label_center_black">
                                 </td>
                                 <td class="label_left_black">
-                                  <strong>Single partition mode</strong>
+                                  <strong>Singlepartition</strong>
+                               <tr id="singlePartitionField" >
+                                <td id="newSINGLEPARTITION_MODEcheckbox" class="label_center_black">
+                                </td>
+                                <td class="label_left_black">
+                                  <strong>Singlepartition</strong>
                                 </td>
                                 <td id ="newSINGLEPARTITION_MODE" class="label_center_black">
                                 </td>
