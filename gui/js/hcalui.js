@@ -351,7 +351,7 @@ function spectatorMode(onOff) {
     $('#dropdown').attr("disabled", false);
     $('#spectate').show();
     $('#drive').hide();
-    if ( !($('#DRIVER_IDENTIFIER').val() == "not set" ||  $.fingerprint() == $('#DRIVER_IDENTIFIER').val())) $('#takeOver').show();
+    if ( !($('#DRIVER_IDENTIFIER').val() == "not set" ||  $.fingerprint() == $('#DRIVER_IDENTIFIER').val())) $('#drive').show();
   }
 }
 
