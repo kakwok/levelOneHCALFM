@@ -389,7 +389,7 @@ function checkSpectator() {
         $('#spectate').click(); 
 	      console.log("did not match fingerprint to driver identifier. fingerprint: " + $.fingerprint() + " ,  driver identifier: " + $('#DRIVER_IDENTIFIER').val());
       }
-      else if ($.fingerprint() == $('#DRIVER_IDENTIFIER').val()) $('#drive').click();
+      else if ($.fingerprint() == $('#DRIVER_IDENTIFIER').val()) spectatorMode(false);
       else console.log("Could not determine whether the browser session is one that was or was not driving the run.");
     }
     else {
