@@ -82,7 +82,7 @@ public class HCALxmlHandler {
   protected HCALFunctionManager functionManager = null;
   static RCMSLogger logger = null;
   public DocumentBuilder docBuilder;
-  //public String[] ValidMasterSnippetTags = new String[] {"CfgScript","TCDSControl","TTCciControl","LPMControl","PIControl","LTCControl","AlarmerURL","AlarmerStatus","FedEnableMask","FMSettings"};
+  public String[] ValidMasterSnippetTags = new String[] {"CfgScript","ICIControlSingle","ICIControlMulti","TTCciControl","LPMControl","PIControlSingle","PIControlMulti","LTCControl","AlarmerURL","AlarmerStatus","FedEnableMask","FMSettings","FMParameter"};
 
   public HCALxmlHandler(HCALFunctionManager parentFunctionManager) {
     this.logger = new RCMSLogger(HCALFunctionManager.class);
@@ -113,9 +113,52 @@ public class HCALxmlHandler {
       throw new UserActionException(errMessage);
     }
   }
-  public String getHCALuserXMLelementContent(String tagName) throws UserActionException {
+
+  // Get userXML from a CfgCVS path
+  public Element getHCALuserXML(String CfgCVSBasePath,String fileName) throws UserActionException {
     try {
-      Element hcalUserXML = getHCALuserXML();
+      // return the userXML
+      File grandMaster = new File(CfgCVSBasePath+fileName+"/pro");
+      String userXmlString ="";
+      if (grandMaster.exists()){
+        userXmlString = "<userXML>" + new String(Files.readAllBytes(Paths.get(CfgCVSBasePath+fileName+"/pro"))) + "</userXML>";
+      }
+      else{
+        String errMessage="[HCAL "+functionManager.FMname+"] Cannot find grandMaster snippet with CfgCVSBasePath ="+CfgCVSBasePath+" and MasterSnippetList="+fileName+".";
+        throw new UserActionException(errMessage);
+        //functionManager.goToError(errMessage);
+      }
+      logger.debug("[HCAL " + functionManager.FMname + "]: got the userXML :"+ userXmlString);
+      docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+      InputSource inputSource = new InputSource();
+      inputSource.setCharacterStream(new StringReader(userXmlString));
+      Document hcalUserXML = docBuilder.parse(inputSource);
+      hcalUserXML.getDocumentElement().normalize();
+      return hcalUserXML.getDocumentElement();
+    }
+    catch (DOMException | ParserConfigurationException | SAXException | IOException e) {
+      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the userXML: " + e.getMessage();
+      functionManager.goToError(errMessage);
+      throw new UserActionException(errMessage);
+    }
+  }
+
+  public String getHCALuserXMLelementContent(String tagName,Boolean isGrandMaster) throws UserActionException {
+      String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
+      String MasterSnippetList = ((StringT) functionManager.getHCALparameterSet().get("HCAL_MASTERSNIPPETLIST").getValue()).getString();
+      Element hcalUserXML = null;
+    try {
+      if (!isGrandMaster){
+        hcalUserXML = getHCALuserXML();
+      }
+      else{
+        hcalUserXML = getHCALuserXML(CfgCVSBasePath,MasterSnippetList);
+      }
+    }
+    catch(UserActionException e){
+      throw e;
+    }
+    try{
       if (!hcalUserXML.equals(null) && !hcalUserXML.getElementsByTagName(tagName).equals(null)) {
         if (hcalUserXML.getElementsByTagName(tagName).getLength()==1) {
           return hcalUserXML.getElementsByTagName(tagName).item(0).getTextContent();
@@ -125,15 +168,23 @@ public class HCALxmlHandler {
           throw new UserActionException("[HCAL " + functionManager.FMname + "]: The userXML element with tag name '" + tagName + "'" + errMessage);
         }
       }
-      else return null;
+      else return "";
     }     
     catch (UserActionException e) {throw e;}
   }
 
-  public String getNamedUserXMLelementAttributeValue (String tag, String name, String attribute ) throws UserActionException {
+  public String getNamedUserXMLelementAttributeValue (String tag, String name, String attribute, Boolean isGrandMaster ) throws UserActionException {
     try {
       boolean foundTheRequestedNamedElement = false;
-      Element hcalUserXML = getHCALuserXML();
+      String CfgCVSBasePath    = ((StringT) functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
+      String MasterSnippetList = ((StringT) functionManager.getHCALparameterSet().get("HCAL_MASTERSNIPPETLIST").getValue()).getString();
+      Element hcalUserXML=null;
+      if (!isGrandMaster){
+        hcalUserXML = getHCALuserXML();
+      }
+      else{
+        hcalUserXML = getHCALuserXML(CfgCVSBasePath,MasterSnippetList);
+      }
       if (!hcalUserXML.equals(null) && !hcalUserXML.getElementsByTagName(tag).equals(null)) {
         if (hcalUserXML.getElementsByTagName(tag).getLength()!=0) {
           NodeList nodes = hcalUserXML.getElementsByTagName(tag); 
@@ -642,14 +693,214 @@ public class HCALxmlHandler {
 
   public String getHCALParameterFromTagName(String TagName){
     String emptyString="";
-    if(TagName.equals("TCDSControl") ) return "HCAL_TCDSCONTROL";
+    if(TagName.equals("ICIControlSingle") ) return "HCAL_ICICONTROL_SINGLE";
+    if(TagName.equals("ICIControlMulti") ) return "HCAL_ICICONTROL_MULTI";
     if(TagName.equals("LPMControl")  ) return "HCAL_LPMCONTROL";
-    if(TagName.equals("PIControl")   ) return "HCAL_PICONTROL";
+    if(TagName.equals("PIControlSingle")   ) return "HCAL_PICONTROL_SINGLE";
+    if(TagName.equals("PIControlMulti" )   ) return "HCAL_PICONTROL_MULTI";
     if(TagName.equals("TTCciControl")) return "HCAL_TTCCICONTROL";
     if(TagName.equals("LTCControl")  ) return "HCAL_LTCCONTROL";
     logger.error("[Martin log HCAL "+ functionManager.FMname +"]: Cannot find HCALParameter corresponding to TagName "+ TagName +". Please check the mapping");
     return emptyString;
   }
+
+  public void SetHCALFMParameter(Element fmParameterElement) {
+    String parameterName  = fmParameterElement.getAttributes().getNamedItem("name").getNodeValue();
+    String parameterType  = fmParameterElement.getAttributes().getNamedItem("type").getNodeValue();
+    String parameterValue = "";
+    if(!(parameterType.contains("VectorT") || parameterType.contains("MapT"))) {
+      parameterValue = fmParameterElement.getAttributes().getNamedItem("value").getNodeValue();
+    }
+    String[] vectorValues = new String[0];
+    if (parameterType.contains("VectorT")) {
+      vectorValues = (parameterValue.split(","));
+    }
+
+    HashMap<String, String> mapValues = new HashMap<String, String>();
+    if (parameterType.contains("MapT")) {
+      NodeList childNodes = fmParameterElement.getChildNodes();
+      Integer nNodes = childNodes.getLength();
+      for (Integer iNode = 0; iNode < nNodes; iNode++) {
+        Node thisNode = childNodes.item(iNode);
+        if (thisNode.getNodeName() == "entry") {
+          mapValues.put(thisNode.getAttributes().getNamedItem("key").getNodeValue(), thisNode.getTextContent());
+        }
+      }
+    }
+
+    try{
+      switch (parameterType) {
+        case "BooleanT":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>(parameterName, new BooleanT(parameterValue)));
+          break;
+        }
+        case "ByteT":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<ByteT>(parameterName, new ByteT(parameterValue)));
+          break;
+        }
+        case "DateT":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DateT>(parameterName, new DateT(parameterValue)));
+          break;
+        }
+        case "DoubleT ":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DoubleT>(parameterName, new DoubleT(parameterValue)));
+          break;
+        }
+        case "FloatT":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<FloatT>(parameterName, new FloatT(parameterValue)));
+          break;
+        }
+        case "IntegerT":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>(parameterName, new IntegerT(parameterValue)));
+          break;
+        }
+        case "LongT":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<LongT>(parameterName, new LongT(parameterValue)));
+          break;
+        }
+        case "ShortT":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<ShortT>(parameterName, new ShortT(parameterValue)));
+          break;
+        }
+        case "StringT":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(parameterName, new StringT(parameterValue)));
+          break;
+        }
+        case "UnsignedIntegerT":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<UnsignedIntegerT>(parameterName, new UnsignedIntegerT(parameterValue)));
+          break;
+        }
+        case "UnsignedShortT":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<UnsignedShortT>(parameterName, new UnsignedShortT(parameterValue)));
+          break;
+        }
+        case "VectorT(StringT)":
+        {
+          VectorT<StringT> tmpVector = new VectorT<StringT>();
+          for (String vectorElement : vectorValues) {
+            tmpVector.add(new StringT(vectorElement));
+          }
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT> >(parameterName, tmpVector));
+          break;
+        }
+        case "VectorT(IntegerT)":
+        {
+          VectorT<IntegerT> tmpVector = new VectorT<IntegerT>();
+          for (String vectorElement : vectorValues) {
+            tmpVector.add(new IntegerT(Integer.parseInt(vectorElement)));
+          }
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<IntegerT> >(parameterName, tmpVector));
+          break;
+        }
+        case "MapT(StringT)":
+        {
+          MapT< StringT> tmpMap = new MapT<StringT>();
+          for (Map.Entry<String, String> entry : mapValues.entrySet()) {
+            tmpMap.put(new StringT(entry.getKey()), new StringT(entry.getValue()));
+          }
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<StringT>>(parameterName, tmpMap));
+          break;
+        }
+        case "MapT(VectorT(IntegerT))":
+        {
+          MapT< VectorT<IntegerT> > tmpMap = new MapT< VectorT<IntegerT> >();
+          for (Map.Entry<String, String> entry : mapValues.entrySet()) {
+            VectorT<IntegerT> tmpVector = new VectorT<IntegerT>();
+            for (String vectorEntry : entry.getValue().split(",")) {
+              tmpVector.add(new IntegerT(Integer.parseInt(vectorEntry)));
+            }
+            tmpMap.put(entry.getKey(), tmpVector);
+          }
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<VectorT<IntegerT> > >(parameterName, tmpMap));
+          break;
+        }
+        default:
+        {
+          String errMessage="[David log HCAL " + functionManager.FMname + "] Unknown FMParameter type (" + parameterType + ") for FMParameter named " + parameterName; 
+          throw new UserActionException(errMessage);
+        }
+      }
+    } catch (UserActionException e) {
+      // Warn when found more than one tag name in mastersnippet
+      functionManager.goToError(e.getMessage());
+    }
+  }
+
+
+  //public void SetHCALParameterFromTagName(String TagName, NodeList NodeListOfTagName ,String CfgCVSBasePath, boolean NeventIsSetFromGUI){
+  //  try{
+  //    if(TagName.equals("ICIControlSingle")|| TagName.equals("ICIControlMulti") || TagName.equals("LPMControl")|| TagName.equals("PIControlSingle")||TagName.equals("PIControlMulti") || TagName.equals("TTCciControl") || TagName.equals("LTCControl") ){
+  //        String HCALParameter = getHCALParameterFromTagName(TagName);
+  //        String ControlSequence  = getIncludeFiles( NodeListOfTagName, CfgCVSBasePath ,TagName );
+  //        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameter ,new StringT(ControlSequence)));
+  //    }
+  //    if(TagName.equals("AlarmerURL")){
+  //        functionManager.alarmerURL        = getTagTextContent(NodeListOfTagName, TagName );
+  //    }
+  //    if(TagName.equals("AlarmerStatus")) {
+  //        functionManager.alarmerPartition  = getTagAttribute(NodeListOfTagName,TagName,"partition" );
+  //    }
+  //    if(TagName.equals("FMSettings")){
+  //        //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
+  //        String StringNumberOfEvents       = getTagAttribute(NodeListOfTagName, TagName,"NumberOfEvents");
+  //        if(NeventIsSetFromGUI){
+  //          logger.info("[HCAL LVL1 "+functionManager.FMname+" Number of Events already set to "+ functionManager.getHCALparameterSet().get("NUMBER_OF_EVENTS").getValue()+" from GUI. Not over-writting");
+  //        }
+  //        else{
+  //          if( !StringNumberOfEvents.equals("")){
+  //             Integer NumberOfEvents           = Integer.valueOf(StringNumberOfEvents);
+  //             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("NUMBER_OF_EVENTS",new IntegerT(NumberOfEvents)));
+  //          }
+  //        }
+  //        //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
+  //        String  StringRunInfoPublish      = getTagAttribute(NodeListOfTagName, TagName,"RunInfoPublish");
+  //        if( !StringRunInfoPublish.equals("")){
+  //          Boolean RunInfoPublish           = Boolean.valueOf(StringRunInfoPublish);
+  //          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("HCAL_RUNINFOPUBLISH",new BooleanT(RunInfoPublish)));
+  //        }
+
+  //        //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
+  //        String  StringOfficialRunNumbers  = getTagAttribute(NodeListOfTagName, TagName,"OfficialRunNumbers");
+  //        if( !StringOfficialRunNumbers.equals("")){
+  //          Boolean OfficialRunNumbers      = Boolean.valueOf(StringOfficialRunNumbers);
+  //          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("OFFICIAL_RUN_NUMBERS",new BooleanT(OfficialRunNumbers)));
+  //        }
+  //    }
+  //    if(TagName.equals("CfgScript")){
+  //        String tmpCfgScript =""; 
+  //        if( !hasDefaultValue("HCAL_CFGSCRIPT","not set") ){
+  //          //If the parameter is filled (by CommonMasterSnippet), add that first instead of overwriting
+  //          tmpCfgScript   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT").getValue()).getString();
+  //          tmpCfgScript  += getTagTextContent( NodeListOfTagName, TagName);
+  //        }
+  //        else{
+  //          //If the parameter has defaultValue, put what is in the current mastersnippet in the parameter
+  //          tmpCfgScript   = getTagTextContent( NodeListOfTagName, TagName);
+  //        }
+  //        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",new StringT(tmpCfgScript)));
+  //    }
+  //    if(TagName.equals("FedEnableMask")){
+  //      if (functionManager.RunType.equals("local")){
+  //        String tmpFedEnableMask = getTagTextContent( NodeListOfTagName, TagName);
+  //        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("FED_ENABLE_MASK",new StringT(tmpFedEnableMask)));
+  //      }
+  //    }
+  //  } catch (UserActionException e) {
+  //    // Warn when found more than one tag name in mastersnippet
+  //    functionManager.goToError(e.getMessage());
+  //  }
+  //}
 
   public boolean hasDefaultValue(String pam, String def_value){
         String present_value = ((StringT)functionManager.getHCALparameterSet().get(pam).getValue()).getString();
@@ -674,16 +925,16 @@ public class HCALxmlHandler {
     boolean isUnique=false;
     if( inputlist.getLength()==0){
       //Return false if no Tagname is found
-      logger.info("[Martin log HCAL " + functionManager.FMname + "]: Cannot find "+ TagName+ " in mastersnippet.  Empty string will be returned. ");
+      logger.info("[HCAL " + functionManager.FMname + "]: Cannot find "+ TagName+ ".  Empty string will be returned. ");
     } 
     else if(inputlist.getLength()>1){
         //Throw execptions if more than 1 TagName is found, decide later what to do
-        String errMessage="[Martin log HCAL " + functionManager.FMname + "]: Found more than one Tag of "+ TagName+ " in mastersnippet. ";
+        String errMessage="[HCAL " + functionManager.FMname + "]: Found more than one Tag of name: "+ TagName+ ".";
         throw new UserActionException(errMessage);
       }
       else if(inputlist.getLength()==1){
           //Return True if only 1 TagName is found.
-          logger.debug("[Martin log HCAL " + functionManager.FMname + "]: Found 1 "+ TagName+ " in mastersnippet. Going to parse it. ");
+          logger.debug("[HCAL " + functionManager.FMname + "]: Found 1 "+ TagName+ ". Going to parse it. ");
           isUnique=true;
       }
     return isUnique;

@@ -76,17 +76,23 @@ public class HCALMasker {
 
   protected Map<String, Resource> getEvmTrigResources(List<Resource> level2Children) throws UserActionException { 
     if (isEvmTrigCandidate(level2Children).get("isAcandidate")) {
+      VectorT<StringT> maskedRss =  (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
+      StringT[] maskedRssArray = maskedRss.toArray(new StringT[maskedRss.size()]);
+
+      //if (!Arrays.asList(maskedRssArray).contains(new StringT(level2resource.getName()))) {
       // This implementation assumes no level2 function managers will have no more than one TA.
       Map<String, Resource> evmTrigResources = new HashMap<String, Resource>();
       for (Resource level2resource : level2Children) {
-        if (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")) {
-          evmTrigResources.put("TriggerAdapter", level2resource);
-        }
-        if (level2resource.getName().contains("hcalTrivialFU")) {
-          evmTrigResources.put("hcalTrivialFU", level2resource);
-        }
-        if (level2resource.getName().contains("hcalEventBuilder")) {
-          evmTrigResources.put("hcalEventBuilder", level2resource);
+        if (!Arrays.asList(maskedRssArray).contains(new StringT(level2resource.getName()))){
+          if (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")) {
+            evmTrigResources.put("TriggerAdapter", level2resource);
+          }
+          if (level2resource.getName().contains("hcalTrivialFU")) {
+            evmTrigResources.put("hcalTrivialFU", level2resource);
+          }
+          if (level2resource.getName().contains("hcalEventBuilder")) {
+            evmTrigResources.put("hcalEventBuilder", level2resource);
+          }
         }
       }
       return evmTrigResources;
@@ -168,58 +174,17 @@ public class HCALMasker {
     // functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_APPLICATIONS,new StringT(MaskedApplications)));
 
     QualifiedGroup qg = functionManager.getQualifiedGroup();
-    // TODO send all masked applications defined in global parameter
-    // This includes user GUI input and userXML maskedapps input.
+    // Maskedapps and MaskedFM in userXML are filled in MASKED_RESOURCES from GUI. --KKH
     // The qr.setActive(false) will turn off the RCMS status of the FM. 
     // It's OK for an maskedapps to call that method too, although maskedapps will be stripped by the stripExecXML() anyway.
-    VectorT<StringT> MaskedFMs =  (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
 
-    logger.info("[Martin log "+ functionManager.FMname + "]: The list of MaskedFMs from gui is " + MaskedFMs.toString());
-    String userXmlMaskedFM = "not set";
-    String localrunkey = ((StringT)functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue()).getString();
-    try{
-        userXmlMaskedFM = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", localrunkey, "maskedFM");
-        logger.info("[Martin log " + functionManager.FMname + "]: Got the following maskedFM from userXML: "+ userXmlMaskedFM );
-    } catch (UserActionException e){
-        logger.error("[Martin log " + functionManager.FMname + "]: Got an error when getting maskedFM from userXML: " + e);
-    }
-    if (!userXmlMaskedFM.equals("")) {
-      String[] userXmlMaskedFMarray = userXmlMaskedFM.split(";");
-      for (String xmlMaskedFM : userXmlMaskedFMarray) {
-        MaskedFMs.add(new StringT(xmlMaskedFM));
-      }
-    }
-    logger.info("[Martin log "+ functionManager.FMname + "]: The final list of MaskedFMs is " + MaskedFMs.toString());
 
     List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
-    //boolean somebodysHandlingTA = false;
-    //boolean itsThisLvl2 = false;
-    //boolean itsAdummy = false;
 
     //Update the MaskedResources for pickEvmTrig
-    VectorT<StringT> allMaskedResources = new VectorT<StringT>();
-    String userXmlMaskedApps= "not set";
-    try{
-        userXmlMaskedApps = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", localrunkey, "maskedapps");
-    } catch (UserActionException e){
-    }
-    if (!userXmlMaskedApps.equals("")) {
-      String[] userXmlMaskedAppsArray = userXmlMaskedApps.split((Pattern.quote("|")));
-      for (String xmlMaskedApp : userXmlMaskedAppsArray) {
-        MaskedFMs.add(new StringT(xmlMaskedApp));
-      }
-    }
+    VectorT<StringT> allMaskedResources = (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
+    logger.info("[HCAL "+ functionManager.FMname + "]: setMaskedFMs: List of Masked resources from gui is " + allMaskedResources.toString());
 
-    try {
-      allMaskedResources = MaskedFMs.clone();
-    }
-    catch (CloneNotSupportedException e) {
-      logger.error("Caught a CloneNotSupportedException when cloning the MaskedFMs vector.");
-    }
-    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES", allMaskedResources));
-    //String ruInstance = "";
-    //String lpmSupervisor = "";
-    //String EvmTrigsApps = "";
     Map<String, Resource> evmTrigResources = pickEvmTrig();
 
     String eventBuilder   = "none";
@@ -241,16 +206,15 @@ public class HCALMasker {
          qr.getResource().setRole("EvmTrig");
          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("EVM_TRIG_FM", new StringT(qr.getName())));
       }
-      //itsThisLvl2 = false;
       try {
         QualifiedGroup level2group = ((FunctionManager)qr).getQualifiedGroup();
         logger.debug("[HCAL " + functionManager.FMname + "]: the qualified group has this DB connector" + level2group.rs.toString());
         Group fullConfig = level2group.rs.retrieveLightGroup(qr.getResource());
         // TODO see here
         List<Resource> fullconfigList = fullConfig.getChildrenResources();
-        if (MaskedFMs.size() > 0) {
-          logger.info("[HCAL " + functionManager.FMname + "]: Got MaskedFMs " + MaskedFMs.toString());
-          StringT[] MaskedResourceArray = MaskedFMs.toArray(new StringT[MaskedFMs.size()]);
+        if (allMaskedResources.size() > 0) {
+          logger.info("[HCAL " + functionManager.FMname + "]: Got Masked resources " + allMaskedResources.toString());
+          StringT[] MaskedResourceArray = allMaskedResources.toArray(new StringT[allMaskedResources.size()]);
           for (StringT MaskedFM : MaskedResourceArray) {
             logger.debug("[HCAL " + functionManager.FMname + "]: " + functionManager.FMname + ": Starting to mask FM " + MaskedFM.getString());
             logger.debug("[HCAL " + functionManager.FMname + "]: " + functionManager.FMname + ": Checking this QR:  " +qr.getName());
@@ -264,6 +228,7 @@ public class HCALMasker {
               }
 
               //logger.info("[HCAL " + functionManager.FMname + "]: LVL2 " + qr.getName() + " has rs group " + level2group.rs.toString());
+              // KKH: This adds all resources of a maskedFM to MASKED_RESOURCES
               allMaskedResources = (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
               for (Resource level2resource : fullconfigList) {
                 logger.debug("[HCAL " + functionManager.FMname + "]: The masked level 2 function manager " + qr.getName() + " has this in its XdaqExecutive list: " + level2resource.getName());

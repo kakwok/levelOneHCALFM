@@ -19,6 +19,7 @@ import java.net.URL;
 import java.net.MalformedURLException;
 import java.lang.Math;
 
+
 import java.io.StringWriter;
 import java.io.PrintWriter;
 
@@ -44,7 +45,9 @@ import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.VectorT;
+import rcms.fm.fw.parameter.type.MapT;
 import rcms.fm.fw.parameter.type.BooleanT;
+import rcms.fm.fw.parameter.type.ParameterType;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserEventHandler;
 import rcms.fm.resource.QualifiedGroup;
@@ -92,12 +95,6 @@ public class HCALEventHandler extends UserEventHandler {
   String ConfigDoc     = "";
   String FullCfgScript = "not set";
 
-  String FullTTCciControlSequence =  "not set";  // Config script for TTCci
-  String FullLTCControlSequence   =  "not set";  // Config doc for LTC
-  String FullTCDSControlSequence  =  "not set";  // Config doc for iCI
-  String FullLPMControlSequence   =  "not set";  // Config doc for LPM
-  String FullPIControlSequence    =  "not set";  // Config doc for PI
-
   public boolean UsePrimaryTCDS                =  true;   // Switch to use primary/secondary TCDS system (TODO: check implementation)
   public boolean OfficialRunNumbers            =  false;  // Query the database for a run number corresponding to the SID 
   public boolean RunInfoPublish                =  false;  // Switch to publish RunInfo or not
@@ -136,9 +133,6 @@ public class HCALEventHandler extends UserEventHandler {
   protected boolean LocalMultiPartitionReadOut =  false;  // Switch for enabling multipartition runs
 
   protected String WSE_FILTER                        =  "empty";                         // for XMAS -- TODO: is this needed?
-  protected String ZeroSuppressionSnippetName        =  "/HTR/ZeroSuppression.cfg/pro";  //TODO: are these last three needed?
-  protected String SpecialZeroSuppressionSnippetName =  "/HTR/SpecialZeroSuppression.cfg/pro";
-  protected String VdMSnippetName                    =  "/LUMI/VdM.cfg/pro";
 
   private List<Thread> TriggerAdapterWatchThreadList =  new ArrayList<Thread>();  // For querying the TA periodically
   private List<Thread> MonitorThreadList             =  new ArrayList<Thread>();  // For watching level2s
@@ -180,167 +174,6 @@ public class HCALEventHandler extends UserEventHandler {
       if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
         logger.info("[HCAL " + functionManager.FMname + "]: The function manager with name " + functionManager.FMname + " was assigned role EvmTrig and thus will handle the trigger adapter.");
       }
-    }
-
-    // Get the RunSequenceName from the userXML
-    {
-      String NewRunSequenceName = "";
-      try {
-        NewRunSequenceName = xmlHandler.getHCALuserXMLelementContent("RunSequenceName");
-      }
-      catch (UserActionException e) { 
-        logger.warn(e.getMessage());
-      }
-      if (!NewRunSequenceName.equals("")) {
-        RunSequenceName = NewRunSequenceName;
-        logger.info("[HCAL base] using RunSequenceName: " + RunSequenceName);
-      }
-      else {
-        logger.debug("[HCAL base] using RunSequenceName: " + RunSequenceName);
-      }
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SEQ_NAME", new StringT(""+RunSequenceName)));
-    }
-
-    // Check if TestMode has been specified in the userXML
-    {
-      String useTestMode = "";
-      try {
-        useTestMode = xmlHandler.getHCALuserXMLelementContent("TestMode");
-      }
-      catch (UserActionException e) { 
-        logger.warn(e.getMessage());
-      }
-      if (!useTestMode.equals("")) {
-        TestMode = useTestMode;
-        logger.warn("[HCAL base] TestMode: " + TestMode + " enabled - ignoring anything which would set the state machine to an error state!");
-      }
-    }
-
-    // Check if the userXML specifies whether ATCP connections should be stopped
-    {
-      String useStopATCP = "";
-      try {
-        useStopATCP = xmlHandler.getHCALuserXMLelementContent("StopATCP");
-      }
-      catch (UserActionException e) { 
-        logger.warn(e.getMessage());
-      }
-      if (!useStopATCP.equals("")) {
-        functionManager.StopATCP = true;
-      }
-      if (functionManager.StopATCP) {
-        logger.warn("[HCAL base] StopATCP: " + functionManager.StopATCP + " - this means ATCP XDAQ apps are operated normally, i.e. started and stopped in the corresponding transitions.");
-      }
-      else {
-        logger.warn("[HCAL base] StopATCP: " + functionManager.StopATCP + " - this means ATCP XDAQ apps are started once during the starting transition but never ever stopped in a run config.");
-      }
-    }
-
-    // Check if the userXML specifies that FEDStreamer applications should be stopped
-    {
-      String useStopFEDStreamer = "";
-      try { useStopFEDStreamer=xmlHandler.getHCALuserXMLelementContent("StopFEDStreamer"); }
-      catch (UserActionException e) { logger.warn(e.getMessage()); }
-      if (!useStopFEDStreamer.equals("")) {
-        functionManager.StopATCP = true;
-      }
-      if (functionManager.StopFEDStreamer) {
-        logger.warn("[HCAL base] StopFEDStreamer: " + functionManager.StopFEDStreamer + " - this means FEDStreamer XDAQ apps are operated normally, i.e. started and stopped in the corresponding transitions.");
-      }
-      else {
-        logger.warn("[HCAL base] StopFEDStreamer: " + functionManager.StopFEDStreamer + " - this means FEDStreamer XDAQ apps are started once during the starting transition but never ever stopped in a run config.");
-      }
-    }
-
-
-    // Get the CfgCVSBasePath in the userXML
-    {
-      String DefaultCfgCVSBasePath = "/nfshome0/hcalcfg/cvs/RevHistory/";
-      //String DefaultCfgCVSBasePath = "/data/cfgcvs/cvs/RevHistory/";
-      String theCfgCVSBasePath = "";
-      try { theCfgCVSBasePath=xmlHandler.getHCALuserXMLelementContent("CfgCVSBasePath"); }
-      catch (UserActionException e) { logger.warn(e.getMessage()); }
-      if (!theCfgCVSBasePath.equals("")) {
-        CfgCVSBasePath = theCfgCVSBasePath;
-      } else{
-        CfgCVSBasePath = DefaultCfgCVSBasePath;
-      }
-      //logger.debug("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
-      //logger.info("[HCAL ] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
-      logger.info("[Martin Log HCAL " + functionManager.FMname + "] The CfgCVSBasePath for this FM is " + CfgCVSBasePath);
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGCVSBASEPATH",new StringT(CfgCVSBasePath)));
-    }
-
-    // Check if a default ZeroSuppressionSnippetName is given in the userXML
-    {
-      String theZeroSuppressionSnippetName = "";
-      try { theZeroSuppressionSnippetName=xmlHandler.getHCALuserXMLelementContent("ZeroSuppressionSnippetName"); }
-      catch (UserActionException e) { logger.warn(e.getMessage()); }
-      if (!theZeroSuppressionSnippetName.equals("")) {
-        ZeroSuppressionSnippetName = theZeroSuppressionSnippetName;
-      }
-      logger.debug("[HCAL base] The ZeroSuppressionSnippetName: " + ZeroSuppressionSnippetName + " is used.");
-    }
-
-    // Check if a default SpecialZeroSuppressionSnippetName is given in the userXML
-    {
-      String theSpecialZeroSuppressionSnippetName = "";
-      try { theSpecialZeroSuppressionSnippetName=xmlHandler.getHCALuserXMLelementContent("SpecialZeroSuppressionSnippetName"); }
-      catch (UserActionException e) { logger.warn(e.getMessage()); }
-      if (!theSpecialZeroSuppressionSnippetName.equals("")) {
-        SpecialZeroSuppressionSnippetName = theSpecialZeroSuppressionSnippetName;
-      }
-      logger.debug("[HCAL base] The special ZeroSuppressionSnippetName: " + SpecialZeroSuppressionSnippetName + " is used.");
-    }
-
-    // Check if a default VdMSnippetName is given in the userXML
-    {
-      String theVdMSnippetName = "";
-      try {theVdMSnippetName=xmlHandler.getHCALuserXMLelementContent("VdMSnippetName"); }
-      catch (UserActionException e) { logger.warn(e.getMessage()); }
-      if (!theVdMSnippetName.equals("")) {
-        VdMSnippetName = theVdMSnippetName;
-      }
-      logger.debug("[HCAL base] The VdMSnippetName: " + VdMSnippetName + " is used.");
-    }
-
-    // Check if we want the "Recover" button to actually perform a "Reset"
-    {
-      String useResetForRecover = ""; 
-      try { useResetForRecover=xmlHandler.getHCALuserXMLelementContent("UseResetForRecover"); }
-      catch (UserActionException e) { logger.warn(e.getMessage()); }
-      if (useResetForRecover.equals("false")) {
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("USE_RESET_FOR_RECOVER",new BooleanT(false)));
-        logger.debug("[HCAL base] UseResetForRecover: " + useResetForRecover + " - this means the \"Recover\" button will perform \"Reset\" unless the user overrides this setting.");
-      }
-      else if (useResetForRecover.equals("true")) {
-        logger.debug("[HCAL base] UseResetForRecover: " + useResetForRecover + " - this means the \"Recover\" button will peform its default behavior unless the user overrides this setting.");
-      }
-      else {
-        logger.debug("[HCAL base] UseResetForRecover is not a valid boolean.");
-      }
-    }
-
-    logger.debug("[HCAL base] base class init() called: functionManager = " + functionManager );
-    try {
-
-      // Get the list of master snippets from the userXML and use it to find the mastersnippet file.
-
-      NodeList nodes = null;
-      nodes = xmlHandler.getHCALuserXML().getElementsByTagName("RunConfig");
-      String availableRunConfigs="";
-      for (int i=0; i < nodes.getLength(); i++) {
-        logger.debug("[HCAL " + functionManager.FMname + "]: Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
-            + ", snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue()+ ", and maskedapps: " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
-
-        availableRunConfigs += nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() + ":" + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue() + ":" + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue() + ";";
-
-        logger.debug("[HCAL " + functionManager.FMname + "]: availableRunConfigs is now: " + availableRunConfigs);
-      }
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("AVAILABLE_RUN_CONFIGS",new StringT(availableRunConfigs)));
-    }
-    catch (DOMException | UserActionException e) {
-      logger.error("[HCAL " + functionManager.FMname + "]: Got an error when trying to manipulate the userXML: " + e.getMessage());
     }
 
     VectorT<StringT> availableResources = new VectorT<StringT>();
@@ -434,7 +267,7 @@ public class HCALEventHandler extends UserEventHandler {
 
   // configuring all created HCAL applications by means of sending the HCAL CfgScript to the HCAL supervisor
   protected void sendRunTypeConfiguration( String CfgScript, String TTCciControlSequence, String LTCControlSequence,
-                                           String TCDSControlSequence, String LPMControlSequence, String PIControlSequence, 
+                                           String ICIControlSequence, String LPMControlSequence, String PIControlSequence, 
                                            String FedEnableMask, boolean UsePrimaryTCDS
                                          ) {
     if (!functionManager.containerTTCciControl.isEmpty()) {
@@ -550,12 +383,12 @@ public class HCALEventHandler extends UserEventHandler {
               pam.setValue("ConfigurationDoc",CfgScript);
               pam.setValue("Partition",functionManager.FMpartition);
               pam.setValue("RunSessionNumber",Sid.toString());
-              pam.setValue("hardwareConfigurationStringTCDS", TCDSControlSequence);
+              pam.setValue("hardwareConfigurationStringTCDS", ICIControlSequence);
               pam.setValue("hardwareConfigurationStringLPM", LPMControlSequence);
               pam.setValue("hardwareConfigurationStringPI", PIControlSequence);
               pam.setValue("fedEnableMask", FedEnableMask);
               pam.setValue("usePrimaryTCDS", new Boolean(UsePrimaryTCDS).toString());
-              logger.debug("[HCAL " + functionManager.FMname + "] sending TCDSControl sequence:\n" + TCDSControlSequence);
+              logger.debug("[HCAL " + functionManager.FMname + "] sending ICIControl sequence:\n" + ICIControlSequence);
               logger.debug("[HCAL " + functionManager.FMname + "] sending LPMControl sequence:\n" + LPMControlSequence);
               logger.debug("[HCAL " + functionManager.FMname + "] sending PIControl sequence:\n" + PIControlSequence);
               logger.debug("[HCAL " + functionManager.FMname + "] sending FedEnableMask sequence:\n" + FedEnableMask);
@@ -843,7 +676,7 @@ public class HCALEventHandler extends UserEventHandler {
       String hostName = qr.getResource().getHostName();
       // ===WARNING!!!=== This hostname is hardcoded and should NOT be!!!
       // TODO This needs to be moved out into userXML or a snippet!!!
-      if (hostName.equals("tcds-control-hcal.cms") || hostName.equals("tcds-control-904.cms904") ) {
+      if (hostName.contains("tcds") ) {
         usingTCDS = true;
         logger.info("[HCAL " + functionManager.FMname + "] initXDAQ() -- the TCDS executive on hostName " + hostName + " is being handled in a special way.");
         qr.setInitialized(true);
@@ -852,7 +685,7 @@ public class HCALEventHandler extends UserEventHandler {
 
     List<QualifiedResource> jobControlList = qg.seekQualifiedResourcesOfType(new JobControl());
     for (QualifiedResource qr: jobControlList) {
-      if (qr.getResource().getHostName().equals("tcds-control-hcal.cms") || qr.getResource().getHostName().equals("tcds-control-904.cms904") ) {
+      if (qr.getResource().getHostName().contains("tcds")  ) {
         logger.info("[HCAL " + functionManager.FMname + "] Masking the  application with name " + qr.getName() + " running on host " + qr.getResource().getHostName() );
         qr.setActive(false);
       }
@@ -904,7 +737,6 @@ public class HCALEventHandler extends UserEventHandler {
       String debugMessage = ("[HCAL " + functionManager.FMname + "] No FM childs found.\nThis is probably OK for a level 2 HCAL FM.\nThis FM has the role: " + functionManager.FMrole);
       logger.debug(debugMessage);
     }
-
     // see if we have any "special" FMs
     List<FunctionManager> evmTrigList = new ArrayList<FunctionManager>();
     List<FunctionManager> normalList = new ArrayList<FunctionManager>();
@@ -959,7 +791,6 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager.containerFUResourceBroker  = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("evf::FUResourceBroker"));
     functionManager.containerFUEventProcessor  = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("evf::FUEventProcessor"));
     functionManager.containerStorageManager    = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("StorageManager"));
-    functionManager.containerFEDStreamer       = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("FEDStreamer"));
     functionManager.containerPeerTransportATCP = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("pt::atcp::PeerTransportATCP"));
     functionManager.containerhcalRunInfoServer = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalRunInfoServer"));
 
@@ -1118,35 +949,6 @@ public class HCALEventHandler extends UserEventHandler {
     return xdaqMsg;
   }
 
-  // get and set a session ID (called only when in local run mode)
-  protected void getSessionId() {
-    String user = functionManager.getQualifiedGroup().getGroup().getDirectory().getUser();
-    String description = functionManager.getQualifiedGroup().getGroup().getDirectory().getFullPath();
-    logSessionConnector = functionManager.logSessionConnector;
-    int tempSessionId = 0;
-
-    logger.debug("[HCAL " + functionManager.FMname + "] HCALEventHandler: Log session connector: " + logSessionConnector );
-
-    if (logSessionConnector != null) {
-      try {
-        tempSessionId = logSessionConnector.createSession( user, description );
-        logger.info("[HCAL " + functionManager.FMname + "] New session Id obtained =" +tempSessionId );
-      }
-      catch (LogSessionException e1) {
-        logger.warn("[HCAL " + functionManager.FMname + "] Could not get session ID, using default = " + tempSessionId + ". Exception: ",e1);
-      }
-    }
-    else {
-      logger.warn("[HCAL " + functionManager.FMname + "] logSessionConnector = " + logSessionConnector + ", using default = " + tempSessionId + ".");
-    }
-
-    // and put it into the instance variable
-    Sid = tempSessionId;
-    // put the session ID into parameter set
-    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("SID",new IntegerT(Sid)));
-    logger.info("[HCAL " + functionManager.FMname + "] Reach the end of getsessionId() ");
-  }
-
   // get official CMS run and sequence number
   protected RunNumberData getOfficialRunNumber() {
 
@@ -1238,7 +1040,7 @@ public class HCALEventHandler extends UserEventHandler {
   // make entry into the CMS run info database
   protected void publishRunInfoSummary() {
     functionManager = this.functionManager;
-    String globalParams[] = new String[] {"HCAL_LPMCONTROL", "HCAL_TCDSCONTROL", "HCAL_PICONTROL", "HCAL_TTCCICONTROL", "SUPERVISOR_ERROR", "HCAL_COMMENT", "HCAL_CFGSCRIPT", "RUN_KEY",  "HCAL_TIME_OF_FM_START"};
+    String globalParams[] = new String[] {"HCAL_LPMCONTROL", "HCAL_ICICONTROL_SINGLE","HCAL_ICICONTROL_MULTI", "HCAL_PICONTROL_SINGLE","HCAL_PICONTROL_MULTI", "HCAL_TTCCICONTROL", "SUPERVISOR_ERROR", "HCAL_COMMENT", "HCAL_CFGSCRIPT", "RUN_KEY",  "HCAL_TIME_OF_FM_START"};
     Hashtable<String, String> localParams = new Hashtable<String, String>();
 
     maskedAppsForRunInfo = ((VectorT<StringT>)functionManager.getParameterSet().get("MASKED_RESOURCES").getValue()).toString();
@@ -2440,7 +2242,7 @@ public class HCALEventHandler extends UserEventHandler {
               XDAQParameter pam = null;
               String status   = "undefined";
               String stateName   = "undefined";
-              String progress = "undefined";
+              String progressFromSupervisor = "undefined";
               String taname   = "undefined";
 
               // ask for the status of the HCAL supervisor
@@ -2452,18 +2254,29 @@ public class HCALEventHandler extends UserEventHandler {
 
                   status = pam.getValue("PartitionState");
                   stateName = pam.getValue("stateName");
-                  progress = pam.getValue("overallProgress");
+                  progressFromSupervisor = pam.getValue("overallProgress");
 
                   if (status==null || stateName==null) {
                     String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the hcalSupervisor for the PartitionState and stateName to see if it is alive or not resulted in a NULL pointer - this is bad!";
                     functionManager.goToError(errMessage);
                   }
-                  if (progress == null) {
+                  if (progressFromSupervisor == null) {
                     // TODO: do something more drastic in this case?
                     logger.error("[JohnLogProgress] " + functionManager.FMname + " Something went wrong when asking the hcalSupervisor for her overallProgress...");
                   }
                   else {
-                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DoubleT>("PROGRESS", new DoubleT(progress)));
+		    logger.debug("JohnDebug: progressFromSupervisor " + qr.getName() + "in " + functionManager.FMname + " was " + progressFromSupervisor);
+                    try {
+		      if (!Double.isNaN(Double.parseDouble(progressFromSupervisor))) {
+                        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DoubleT>("PROGRESS", new DoubleT(Double.parseDouble(progressFromSupervisor))));
+                      }
+		      else {
+		        logger.debug("JohnDebug: progressFromSupervisor was NaN. Not setting progress to NaN.");
+	              }
+                    }
+                    catch(NumberFormatException e) {
+		      logger.debug("JohnDebug: progressFromSupervisor was NOT parseable to a double. Will not set progress");
+                    }
                   }
 
                   logger.debug("[HCAL " + functionManager.FMname + "] asking for the HCAL supervisor PartitionState to see if it is still alive.\n The PartitionState is: " + status);
@@ -2630,6 +2443,7 @@ public class HCALEventHandler extends UserEventHandler {
       List<QualifiedResource> fmChildrenList    = functionManager.containerFMChildren.getActiveQRList();
       List<String>  watchedAlarms     = new ArrayList<String>();
       List<String>  watchedPartitions = new ArrayList<String>();
+      String        FMstate           =  functionManager.getState().getStateString();
       for(QualifiedResource qr : fmChildrenList){
         String LV2FMname             = qr.getName(); //e.g. HCAL_HO
         try{
@@ -2670,8 +2484,8 @@ public class HCALEventHandler extends UserEventHandler {
       while ((stopAlarmerWatchThread == false) && (functionManager != null) && (functionManager.isDestroyed() == false)) {
         Date now = Calendar.getInstance().getTime();
 
-        if (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()) ||
-            functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()) ) {
+        FMstate = functionManager.getState().getStateString();
+        if (FMstate.equals(HCALStates.RUNNING.toString()) || FMstate.equals(HCALStates.RUNNINGDEGRADED.toString()) ) {
           try {
             if (delayAlarmerWatchThread){
               try { Thread.sleep(60000); }   // delay the first poll by 60s when we enter Running state
@@ -2700,7 +2514,7 @@ public class HCALEventHandler extends UserEventHandler {
               }
             }
             for (String ignoredPartition : ignoredPartitions) {
-              logger.warn("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: Alarms from this masked or empty partition will be ignored: "+ignoredPartition);
+              logger.debug("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: Alarms from this masked or empty partition will be ignored: "+ignoredPartition);
             }
 
             // ask for the status of the HCAL alarmer
@@ -2750,8 +2564,8 @@ public class HCALEventHandler extends UserEventHandler {
 
             // Actions taken based on alarmer results
             if (!totalStatus) {
-              // Print partition results
-              logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread : Printing partition statuses:");
+              // Print debug partition results
+              logger.debug("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread : Printing partition statuses:");
               for (String partitionName : watchedPartitions) {
                 String thisPartitionAlarmerResults = "[HCAL " + functionManager.FMname + "] David log : Partition " + partitionName + " / alarm " + partitionName + "_Status => ";
                 if (partitionStatuses.get(partitionName)) {
@@ -2762,8 +2576,16 @@ public class HCALEventHandler extends UserEventHandler {
                 if (ignoredPartitions.contains(partitionName)) {
                   thisPartitionAlarmerResults = thisPartitionAlarmerResults + " (but FM is EMPTY/MASKED, so ignoring)";
                 }
-                logger.warn(thisPartitionAlarmerResults);
+                logger.debug(thisPartitionAlarmerResults);
               }
+              // Print simple result
+              String PartitionAlarmerResult = "[HCAL " + functionManager.FMname + "] AlarmerWatchThread : Following partition status is not OK: ";
+              for (String partitionName : watchedPartitions){
+                if (!partitionStatuses.get(partitionName) && !ignoredPartitions.contains(partitionName)){
+                  PartitionAlarmerResult += partitionName + " " ;
+                }
+              }
+              logger.warn(PartitionAlarmerResult);
 
               // Put a message in the fishy box
               String badAlarmerMessage = "><))),> : RunningDegraded state due to:";
@@ -2772,22 +2594,26 @@ public class HCALEventHandler extends UserEventHandler {
               }
               badAlarmerMessage += ". Please contact HCAL DOC!";
 
-              // go to degraded state if needed
-              if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
-                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: due to bad alarmer status (see previous messages), going to RUNNINGDEGRADED state");
-                functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
-                functionManager.setAction(badAlarmerMessage);
+              // get fresh FM state after first delay poll 
+              FMstate = functionManager.getState().getStateString();
+              if (FMstate.equals(HCALStates.RUNNING.toString()) || FMstate.equals(HCALStates.RUNNINGDEGRADED.toString()) ) {
+                // total status not OK and FMstate != RunningDegraded => go to degraded state 
+                if(!FMstate.equals(HCALStates.RUNNINGDEGRADED.toString())) {
+                  logger.warn("[HCAL " + functionManager.FMname + "] AlarmerWatchThread: due to bad alarmer status (see previous messages), going to RUNNINGDEGRADED state");
+                  functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
+                  functionManager.setAction(badAlarmerMessage);
+                }
+                else {
+                  logger.debug("[HCAL " + functionManager.FMname + "] AlarmerWatchThread: due to bad alarmer status (see previous messages), going to stay in RUNNINGDEGRADED state");
+                  functionManager.setAction(badAlarmerMessage);
+                }
               }
-              else {
-                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: due to bad alarmer status (see previous messages), going to stay in RUNNINGDEGRADED state");
-                functionManager.setAction(badAlarmerMessage);
-              }
-
             } else {
+              FMstate = functionManager.getState().getStateString();
               // Alarmer status is OK. If RUNNINGDEGRADED, unset.
-              if(functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
+              if(FMstate.equals(HCALStates.RUNNINGDEGRADED.toString())) {
                 // if we got back to OK, go back to RUNNING
-                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: Alarmer status is OK. Going to get out of RUNNINGDEGRADED state now");
+                logger.warn("[HCAL " + functionManager.FMname + "] AlarmerWatchThread: Alarmer status is OK. Going to get out of RUNNINGDEGRADED state now");
                 functionManager.fireEvent(HCALInputs.UNSETRUNNINGDEGRADED);
               }
             }

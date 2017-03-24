@@ -48,8 +48,6 @@ public class HCALInputs {
 	public static final Input SETTESTING_TTS        =  new Input("SetTestingTTS");
 	public static final Input SETERROR              =  new Input("SetError");
 	public static final Input SENDTTSTESTPATTERN    =  new Input("SendTTSTestPattern");
-	public static final Input FEDSTREAMERSTART      =  new Input("start");
-	public static final Input FEDSTREAMERSTOP       =  new Input("stop");
 	public static final Input COLDRESET             =  new Input("ColdReset");
 	public static final Input SETCOLDRESET          =  new Input("SetColdReset");
 }
