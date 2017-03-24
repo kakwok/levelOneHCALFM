@@ -814,8 +814,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         //  if (RunType.equals("local")) { logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a run sequence number.\nThis is OK for global runs."); }
         //}
         
-        publishRunInfoSummary();
-        publishRunInfoSummaryfromXDAQ();
       }
       VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
       if (EmptyFMs.contains(new StringT(functionManager.FMname))){
@@ -827,6 +825,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("startAction executed ...")));
         return;
       }
+
+      publishRunInfoSummary();
+      publishRunInfoSummaryfromXDAQ();
       
       if (functionManager.containerTriggerAdapter!=null) {
         if (!functionManager.containerTriggerAdapter.isEmpty()) {
