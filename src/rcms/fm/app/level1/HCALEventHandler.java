@@ -2341,7 +2341,7 @@ public class HCALEventHandler extends UserEventHandler {
               if (!functionManager.containerTriggerAdapter.isEmpty()) {
                 {
                   String debugMessage = "[HCAL " + functionManager.FMname + "] TriggerAdapter found for asking its state - good!";
-                  logger.info(debugMessage);
+                  logger.debug(debugMessage);
                 }
                 XDAQParameter pam = null;
                 String status = "undefined";
