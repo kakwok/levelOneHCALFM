@@ -531,20 +531,20 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           CheckAndSetParameter( parameterSet , "HCAL_RUNINFOPUBLISH" );
           CheckAndSetParameter( parameterSet , "OFFICIAL_RUN_NUMBERS");
           CheckAndSetParameter( parameterSet , "HCAL_CFGCVSBASEPATH" );
-          CheckAndSetParameter( parameterSet , "HCAL_CFGSCRIPT"      );
-          CheckAndSetParameter( parameterSet , "HCAL_TTCCICONTROL"   );
-          CheckAndSetParameter( parameterSet , "HCAL_LTCCONTROL"     );
+          CheckAndSetParameter( parameterSet , "HCAL_CFGSCRIPT"      ,false);
+          CheckAndSetParameter( parameterSet , "HCAL_TTCCICONTROL"   ,false);
+          CheckAndSetParameter( parameterSet , "HCAL_LTCCONTROL"     ,false);
           CheckAndSetParameter( parameterSet , "SINGLEPARTITION_MODE");
           isSinglePartition   = ((BooleanT)functionManager.getHCALparameterSet().get("SINGLEPARTITION_MODE").getValue()).getBoolean();
           // Only set the parameter being used so that RunInfo will be clear
           if(isSinglePartition){
-            CheckAndSetParameter( parameterSet , "HCAL_ICICONTROL_SINGLE"     );
-            CheckAndSetParameter( parameterSet , "HCAL_PICONTROL_SINGLE"      );
+            CheckAndSetParameter( parameterSet , "HCAL_ICICONTROL_SINGLE"     ,false);
+            CheckAndSetParameter( parameterSet , "HCAL_PICONTROL_SINGLE"      ,false);
           }
           else{
-            CheckAndSetParameter( parameterSet , "HCAL_LPMCONTROL"           );
-            CheckAndSetParameter( parameterSet , "HCAL_ICICONTROL_MULTI"     );
-            CheckAndSetParameter( parameterSet , "HCAL_PICONTROL_MULTI"      );
+            CheckAndSetParameter( parameterSet , "HCAL_LPMCONTROL"           ,false);
+            CheckAndSetParameter( parameterSet , "HCAL_ICICONTROL_MULTI"     ,false);
+            CheckAndSetParameter( parameterSet , "HCAL_PICONTROL_MULTI"      ,false);
           }
         }
         catch (UserActionException e){
