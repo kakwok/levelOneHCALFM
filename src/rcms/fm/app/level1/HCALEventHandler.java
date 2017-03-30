@@ -379,7 +379,7 @@ public class HCALEventHandler extends UserEventHandler {
             else {
               pam.select(new String[] {"RunType", "ConfigurationDoc", "Partition", "RunSessionNumber", "hardwareConfigurationStringTCDS", "hardwareConfigurationStringLPM", "hardwareConfigurationStringPI", "fedEnableMask", "usePrimaryTCDS"});
               pam.setValue("RunType",functionManager.FMfullpath);
-              logger.info("[HCAL " + functionManager.FMname + "]: the ConfigurationDoc to be sent to the supervisor is: " + CfgScript);
+              logger.debug("[HCAL " + functionManager.FMname + "]: the ConfigurationDoc to be sent to the supervisor is: " + CfgScript);
               pam.setValue("ConfigurationDoc",CfgScript);
               pam.setValue("Partition",functionManager.FMpartition);
               pam.setValue("RunSessionNumber",Sid.toString());
@@ -2341,7 +2341,7 @@ public class HCALEventHandler extends UserEventHandler {
               if (!functionManager.containerTriggerAdapter.isEmpty()) {
                 {
                   String debugMessage = "[HCAL " + functionManager.FMname + "] TriggerAdapter found for asking its state - good!";
-                  logger.info(debugMessage);
+                  logger.debug(debugMessage);
                 }
                 XDAQParameter pam = null;
                 String status = "undefined";
@@ -2645,22 +2645,42 @@ public class HCALEventHandler extends UserEventHandler {
   
   // Function to receive parameter
   void CheckAndSetParameter(ParameterSet pSet , String PamName) throws UserActionException{
+    CheckAndSetParameter(pSet,PamName,true);
+  }
+
+  void CheckAndSetParameter(ParameterSet pSet , String PamName, boolean printResult) throws UserActionException{
+    String inputString = getUserFunctionManager().getLastInput().getInputString();
 
     if( pSet.get(PamName) != null){
       if (pSet.get(PamName).getType().equals(StringT.class)){
         String PamValue = ((StringT)pSet.get(PamName).getValue()).getString();
         functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(PamName, new StringT(PamValue)));
-        logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input. Here it is: \n"+ PamValue);
+        if(printResult){
+          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
+        }
+        else{
+          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString);
+        }
       }
       if (pSet.get(PamName).getType().equals(IntegerT.class)){
         Integer PamValue = ((IntegerT)pSet.get(PamName).getValue()).getInteger();
         functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(PamName, new IntegerT(PamValue)));
-        logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input. Here it is: \n"+ PamValue);
+        if(printResult){
+          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
+        }
+        else{
+          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString);
+        }
       }
       if (pSet.get(PamName).getType().equals(BooleanT.class)){
         Boolean PamValue = ((BooleanT)pSet.get(PamName).getValue()).getBoolean();
         functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>(PamName, new BooleanT(PamValue)));
-        logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input. Here it is: \n"+ PamValue);
+        if(printResult){
+          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString+". Here is the set value: \n"+ PamValue);
+        }
+        else{
+          logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input= "+inputString);
+        }
       }
     }
     else{
