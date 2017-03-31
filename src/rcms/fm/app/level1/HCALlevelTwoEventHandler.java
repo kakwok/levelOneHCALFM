@@ -559,14 +559,22 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       String LTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LTCCONTROL"    ).getValue()).getString();
       String LPMControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LPMCONTROL"    ).getValue()).getString();
       if(isSinglePartition){
+        //KKH: Set ICIControl from userXML if it is not empty
+        if(xmlHandler.hasUniqueTag(xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlSingle"),"ICIControlSingle")){
+          xmlHandler.SetHCALParameterFromTagName("ICIControlSingle",xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlSingle"),CfgCVSBasePath,false);
+        }
         ICIControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_ICICONTROL_SINGLE" ).getValue()).getString();
         PIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL_SINGLE"   ).getValue()).getString();
       }
       else{
+        //KKH: Set ICIControl from userXML if it is not empty
+        if(xmlHandler.hasUniqueTag(xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlMulti"),"ICIControlMulti")){
+          xmlHandler.SetHCALParameterFromTagName("ICIControlMulti",xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlMulti"),CfgCVSBasePath,false);
+        }
         ICIControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_ICICONTROL_MULTI" ).getValue()).getString();
         PIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL_MULTI"   ).getValue()).getString();
       }
-      
+
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] configureAction: We are in " + RunType + " mode ...");
