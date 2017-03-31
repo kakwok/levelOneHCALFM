@@ -286,7 +286,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // ask the HCAL supervisor for the TriggerAdapter name
       //
       
-      logger.warn("[JohnLog] this FM is checking if he should be doing getTriggerAdapter() " + functionManager.FMname + " and his role is " + functionManager.FMrole);
       if (functionManager.FMrole.equals("EvmTrig")) {
         //logger.info("JohnLog3] [HCAL LVL2 " + functionManager.FMname + "] Going to ask the HCAL supervisor fo the TriggerAdapter name, now...");
         logger.info("[HCAL LVL2 " + functionManager.FMname + "] Going to ask the HCAL supervisor fo the TriggerAdapter name, now...");
@@ -531,20 +530,20 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           CheckAndSetParameter( parameterSet , "HCAL_RUNINFOPUBLISH" );
           CheckAndSetParameter( parameterSet , "OFFICIAL_RUN_NUMBERS");
           CheckAndSetParameter( parameterSet , "HCAL_CFGCVSBASEPATH" );
-          CheckAndSetParameter( parameterSet , "HCAL_CFGSCRIPT"      );
-          CheckAndSetParameter( parameterSet , "HCAL_TTCCICONTROL"   );
-          CheckAndSetParameter( parameterSet , "HCAL_LTCCONTROL"     );
+          CheckAndSetParameter( parameterSet , "HCAL_CFGSCRIPT"      ,false);
+          CheckAndSetParameter( parameterSet , "HCAL_TTCCICONTROL"   ,false);
+          CheckAndSetParameter( parameterSet , "HCAL_LTCCONTROL"     ,false);
           CheckAndSetParameter( parameterSet , "SINGLEPARTITION_MODE");
           isSinglePartition   = ((BooleanT)functionManager.getHCALparameterSet().get("SINGLEPARTITION_MODE").getValue()).getBoolean();
           // Only set the parameter being used so that RunInfo will be clear
           if(isSinglePartition){
-            CheckAndSetParameter( parameterSet , "HCAL_ICICONTROL_SINGLE"     );
-            CheckAndSetParameter( parameterSet , "HCAL_PICONTROL_SINGLE"      );
+            CheckAndSetParameter( parameterSet , "HCAL_ICICONTROL_SINGLE"     ,false);
+            CheckAndSetParameter( parameterSet , "HCAL_PICONTROL_SINGLE"      ,false);
           }
           else{
-            CheckAndSetParameter( parameterSet , "HCAL_LPMCONTROL"           );
-            CheckAndSetParameter( parameterSet , "HCAL_ICICONTROL_MULTI"     );
-            CheckAndSetParameter( parameterSet , "HCAL_PICONTROL_MULTI"      );
+            CheckAndSetParameter( parameterSet , "HCAL_LPMCONTROL"           ,false);
+            CheckAndSetParameter( parameterSet , "HCAL_ICICONTROL_MULTI"     ,false);
+            CheckAndSetParameter( parameterSet , "HCAL_PICONTROL_MULTI"      ,false);
           }
         }
         catch (UserActionException e){
@@ -560,14 +559,22 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       String LTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LTCCONTROL"    ).getValue()).getString();
       String LPMControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LPMCONTROL"    ).getValue()).getString();
       if(isSinglePartition){
+        //KKH: Set ICIControl from userXML if it is not empty
+        if(xmlHandler.hasUniqueTag(xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlSingle"),"ICIControlSingle")){
+          xmlHandler.SetHCALParameterFromTagName("ICIControlSingle",xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlSingle"),CfgCVSBasePath,false);
+        }
         ICIControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_ICICONTROL_SINGLE" ).getValue()).getString();
         PIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL_SINGLE"   ).getValue()).getString();
       }
       else{
+        //KKH: Set ICIControl from userXML if it is not empty
+        if(xmlHandler.hasUniqueTag(xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlMulti"),"ICIControlMulti")){
+          xmlHandler.SetHCALParameterFromTagName("ICIControlMulti",xmlHandler.getHCALuserXML().getElementsByTagName("ICIControlMulti"),CfgCVSBasePath,false);
+        }
         ICIControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_ICICONTROL_MULTI" ).getValue()).getString();
         PIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL_MULTI"   ).getValue()).getString();
       }
-      
+
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] configureAction: We are in " + RunType + " mode ...");
@@ -814,8 +821,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         //  if (RunType.equals("local")) { logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a run sequence number.\nThis is OK for global runs."); }
         //}
         
-        publishRunInfoSummary();
-        publishRunInfoSummaryfromXDAQ();
       }
       VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
       if (EmptyFMs.contains(new StringT(functionManager.FMname))){
@@ -827,6 +832,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("startAction executed ...")));
         return;
       }
+
+      publishRunInfoSummary();
+      publishRunInfoSummaryfromXDAQ();
       
       if (functionManager.containerTriggerAdapter!=null) {
         if (!functionManager.containerTriggerAdapter.isEmpty()) {
