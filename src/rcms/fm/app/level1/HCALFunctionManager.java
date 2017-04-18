@@ -75,6 +75,8 @@ public class HCALFunctionManager extends UserFunctionManager {
 
   public XdaqApplicationContainer containerhcalSupervisor      = null;
   public XdaqApplicationContainer containerlpmController       = null;
+  public XdaqApplicationContainer containerPIController       = null;
+  public XdaqApplicationContainer containerICIController       = null;
   public XdaqApplicationContainer containerTCDSControllers     = null;
   public XdaqApplicationContainer containerhcalDCCManager      = null;
   public XdaqApplicationContainer containerTriggerAdapter      = null;
@@ -892,7 +894,7 @@ public class HCALFunctionManager extends UserFunctionManager {
       if (!containerPIController.isEmpty()) {
         XdaqApplication PIapp = null;
         logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to PI ");
-        for(QualifiedResource qr : containerlpmController.getQualifiedResourceList()){
+        for(QualifiedResource qr : containerPIController.getQualifiedResourceList()){
           PIapp = (XdaqApplication) qr;
           PIapp.execute(HCALInputs.HALT,Integer.toString(sessionId),rcmsStateListenerURL);
         }
@@ -900,7 +902,7 @@ public class HCALFunctionManager extends UserFunctionManager {
       if (!containerICIController.isEmpty()) {
         XdaqApplication ICIapp = null;
         logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to ICI ");
-        for(QualifiedResource qr : containerlpmController.getQualifiedResourceList()){
+        for(QualifiedResource qr : containerICIController.getQualifiedResourceList()){
           ICIapp = (XdaqApplication) qr;
           ICIapp.execute(HCALInputs.HALT,Integer.toString(sessionId),rcmsStateListenerURL);
         }
