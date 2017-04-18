@@ -474,12 +474,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Resetting")));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR",new StringT("")));
 
-      // kill all XDAQ executives
-      //destroyXDAQ();
-
-      // init all XDAQ executives
-      //initXDAQ();
-
       if (!functionManager.containerFMChildren.isEmpty()) {
 
         // reset all FMs
@@ -489,11 +483,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
         catch (QualifiedResourceContainerException e) {
           String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: sending: " + HCALInputs.RESET + " failed ...";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - problems ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          functionManager.goToError(errMessage,e)
         }
       }
       else {
