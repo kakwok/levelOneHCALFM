@@ -21,6 +21,7 @@ import rcms.fm.fw.user.UserActionException;
 import rcms.resourceservice.db.resource.Resource;
 import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
 import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
+import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainerException;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
@@ -1301,7 +1302,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
       //  Halt LPM with LPM FM. 
       if( functionManager.FMrole.equals("Level2_TCDSLPM")){
-        functionManager.haltLPMControllers();
+        functionManager.haltTCDSControllers();
       }
 
       // check from which state we came, i.e. if we were in sTTS test mode disable this DCC special mode
