@@ -39,6 +39,8 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/hcalui.js" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/GUI.js" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/stateNotification.js" />
+  <rcms.control:customResourceRenderer indentation="1" type="customPath" path="/icons/redX.png" htmlId="redX"/>
+  <rcms.control:customResourceRenderer indentation="1" type="customPath" path="/icons/greenCheck.png" htmlId="greenCheck"/>
   <script type="text/javascript">
     var guiInst = new GUI();
   </script>

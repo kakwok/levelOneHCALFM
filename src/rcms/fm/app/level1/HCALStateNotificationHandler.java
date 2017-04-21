@@ -74,6 +74,8 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
         }
 
         handleError(errMsg,actionMsg);
+        //logger.warn("["+fm.FMname+"]: Going to error, reset taskSequence to null. ");
+        taskSequence = null;  //Reset taskSequence if we are in error
         return;
       }
       //INFO [SethLog HCAL HCAL_HO] 2 received id: http://hcalvme05.cms:16601/urn:xdaq-application:lid=50, ToState: Ready

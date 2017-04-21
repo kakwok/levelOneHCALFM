@@ -470,12 +470,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Resetting")));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR",new StringT("")));
 
-      // kill all XDAQ executives
-      //destroyXDAQ();
-
-      // init all XDAQ executives
-      //initXDAQ();
-
       if (!functionManager.containerFMChildren.isEmpty()) {
 
         // reset all FMs
@@ -485,11 +479,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
         catch (QualifiedResourceContainerException e) {
           String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: sending: " + HCALInputs.RESET + " failed ...";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - problems ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          functionManager.goToError(errMessage,e)
         }
       }
       else {
@@ -888,6 +878,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           EmptyFMs.add(new StringT(childFMName));
         }
       }
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("EMPTY_FMS",EmptyFMs));
       String emptyFMnames      ="";
       for(StringT FMname : EmptyFMs){
         emptyFMnames += FMname.getString()+";";
@@ -933,7 +924,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       pSet.put(new CommandParameter<BooleanT>("HCAL_RUNINFOPUBLISH"   , new BooleanT(RunInfoPublish)));
       pSet.put(new CommandParameter<BooleanT>("OFFICIAL_RUN_NUMBERS"  , new BooleanT(OfficialRunNumbers)));
       pSet.put(new CommandParameter<VectorT<StringT>>("EMPTY_FMS"              , EmptyFMs));
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("EMPTY_FMS",EmptyFMs));
 
       // prepare command plus the parameters to send
       Input configureInput= new Input(HCALInputs.CONFIGURE.toString());
@@ -1645,6 +1635,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
   protected class ProgressThread extends Thread {
     protected HCALFunctionManager functionManager = null;
     RCMSLogger logger = null;
+    double lvl2progress = 0.0;
 
     public ProgressThread(HCALFunctionManager parentFunctionManager) {
       this.logger = new RCMSLogger(HCALFunctionManager.class);
@@ -1671,11 +1662,15 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
               logger.warn("[HCAL " + functionManager.FMname + "] Could not update parameters for FM client: " + childFM.getResource().getName() + " The exception is:", e);
               return;
             }
-            progress += ((DoubleT)lvl2pars.get("PROGRESS").getValue()).getDouble();
+            lvl2progress = ((DoubleT)lvl2pars.get("PROGRESS").getValue()).getDouble();
+            if(lvl2progress>0){
+              progress += lvl2progress;
+              logger.debug("[JohnLogProgress] " + functionManager.FMname + ": From "+childFM.getName()+", got progress = "+lvl2progress);
+            }
           }
         }
-        logger.debug("[JohnLogProgress] " + functionManager.FMname + ": got total progress " + progress);
         progress = progress/(nChildren.doubleValue());
+        logger.debug("[JohnLogProgress] " + functionManager.FMname + ": Total progress =" + progress + " from nChildren = "+ nChildren);
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DoubleT>("PROGRESS", new DoubleT(progress)));
 
         // delay between polls
