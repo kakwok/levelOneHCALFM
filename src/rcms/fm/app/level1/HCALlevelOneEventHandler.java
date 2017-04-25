@@ -483,7 +483,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
         catch (QualifiedResourceContainerException e) {
           String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: sending: " + HCALInputs.RESET + " failed ...";
-          functionManager.goToError(errMessage,e)
+          functionManager.goToError(errMessage,e);
         }
       }
       else {
