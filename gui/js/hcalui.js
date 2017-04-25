@@ -213,6 +213,7 @@ function fillMask() {
     masksToShow += "]";
     masksToShow = masksToShow.replace(", ]", "]");
     $('#maskTest').text(masksToShow);
+    makeIcons();
 }
 
 function getAvailableResources() {
@@ -398,6 +399,13 @@ function checkSpectator() {
     }
 }
 
+function makeIcons() {
+  $('.control__indicator > span').html("<img src='" + $('#greenCheck').val() + "' />");
+  $('.radio__indicator > span').html("<img src='" + $('#redX').val() + "' />");
+  $('#singlePartitionSelection input:checked ~ .radio_wrapper > .radio__indicator > span').html("<img src='" + $('#greenCheck').val() + "' />");
+  $('#multiPartitionSelection input:checked ~ .control_wrapper > .control__indicator > span').html("<img src='" + $('#redX').val() + "' />");
+}
+
 function hcalOnLoad() {
   if ($('input[value="STATE"]').size() > 0) { // this is a sanity check to see if we're actually attached
     activate_relevant_table('AllParamTables');
@@ -450,5 +458,6 @@ function hcalOnLoad() {
     makecheckboxes();
     updatePage();
     checkSpectator();
+    makeIcons();
   }
 }
