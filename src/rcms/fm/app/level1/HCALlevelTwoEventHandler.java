@@ -84,6 +84,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       // convert TCDS apps to service apps and reset QG to modified one
       QualifiedGroup qg = ConvertTCDSAppsToServiceApps(functionManager.getQualifiedGroup());
+      //QualifiedGroup qg = functionManager.getQualifiedGroup();
       // reset QG to modified one
       functionManager.setQualifiedGroup(qg);
 
