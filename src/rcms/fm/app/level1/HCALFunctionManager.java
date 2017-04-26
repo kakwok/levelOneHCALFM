@@ -277,7 +277,7 @@ public class HCALFunctionManager extends UserFunctionManager {
     logger.debug("[HCAL base] entering createAction ...");
 
     // Retrieve the configuration for this Function Manager from the Group
-    FunctionManagerResource fmConf = ((FunctionManagerResource) qualifiedGroup.getGroup().getThisResource());
+    FunctionManagerResource fmConf = ((FunctionManagerResource) getQualifiedGroup().getGroup().getThisResource());
 
     FMfullpath = fmConf.getDirectory().getFullPath().toString();
     FMname = fmConf.getName();
@@ -495,7 +495,7 @@ public class HCALFunctionManager extends UserFunctionManager {
     logger.debug("[HCAL " + FMname + "] Getting the updated state ...");
 
     // without the qualified group we cannout do anything ;-)
-    if (!qualifiedGroup.isInitialized()) {
+    if (!getQualifiedGroup().isInitialized()) {
       logger.debug("[HCAL " + FMname + "] QualifiedGroup not initialized.\nThis should be OK when happens very early i.e. when initializing a run configuration." );
 
       return this.getState();
@@ -542,7 +542,7 @@ public class HCALFunctionManager extends UserFunctionManager {
 
       CustomStatesDefined=true;
 
-      Set<QualifiedResource> resourceGroup = qualifiedGroup.getQualifiedResourceGroup();
+      Set<QualifiedResource> resourceGroup = getQualifiedGroup().getQualifiedResourceGroup();
       svCalc = new StateVectorCalculation(resourceGroup);
 
       // all FM's are assumed to have either a supervisor or an LPMController which will give state notifications via xdaq2rc
@@ -916,7 +916,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         Resource supervResource = containerhcalSupervisor.getApplications().get(0).getResource();
         XdaqExecutiveResource qrSupervParentExec = ((XdaqApplicationResource)supervResource).getXdaqExecutiveResourceParent();
         supervExecURI = qrSupervParentExec.getURI();
-        QualifiedResource qrExec = qualifiedGroup.seekQualifiedResourceOfURI(supervExecURI);
+        QualifiedResource qrExec = getQualifiedGroup().seekQualifiedResourceOfURI(supervExecURI);
         XdaqExecutive ex = (XdaqExecutive) qrExec;
         try{
             ex.destroy();
@@ -930,8 +930,8 @@ public class HCALFunctionManager extends UserFunctionManager {
     }
 
     // find all XDAQ executives and kill them
-    if (qualifiedGroup != null) {
-      List listExecutive = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqExecutive());
+    if (getQualifiedGroup() != null) {
+      List listExecutive = getQualifiedGroup().seekQualifiedResourcesOfType(new XdaqExecutive());
       Iterator it = listExecutive.iterator();
       while (it.hasNext()) {
         XdaqExecutive ex = (XdaqExecutive) it.next();

@@ -79,7 +79,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
   public void init() throws rcms.fm.fw.EventHandlerException {
 
     functionManager = (HCALFunctionManager) getUserFunctionManager();
-    qualifiedGroup  = functionManager.getQualifiedGroup();
     xmlHandler = new HCALxmlHandler(this.functionManager);
     masker = new HCALMasker(this.functionManager);
 
@@ -390,12 +389,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Starting Monitor thread ...");
       LevelOneMonitorThread thread1 = new LevelOneMonitorThread();
       thread1.start();
-
-      // start the TriggerAdapter watchdog thread
-      System.out.println("[HCAL LVL1 " + functionManager.FMname + "] Starting TriggerAdapter watchdog thread ...");
-      logger.debug("[HCAL LVL1 " + functionManager.FMname + "] StartingTriggerAdapter watchdog thread ...");
-      TriggerAdapterWatchThread thread3 = new TriggerAdapterWatchThread();
-      thread3.start();
 
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
@@ -973,7 +966,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           PrintQRnames(containerEvmAndLPM);
           configureTaskSeq.addLast(EvmTrigConfigureTask);
         }
-        logger.info("[HCAL LVL1 " + functionManager.FMname +"] Destroying XDAQ for these LV2 FMs: "+emptyFMnames);
+        if(nEmptyFM>0){
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"] Destroying XDAQ for these LV2 FMs: "+emptyFMnames);
+        }
 
         logger.info("[HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
         functionManager.theStateNotificationHandler.executeTaskSequence(configureTaskSeq);
