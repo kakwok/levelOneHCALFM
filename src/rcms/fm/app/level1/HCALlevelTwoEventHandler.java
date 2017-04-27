@@ -3,6 +3,7 @@ package rcms.fm.app.level1;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import net.hep.cms.xdaqctl.XDAQException;
 import net.hep.cms.xdaqctl.XDAQTimeoutException;
@@ -21,16 +22,19 @@ import rcms.fm.fw.user.UserActionException;
 import rcms.resourceservice.db.resource.Resource;
 import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
 import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
+import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainerException;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.fm.resource.qualifiedresource.XdaqApplication;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
 import rcms.fm.resource.qualifiedresource.XdaqExecutiveConfiguration;
+import rcms.fm.resource.CommandException;
 import rcms.util.logger.RCMSLogger;
 import rcms.xdaqctl.XDAQParameter;
 import rcms.utilities.runinfo.RunNumberData;
 
+import rcms.statemachine.definition.Input;
 import rcms.utilities.fm.task.TaskSequence;
 import rcms.utilities.fm.task.SimpleTask;
 
@@ -50,7 +54,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
   public void init() throws rcms.fm.fw.EventHandlerException {
     functionManager = (HCALFunctionManager) getUserFunctionManager();
-    qualifiedGroup  = functionManager.getQualifiedGroup();
     xmlHandler = new HCALxmlHandler(this.functionManager);
     super.init();
       
@@ -81,125 +84,17 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         functionManager.FMrole="EvmTrig";
       }
 
-      List<QualifiedResource> xdaqApplicationList = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqApplication());
-      boolean doMasking = parameterSet.get("MASKED_RESOURCES") != null && ((VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue()).size()!=0;
-      if (doMasking) {
-        VectorT<StringT> MaskedResources = (VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue();
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES",MaskedResources));
-        StringT[] MaskedResourceArray = MaskedResources.toArray(new StringT[MaskedResources.size()]);
-        List<QualifiedResource> level2list = qualifiedGroup.seekQualifiedResourcesOfType(new FunctionManager());
-        for (StringT MaskedApplication : MaskedResourceArray) {
-          //String MaskedAppWcolonsNoCommas = MaskedApplication.replace("," , ":");
-          //logger.info("[JohnLog2] " + functionManager.FMname + ": " + functionManager.FMname + ": Starting to mask application " + MaskedApplication);
-          //logger.info("[JohnLogVector] " + functionManager.FMname + ": Starting to mask application " + MaskedApplication.getString());
-          for (QualifiedResource qr : xdaqApplicationList) {
-            //logger.info("[JohnLogVector] " + functionManager.FMname + ": For masking application " + MaskedApplication.getString() + "checking for match with " + qr.getName());
-            if (qr.getName().equals(MaskedApplication.getString())) {
-              //logger.info("[HCAL LVL2 " + functionManager.FMname + "]: found the matching application in the qr list, calling setActive(false): " + qr.getName());
-              logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Going to call setActive(false) on "+qr.getName());
-              qr.setActive(false);
-            }
-          }
-          //logger.info("[JohnLogVector] " + functionManager.FMname + ": Done masking application " + MaskedApplication.getString());
-        }
-      }
-      //else {
-      //  String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive any applications requested to be masked.";
-      //  logger.warn(warnMessage);
-      //}
-      //logger.info("[JohnLog] " + functionManager.FMname + ": This FM has role: " + functionManager.FMrole);
-      logger.info("[HCAL LVL2 " + functionManager.FMname + "]: This FM has role: " + functionManager.FMrole);
-      List<QualifiedResource> xdaqExecList = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqExecutive());
-      // loop over the executives and strip the connections
-     
-      //logger.info("[JohnLog3] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
-      logger.info("[HCAL LVL2 " + functionManager.FMname + "]: about to set the xml for the xdaq executives.");
-      //Boolean addedContext = false;
-      for( QualifiedResource qr : xdaqExecList) {
-        XdaqExecutive exec = (XdaqExecutive)qr;
-        //logger.info("[JohnLog3] " + functionManager.FMname + " Found qualified resource: " + qr.getName());
-        //logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Found qualified resource: " + qr.getName());
-        XdaqExecutiveConfiguration config =  exec.getXdaqExecutiveConfiguration();
-        String oldExecXML = config.getXml();
-        try {
-          String intermediateXML = "";
-          if (doMasking)
-            intermediateXML = xmlHandler.stripExecXML(oldExecXML, getUserFunctionManager().getParameterSet());
-          else
-            intermediateXML = oldExecXML;
-          //String newExecXML = intermediateXML;
-          //TODO
-          //if (functionManager.FMrole.equals("EvmTrig") && !addedContext) {
-          String newExecXML = xmlHandler.addStateListenerContext(intermediateXML, functionManager.rcmsStateListenerURL);
-          //  addedContext = true;
-            System.out.println("Set the statelistener context.");
-          //}
-          newExecXML = xmlHandler.setUTCPConnectOnRequest(newExecXML);
-          System.out.println("Set the utcp connectOnRequest attribute.");
-          config.setXml(newExecXML);
-          //logger.info("[JohnLog3] " + functionManager.FMname + ": Just set the xml for executive " + qr.getName());
-          logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the xml for executive " + qr.getName());
-        }
-        catch (UserActionException e) {
-          String errMessage = e.getMessage();
-          logger.info("[HCAL LVL2 " + functionManager.FMname + "]: got an error while trying to modify the ExecXML: " + errMessage);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-        XdaqExecutiveConfiguration configRetrieved =  exec.getXdaqExecutiveConfiguration();
-        System.out.println("[HCAL LVL2 System] " +qr.getName() + " has executive xml: " +  configRetrieved.getXml());
-        //logger.info("[JohnLogVector] " + functionManager.FMname + ": Done with qualified resource: " + qr.getName());
-      }
-
-      // initialize all XDAQ executives
-      // we also halt the LPM applications inside here
-      initXDAQ();
-
-      String ruInstance = "";
-      if (parameterSet.get("RU_INSTANCE") != null) {
-        ruInstance = ((StringT)parameterSet.get("RU_INSTANCE").getValue()).getString();
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("RU_INSTANCE",new StringT(ruInstance)));
-      }
-      String lpmSupervisor = "";
-      if (parameterSet.get("LPM_SUPERVISOR") != null) {
-        lpmSupervisor = ((StringT)parameterSet.get("LPM_SUPERVISOR").getValue()).getString();
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("LPM_SUPERVISOR",new StringT(lpmSupervisor)));
-      }
-      //Set instance numbers and HandleLPM in the infospace
-      initXDAQinfospace();
-
-      //logger.info("[JohnLogX] just after initXdaq");
-      // start the monitor thread
-      System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting Monitor thread ...");
-      logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting Monitor thread ...");
-      LevelOneMonitorThread thread1 = new LevelOneMonitorThread();
-      thread1.start();
-
-      // start the HCALSupervisor watchdog thread
-      System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
-      logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
-      if (!functionManager.containerhcalSupervisor.isEmpty()) {
-        HCALSupervisorWatchThread thread2 = new HCALSupervisorWatchThread();
-        thread2.start();
-      } 
-
-      // start the TriggerAdapter watchdog thread
-      System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting TriggerAdapter watchdog thread ...");
-      logger.debug("[HCAL LVL2 " + functionManager.FMname + "] StartingTriggerAdapter watchdog thread ...");
-      TriggerAdapterWatchThread thread3 = new TriggerAdapterWatchThread();
-      thread3.start();
-      functionManager.parameterSender.start();
-
+      // convert TCDS apps to service apps and reset QG to modified one
+      QualifiedGroup qg = ConvertTCDSAppsToServiceApps(functionManager.getQualifiedGroup());
+      // reset QG to modified one
+      functionManager.setQualifiedGroup(qg);
 
       // check run type passed from Level-1
+      // get SID from from LV1
       if(((StringT)parameterSet.get("HCAL_RUN_TYPE").getValue()).getString().equals("local")) {
 
         RunType = "local";
 
-        // request a session ID
-        //getSessionId();
         // Get SID from LV1:
         if (parameterSet.get("SID") != null) {
           Sid = ((IntegerT)parameterSet.get("SID").getValue()).getInteger();
@@ -246,6 +141,97 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
+      //Set SID of QG for service App
+      qg = functionManager.getQualifiedGroup();
+      if( qg.getRegistryEntry("SID") ==null){
+        Integer sid = ((IntegerT)functionManager.getHCALparameterSet().get("SID").getValue()).getInteger();
+        qg.putRegistryEntry("SID", Integer.toString(sid));
+        logger.warn("[HCAL "+ functionManager.FMname+"] Just set the SID of QG to "+ sid);
+      }
+      else{
+        logger.info("[HCAL "+ functionManager.FMname+"] SID of QG is "+ qg.getRegistryEntry("SID"));
+      }
+
+      List<QualifiedResource> xdaqApplicationList = qg.seekQualifiedResourcesOfType(new XdaqApplication());
+      boolean doMasking = parameterSet.get("MASKED_RESOURCES") != null && ((VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue()).size()!=0;
+      if (doMasking) {
+        VectorT<StringT> MaskedResources = (VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue();
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES",MaskedResources));
+        StringT[] MaskedResourceArray = MaskedResources.toArray(new StringT[MaskedResources.size()]);
+        List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
+        for (StringT MaskedApplication : MaskedResourceArray) {
+          //String MaskedAppWcolonsNoCommas = MaskedApplication.replace("," , ":");
+          //logger.info("[JohnLog2] " + functionManager.FMname + ": " + functionManager.FMname + ": Starting to mask application " + MaskedApplication);
+          //logger.info("[JohnLogVector] " + functionManager.FMname + ": Starting to mask application " + MaskedApplication.getString());
+          for (QualifiedResource qr : xdaqApplicationList) {
+            //logger.info("[JohnLogVector] " + functionManager.FMname + ": For masking application " + MaskedApplication.getString() + "checking for match with " + qr.getName());
+            if (qr.getName().equals(MaskedApplication.getString())) {
+              //logger.info("[HCAL LVL2 " + functionManager.FMname + "]: found the matching application in the qr list, calling setActive(false): " + qr.getName());
+              logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Going to call setActive(false) on "+qr.getName());
+              qr.setActive(false);
+            }
+          }
+          //logger.info("[JohnLogVector] " + functionManager.FMname + ": Done masking application " + MaskedApplication.getString());
+        }
+      }
+      //else {
+      //  String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive any applications requested to be masked.";
+      //  logger.warn(warnMessage);
+      //}
+      logger.info("[HCAL LVL2 " + functionManager.FMname + "]: This FM has role: " + functionManager.FMrole);
+      List<QualifiedResource> xdaqExecList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
+      // loop over the executives and strip the connections
+     
+      logger.info("[HCAL LVL2 " + functionManager.FMname + "]: about to set the xml for the xdaq executives.");
+      //Boolean addedContext = false;
+      for( QualifiedResource qr : xdaqExecList) {
+        XdaqExecutive exec = (XdaqExecutive)qr;
+        //logger.info("[JohnLog3] " + functionManager.FMname + " Found qualified resource: " + qr.getName());
+        //logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Found qualified resource: " + qr.getName());
+        XdaqExecutiveConfiguration config =  exec.getXdaqExecutiveConfiguration();
+        String oldExecXML = config.getXml();
+        try {
+          String intermediateXML = "";
+          if (doMasking)
+            intermediateXML = xmlHandler.stripExecXML(oldExecXML, getUserFunctionManager().getParameterSet());
+          else
+            intermediateXML = oldExecXML;
+          //String newExecXML = intermediateXML;
+          //TODO
+          //if (functionManager.FMrole.equals("EvmTrig") && !addedContext) {
+          String newExecXML = xmlHandler.addStateListenerContext(intermediateXML, functionManager.rcmsStateListenerURL);
+          //  addedContext = true;
+            System.out.println("Set the statelistener context.");
+          //}
+          newExecXML = xmlHandler.setUTCPConnectOnRequest(newExecXML);
+          System.out.println("Set the utcp connectOnRequest attribute.");
+          config.setXml(newExecXML);
+        }
+        catch (UserActionException e) {
+          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "]: got an error while trying to modify the ExecXML: ";
+          functionManager.goToError(errMessage,e);
+        }
+        XdaqExecutiveConfiguration configRetrieved =  exec.getXdaqExecutiveConfiguration();
+        System.out.println("[HCAL LVL2 System] " +qr.getName() + " has final executive xml: " +  configRetrieved.getXml());
+      }
+
+      // initialize all XDAQ executives
+      // we also halt the LPM applications inside here
+      initXDAQ();
+
+      String ruInstance = "";
+      if (parameterSet.get("RU_INSTANCE") != null) {
+        ruInstance = ((StringT)parameterSet.get("RU_INSTANCE").getValue()).getString();
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("RU_INSTANCE",new StringT(ruInstance)));
+      }
+      String lpmSupervisor = "";
+      if (parameterSet.get("LPM_SUPERVISOR") != null) {
+        lpmSupervisor = ((StringT)parameterSet.get("LPM_SUPERVISOR").getValue()).getString();
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("LPM_SUPERVISOR",new StringT(lpmSupervisor)));
+      }
+      //Set instance numbers and HandleLPM in the infospace
+      initXDAQinfospace();
+
       //Send SID to supervisor
       for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
         try {
@@ -268,6 +254,29 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           functionManager.goToError(errMessage,e);
         }
       }
+      // start the monitor thread
+      System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting Monitor thread ...");
+      logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting Monitor thread ...");
+      LevelOneMonitorThread thread1 = new LevelOneMonitorThread();
+      thread1.start();
+
+      // start the HCALSupervisor watchdog thread
+      System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
+      logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
+      if (!functionManager.containerhcalSupervisor.isEmpty()) {
+        HCALSupervisorWatchThread thread2 = new HCALSupervisorWatchThread();
+        thread2.start();
+      } 
+
+      // start the TriggerAdapter watchdog thread. Note: containerTriggerAdapter is filled after this. Start watchThread with role check.
+      if (functionManager.FMrole.equals("EvmTrig")){
+        System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting TriggerAdapter watchdog thread ...");
+        logger.debug("[HCAL LVL2 " + functionManager.FMname + "] StartingTriggerAdapter watchdog thread ...");
+        TriggerAdapterWatchThread thread3 = new TriggerAdapterWatchThread();
+        thread3.start();
+        functionManager.parameterSender.start();
+      }
+
   
       if (parameterSet.get("RUN_CONFIG_SELECTED") != null) {
         String RunConfigSelected = ((StringT)parameterSet.get("RUN_CONFIG_SELECTED").getValue()).getString();
@@ -287,10 +296,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       //
       
       if (functionManager.FMrole.equals("EvmTrig")) {
-        //logger.info("JohnLog3] [HCAL LVL2 " + functionManager.FMname + "] Going to ask the HCAL supervisor fo the TriggerAdapter name, now...");
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Going to ask the HCAL supervisor fo the TriggerAdapter name, now...");
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Going to ask the HCAL supervisor fo the TriggerAdapter name.");
         getTriggerAdapter();
-        logger.debug("[HCAL LVL2 " + functionManager.FMname + "] OK, now I should have at least one TriggerAdapter to talk to ...");
       }
 
       // go to HALT
@@ -333,6 +340,14 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // init all XDAQ executives
       // also halt all LPM applications inside here
       initXDAQ();
+      
+      // Halt TCDS controllers to release the lease
+      try{
+        functionManager.haltTCDSControllers();
+      }catch (UserActionException e){
+        String errMessage = "[HCAL LVL2 "+ functionManager.FMname +"] resetAction: Failed to haltTCDS controllers";
+        functionManager.goToError(errMessage,e);
+      }
 
       //Set instance numbers and HandleLPM in the infospace
       initXDAQinfospace();
@@ -389,8 +404,13 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: recoverAction()";
         functionManager.goToError(errMessage);
       }
-      // halt LPM
-      functionManager.haltLPMControllers();
+      // halt TCDS Controllers
+      try{
+        functionManager.haltTCDSControllers();
+      }catch(UserActionException e){
+        String errMessage = "[HCAL LVL2 "+functionManager.FMname +"] RecoverAction: failed to haltTCDSControllers";
+        functionManager.goToError(errMessage,e);
+      }
 
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
@@ -740,9 +760,32 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
               functionManager.goToError(errMessage,e);
             }
           }
-          // configuring all created HCAL applications by means of sending the RunType to the HCAL supervisor
-          if (!functionManager.ErrorState) {
-            sendRunTypeConfiguration(FullCfgScript,TTCciControlSequence,LTCControlSequence,ICIControlSequence,LPMControlSequence,PIControlSequence, FedEnableMask, UsePrimaryTCDS);
+          if (!functionManager.containerhcalSupervisor.isEmpty()){
+            // configuring all created HCAL applications by means of sending the RunType to the HCAL supervisor
+            if (!functionManager.ErrorState) {
+              sendRunTypeConfiguration(FullCfgScript,TTCciControlSequence,LTCControlSequence,ICIControlSequence,LPMControlSequence,PIControlSequence, FedEnableMask, UsePrimaryTCDS);
+            }
+          }
+          else if(!functionManager.containerlpmController.isEmpty()){
+            // Configure LPMController for TCDSLPM FM
+            Input LPMconfigureInput= new Input(HCALInputs.CONFIGURE.toString());
+            ParameterSet<CommandParameter> LPMpSet = new ParameterSet<CommandParameter>();
+            LPMpSet.put( new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(LPMControlSequence))                 );
+            LPMpSet.put( new CommandParameter<StringT> ("fedEnableMask"              , new StringT(FedEnableMask))                      );
+            LPMconfigureInput.setParameters( LPMpSet );
+
+            logger.info("[HCAL LVL2 " + functionManager.FMname+ "] Configuring LPMController.");
+            try{
+              functionManager.containerlpmController.execute(LPMconfigureInput);
+            }
+            catch(QualifiedResourceContainerException e){
+              String errMessage = " Configure LPMController: ";
+              Map<QualifiedResource, CommandException> CommandExceptionMap = e.getCommandExceptionMap();
+              for (QualifiedResource qr : CommandExceptionMap.keySet()){
+                errMessage += " Failed to configure "+ qr.getName() + " with reason: " +  CommandExceptionMap.get(qr).getFaultString() +"\n";
+              }
+              functionManager.goToError(errMessage);
+            }
           }
         }
         else{
@@ -1286,7 +1329,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
       //  Halt LPM with LPM FM. 
       if( functionManager.FMrole.equals("Level2_TCDSLPM")){
-        functionManager.haltLPMControllers();
+        functionManager.haltTCDSControllers();
       }
 
       // check from which state we came, i.e. if we were in sTTS test mode disable this DCC special mode

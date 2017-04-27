@@ -79,7 +79,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
   public void init() throws rcms.fm.fw.EventHandlerException {
 
     functionManager = (HCALFunctionManager) getUserFunctionManager();
-    qualifiedGroup  = functionManager.getQualifiedGroup();
     xmlHandler = new HCALxmlHandler(this.functionManager);
     masker = new HCALMasker(this.functionManager);
 
@@ -332,7 +331,21 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       masker.pickEvmTrig();
       masker.setMaskedFMs();
-      QualifiedGroup qg = functionManager.getQualifiedGroup();
+
+      // convert TCDS apps to service apps
+      QualifiedGroup qg = ConvertTCDSAppsToServiceApps(functionManager.getQualifiedGroup());
+      // reset QG to modified one
+      functionManager.setQualifiedGroup(qg);
+      qg = functionManager.getQualifiedGroup();
+      if( qg.getRegistryEntry("SID") ==null){
+        Integer sid = ((IntegerT)functionManager.getHCALparameterSet().get("SID").getValue()).getInteger();
+        qg.putRegistryEntry("SID", sid);
+        logger.warn("[HCAL "+ functionManager.FMname+"] Just set the SID of QG to "+ sid);
+      }
+      else{
+        logger.info("[HCAL "+ functionManager.FMname+"] SID of QG is "+ qg.getRegistryEntry("SID"));
+      }
+
       List<QualifiedResource> xdaqExecList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
       // loop over the executives to strip the connections
 
@@ -376,12 +389,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Starting Monitor thread ...");
       LevelOneMonitorThread thread1 = new LevelOneMonitorThread();
       thread1.start();
-
-      // start the TriggerAdapter watchdog thread
-      System.out.println("[HCAL LVL1 " + functionManager.FMname + "] Starting TriggerAdapter watchdog thread ...");
-      logger.debug("[HCAL LVL1 " + functionManager.FMname + "] StartingTriggerAdapter watchdog thread ...");
-      TriggerAdapterWatchThread thread3 = new TriggerAdapterWatchThread();
-      thread3.start();
 
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
@@ -430,11 +437,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
             }
             catch (CommandException e) {
               String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + initInput + " failed ...";
-              logger.error(errMessage,e);
-              functionManager.sendCMSError(errMessage);
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - problems ...")));
-              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+              functionManager.goToError(errMessage,e);
             }
           }
         }
@@ -934,36 +937,35 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       configureInput.setParameters( pSet );
 
       if (!functionManager.containerFMChildren.isEmpty()) {
-        logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM childs - good! fireEvent: " + configureInput);
-
-
-        Boolean needtowait = false;
 
         // include scheduling
         TaskSequence configureTaskSeq = new TaskSequence(HCALStates.CONFIGURING,HCALInputs.SETCONFIGURE);
-
-        // now configure the rest in parallel
-        List<QualifiedResource> EvmAndLPMfmList = new ArrayList<QualifiedResource>();
-        EvmAndLPMfmList.addAll(functionManager.containerFMEvmTrig.getActiveQRList());
-        EvmAndLPMfmList.addAll(functionManager.containerFMTCDSLPM.getActiveQRList());
-        QualifiedResourceContainer containerEvmAndLPM = new QualifiedResourceContainer(EvmAndLPMfmList);
-        
-        // 1) Normal FMs
+       
+        // 1) Configure TCDSLPM FM
+        if (!functionManager.containerFMTCDSLPM.isEmpty()){
+          SimpleTask LPMTask   = new SimpleTask(functionManager.containerFMTCDSLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring TCDSLPMFM first");
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring LPM FM first: ");
+          PrintQRnames(functionManager.containerFMTCDSLPM);
+          configureTaskSeq.addLast(LPMTask);
+        } 
+        // 2) Normal FMs
         if (!functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM.isEmpty()){
           SimpleTask fmChildrenTask   = new SimpleTask(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring regular priority FM children");
           logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring these regular LV2 FMs: ");
           PrintQRnames(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM);
           configureTaskSeq.addLast(fmChildrenTask);
         }
-        // 2) Need to configure LPM and EvmTrig FM in parallel 
+        // 3) Configure EvmTrig FM  
         // NOTE: Emptyness check is important to support global run
-        if (!containerEvmAndLPM.isEmpty()){
-          SimpleTask EvmTrigConfigureTask = new SimpleTask(containerEvmAndLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring EvmTrig FM");  
-          logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring the EvmTrig and TCDS LPM FM together: ");
-          PrintQRnames(containerEvmAndLPM);
+        if (!functionManager.containerFMEvmTrig.isEmpty()){
+          SimpleTask EvmTrigConfigureTask = new SimpleTask(functionManager.containerFMEvmTrig,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring EvmTrig FM");  
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring the EvmTrig: ");
+          PrintQRnames(functionManager.containerFMEvmTrig);
           configureTaskSeq.addLast(EvmTrigConfigureTask);
         }
-        logger.info("[HCAL LVL1 " + functionManager.FMname +"] Destroying XDAQ for these LV2 FMs: "+emptyFMnames);
+        if(nEmptyFM>0){
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"] Destroying XDAQ for these LV2 FMs: "+emptyFMnames);
+        }
 
         logger.info("[HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
         functionManager.theStateNotificationHandler.executeTaskSequence(configureTaskSeq);
