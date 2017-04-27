@@ -3,6 +3,7 @@ package rcms.fm.app.level1;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import net.hep.cms.xdaqctl.XDAQException;
 import net.hep.cms.xdaqctl.XDAQTimeoutException;
@@ -28,10 +29,12 @@ import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.fm.resource.qualifiedresource.XdaqApplication;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
 import rcms.fm.resource.qualifiedresource.XdaqExecutiveConfiguration;
+import rcms.fm.resource.CommandException;
 import rcms.util.logger.RCMSLogger;
 import rcms.xdaqctl.XDAQParameter;
 import rcms.utilities.runinfo.RunNumberData;
 
+import rcms.statemachine.definition.Input;
 import rcms.utilities.fm.task.TaskSequence;
 import rcms.utilities.fm.task.SimpleTask;
 
@@ -757,9 +760,32 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
               functionManager.goToError(errMessage,e);
             }
           }
-          // configuring all created HCAL applications by means of sending the RunType to the HCAL supervisor
-          if (!functionManager.ErrorState) {
-            sendRunTypeConfiguration(FullCfgScript,TTCciControlSequence,LTCControlSequence,ICIControlSequence,LPMControlSequence,PIControlSequence, FedEnableMask, UsePrimaryTCDS);
+          if (!functionManager.containerhcalSupervisor.isEmpty()){
+            // configuring all created HCAL applications by means of sending the RunType to the HCAL supervisor
+            if (!functionManager.ErrorState) {
+              sendRunTypeConfiguration(FullCfgScript,TTCciControlSequence,LTCControlSequence,ICIControlSequence,LPMControlSequence,PIControlSequence, FedEnableMask, UsePrimaryTCDS);
+            }
+          }
+          else if(!functionManager.containerlpmController.isEmpty()){
+            // Configure LPMController for TCDSLPM FM
+            Input LPMconfigureInput= new Input(HCALInputs.CONFIGURE.toString());
+            ParameterSet<CommandParameter> LPMpSet = new ParameterSet<CommandParameter>();
+            LPMpSet.put( new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(LPMControlSequence))                 );
+            LPMpSet.put( new CommandParameter<StringT> ("fedEnableMask"              , new StringT(FedEnableMask))                      );
+            LPMconfigureInput.setParameters( LPMpSet );
+
+            logger.info("[HCAL LVL2 " + functionManager.FMname+ "] Configuring LPMController.");
+            try{
+              functionManager.containerlpmController.execute(LPMconfigureInput);
+            }
+            catch(QualifiedResourceContainerException e){
+              String errMessage = " Configure LPMController: ";
+              Map<QualifiedResource, CommandException> CommandExceptionMap = e.getCommandExceptionMap();
+              for (QualifiedResource qr : CommandExceptionMap.keySet()){
+                errMessage += " Failed to configure "+ qr.getName() + " with reason: " +  CommandExceptionMap.get(qr).getFaultString() +"\n";
+              }
+              functionManager.goToError(errMessage);
+            }
           }
         }
         else{
