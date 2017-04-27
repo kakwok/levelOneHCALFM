@@ -849,7 +849,7 @@ public class HCALEventHandler extends UserEventHandler {
               if (pamNamesToSet.contains("RUinstance")) {              pam.setValue("RUinstance", ruInstance.split("_")[1])              ;}
               if (pamNamesToSet.contains("BUInstance")) {              pam.setValue("BUInstance", ruInstance.split("_")[1])              ;}
               if (pamNamesToSet.contains("EVMinstance")){              pam.setValue("EVMinstance", ruInstance.split("_")[1])             ;}
-              if (pamNamesToSet.contains("HandleLPM"))  {              pam.setValue("HandleLPM"  ,"true")                                ;}
+              if (pamNamesToSet.contains("HandleLPM"))  {              pam.setValue("HandleLPM"  ,"false")                                ;}
               // KKH: these are for local DAQ
               //if (pamNamesToSet.contains("HandleTCDS")) {              pam.setValue("HandleTCDS","false")                                ;}
               //if (pamNamesToSet.contains("EnableDisableTTCOrTCDS")) {  pam.setValue("EnableDisableTTCOrTCDS","false")                    ;}
