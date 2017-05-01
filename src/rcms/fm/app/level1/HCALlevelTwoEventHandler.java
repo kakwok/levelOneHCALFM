@@ -232,28 +232,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       //Set instance numbers and HandleLPM in the infospace
       initXDAQinfospace();
 
-      //Send SID to supervisor
-      for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
-        try {
-          XDAQParameter pam = null;
-          pam =((XdaqApplication)qr).getXDAQParameter();
-     
-          // "Sid" was received from LV1
-          pam.select(new String[] {"SessionID"});
-          pam.setValue("SessionID", Sid.toString());
-          logger.info("[HCAL " + functionManager.FMname + "] Sent SID to supervisor: " + Sid);
-      
-          pam.send();
-        }
-        catch (XDAQTimeoutException  e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: initAction() when trying to send SID to the HCAL supervisor.";
-          functionManager.goToError(errMessage,e);
-        }
-        catch (XDAQException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: initAction() when trying to send SID to the HCAL supervisor.";
-          functionManager.goToError(errMessage,e);
-        }
-      }
       // start the monitor thread
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting Monitor thread ...");
       logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting Monitor thread ...");
@@ -338,17 +316,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.destroyXDAQ();
 
       // init all XDAQ executives
-      // also halt all LPM applications inside here
+      // also halt all TCDS applications inside here
       initXDAQ();
       
-      // Halt TCDS controllers to release the lease
-      try{
-        functionManager.haltTCDSControllers();
-      }catch (UserActionException e){
-        String errMessage = "[HCAL LVL2 "+ functionManager.FMname +"] resetAction: Failed to haltTCDS controllers";
-        functionManager.goToError(errMessage,e);
-      }
-
       //Set instance numbers and HandleLPM in the infospace
       initXDAQinfospace();
 
@@ -357,7 +327,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("EMPTY_FMS",EmptyFMs));
 
       // go to Halted
-      if (!functionManager.ErrorState) {
+      if (!functionManager.ErrorState && !functionManager.FMrole.equals("Level2_TCDSLPM")) {
         functionManager.fireEvent( HCALInputs.SETHALT );
       }
 
