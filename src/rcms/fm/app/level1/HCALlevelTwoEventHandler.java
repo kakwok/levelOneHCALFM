@@ -378,7 +378,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
       // halt TCDS Controllers
       try{
-        functionManager.haltTCDSControllers();
+        functionManager.haltTCDSControllers(false);
       }catch(UserActionException e){
         String errMessage = "[HCAL LVL2 "+functionManager.FMname +"] RecoverAction: failed to haltTCDSControllers";
         functionManager.goToError(errMessage,e);
@@ -746,16 +746,26 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             LPMpSet.put( new CommandParameter<StringT> ("fedEnableMask"              , new StringT(FedEnableMask))                      );
             LPMconfigureInput.setParameters( LPMpSet );
 
+        		Integer sid = ((IntegerT)functionManager.getHCALparameterSet().get("SID").getValue()).getInteger();
             logger.info("[HCAL LVL2 " + functionManager.FMname+ "] Configuring LPMController.");
+            //try{
+            //  functionManager.containerlpmController.execute(LPMconfigureInput);
+            //}
+            //catch(QualifiedResourceContainerException e){
+            //  String errMessage = " Configure LPMController: ";
+            //  Map<QualifiedResource, CommandException> CommandExceptionMap = e.getCommandExceptionMap();
+            //  for (QualifiedResource qr : CommandExceptionMap.keySet()){
+            //    errMessage += " Failed to configure "+ qr.getName() + " with reason: " +  CommandExceptionMap.get(qr).getFaultString() +"\n";
+            //  }
+            //  functionManager.goToError(errMessage);
+            //}
             try{
-              functionManager.containerlpmController.execute(LPMconfigureInput);
-            }
-            catch(QualifiedResourceContainerException e){
-              String errMessage = " Configure LPMController: ";
-              Map<QualifiedResource, CommandException> CommandExceptionMap = e.getCommandExceptionMap();
-              for (QualifiedResource qr : CommandExceptionMap.keySet()){
-                errMessage += " Failed to configure "+ qr.getName() + " with reason: " +  CommandExceptionMap.get(qr).getFaultString() +"\n";
+              for(XdaqApplication lpmApp : functionManager.containerlpmController.getApplications()){
+                lpmApp.execute(LPMconfigureInput,Integer.toString(sid),functionManager.rcmsStateListenerURL);
               }
+            }
+            catch(CommandException e){
+              String errMessage = "[HCAL " + functionManager.FMname + "] failed to configure LPM with reason: "+ e.getFaultString();
               functionManager.goToError(errMessage);
             }
           }
@@ -1301,7 +1311,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
       //  Halt LPM with LPM FM. 
       if( functionManager.FMrole.equals("Level2_TCDSLPM")){
-        functionManager.haltTCDSControllers();
+        functionManager.haltTCDSControllers(false);
       }
 
       // check from which state we came, i.e. if we were in sTTS test mode disable this DCC special mode
