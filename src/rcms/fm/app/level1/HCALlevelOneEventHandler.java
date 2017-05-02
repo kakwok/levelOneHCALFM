@@ -333,7 +333,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       masker.setMaskedFMs();
 
       // convert TCDS apps to service apps
-      QualifiedGroup qg = ConvertTCDSAppsToServiceApps(functionManager.getQualifiedGroup());
+      //QualifiedGroup qg = ConvertTCDSAppsToServiceApps(functionManager.getQualifiedGroup());
+      // Use normal QG for now
+      QualifiedGroup qg = functionManager.getQualifiedGroup();
+
       // reset QG to modified one
       functionManager.setQualifiedGroup(qg);
       qg = functionManager.getQualifiedGroup();

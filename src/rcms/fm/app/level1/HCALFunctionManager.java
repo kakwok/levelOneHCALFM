@@ -873,26 +873,46 @@ public class HCALFunctionManager extends UserFunctionManager {
   }
 
   /**----------------------------------------------------------------------
-   * halt the LPM controller 
+   * halt the TCDS controllers 
    */
-  public void haltTCDSControllers() throws UserActionException{
+  public void haltTCDSControllers(bool isServiceApp) throws UserActionException{
     try{
       int sessionId       = ((IntegerT)getParameterSet().get("SID").getValue()).getInteger();
       //logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Halting with SID= "+sessionId+" and RCMSURL = "+rcmsStateListenerURL);
 
       if (!containerlpmController.isEmpty()) {
-        logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to LPM with SID="+sessionId);
-        containerlpmController.execute(HCALInputs.HALT);
-        // if LPM is not a service app, need to provide rcmsURL
-        //lpmApp.execute(HCALInputs.HALT,"test",rcmsStateListenerURL);
+        if(isServiceApp){
+          logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to LPM with SID="+sessionId);
+          containerlpmController.execute(HCALInputs.HALT);
+        }
+        else{
+          for(XdaqApplication lpmApp : containerlpmController.getApplications()){
+            logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to LPM with SID="+sessionId+" and RCMSURL = "+rcmsStateListenerURL);
+            lpmApp.execute(HCALInputs.HALT,Integer.toString(sessionId),rcmsStateListenerURL);
+          }
+        }
       }
       if (!containerPIController.isEmpty()) {
-        logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to PI with SID="+sessionId);
-        containerPIController.execute(HCALInputs.HALT);
+        if(isServiceApp){
+          logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to PI with SID="+sessionId);
+          containerPIController.execute(HCALInputs.HALT);
+        }else{
+          for(XdaqApplication PIapp : containerPIController.getApplications()){
+            logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to PI with SID="+sessionId+" and RCMSURL = "+rcmsStateListenerURL);
+            PIapp.execute(HCALInputs.HALT,Integer.toString(sessionId),rcmsStateListenerURL);
+          }
+        }
       }
       if (!containerICIController.isEmpty()) {
-        logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to ICI with SID="+sessionId);
-        containerICIController.execute(HCALInputs.HALT);
+        if(isServiceApp){
+          logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to ICI with SID="+sessionId);
+          containerICIController.execute(HCALInputs.HALT);
+        }else{
+          for(XdaqApplication ICIapp : containerICIController.getApplications()){
+            logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to PI with SID="+sessionId+" and RCMSURL = "+rcmsStateListenerURL);
+            ICIapp.execute(HCALInputs.HALT,Integer.toString(sessionId),rcmsStateListenerURL);
+          }
+        }
       }
     }
     catch (QualifiedResourceContainerException e) {
@@ -901,6 +921,10 @@ public class HCALFunctionManager extends UserFunctionManager {
       for (QualifiedResource qr : CommandExceptionMap.keySet()){
       errMessage += " Failed to halt "+ qr.getName() + " with reason: " +  CommandExceptionMap.get(qr).getFaultString() +"\n";
       }
+      throw new UserActionException(errMessage);
+    }
+    catch (CommandException e) {
+      String errMessage = "[HCAL " + FMname + "] failed HALT of TCDS applications with reason: "+ e.getFaultString();
       throw new UserActionException(errMessage);
     }
   }
