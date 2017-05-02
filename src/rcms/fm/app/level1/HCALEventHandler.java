@@ -659,17 +659,19 @@ public class HCALEventHandler extends UserEventHandler {
     maskTCDSExecAndJC(qg);
 
     // Fill containers of TCDS apps
-    functionManager.containerXdaqServiceApplication = new XdaqApplicationContainer(qg.seekQualifiedResourcesOfType(new XdaqServiceApplication()));
-    XdaqApplicationContainer XdaqServiceAppContainer    = functionManager.containerXdaqServiceApplication ;
-
+    //functionManager.containerXdaqServiceApplication = new XdaqApplicationContainer(qg.seekQualifiedResourcesOfType(new XdaqServiceApplication()));
+    //XdaqApplicationContainer XdaqServiceAppContainer    = functionManager.containerXdaqServiceApplication ;
+    functionManager.containerXdaqApplication = new XdaqApplicationContainer(qg.seekQualifiedResourcesOfType(new XdaqServiceApplication()));
+    XdaqApplicationContainer XdaqAppContainer    = functionManager.containerXdaqApplication ;
+    
     List<XdaqApplication> tcdsList = new ArrayList<XdaqApplication>();
-    tcdsList.addAll(XdaqServiceAppContainer.getApplicationsOfClass("tcds::lpm::LPMController"));
-    tcdsList.addAll(XdaqServiceAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
-    tcdsList.addAll(XdaqServiceAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
+    tcdsList.addAll(XdaqAppContainer.getApplicationsOfClass("tcds::lpm::LPMController"));
+    tcdsList.addAll(XdaqAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
+    tcdsList.addAll(XdaqAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
     functionManager.containerTCDSControllers = new XdaqApplicationContainer(tcdsList);
-    functionManager.containerlpmController   = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::lpm::LPMController"));
-    functionManager.containerICIController   = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
-    functionManager.containerPIController    = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
+    functionManager.containerlpmController   = new XdaqApplicationContainer(XdaqAppContainer.getApplicationsOfClass("tcds::lpm::LPMController"));
+    functionManager.containerICIController   = new XdaqApplicationContainer(XdaqAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
+    functionManager.containerPIController    = new XdaqApplicationContainer(XdaqAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
     
 
     // Halt TCDS apps
