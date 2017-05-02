@@ -661,7 +661,7 @@ public class HCALEventHandler extends UserEventHandler {
     // Fill containers of TCDS apps
     //functionManager.containerXdaqServiceApplication = new XdaqApplicationContainer(qg.seekQualifiedResourcesOfType(new XdaqServiceApplication()));
     //XdaqApplicationContainer XdaqServiceAppContainer    = functionManager.containerXdaqServiceApplication ;
-    functionManager.containerXdaqApplication = new XdaqApplicationContainer(qg.seekQualifiedResourcesOfType(new XdaqServiceApplication()));
+    functionManager.containerXdaqApplication = new XdaqApplicationContainer(qg.seekQualifiedResourcesOfType(new XdaqApplication()));
     XdaqApplicationContainer XdaqAppContainer    = functionManager.containerXdaqApplication ;
     
     List<XdaqApplication> tcdsList = new ArrayList<XdaqApplication>();
@@ -676,7 +676,7 @@ public class HCALEventHandler extends UserEventHandler {
 
     // Halt TCDS apps
     try{
-      functionManager.haltTCDSControllers();
+      functionManager.haltTCDSControllers(false);
     }catch(UserActionException e){
       String errMessage ="[HCAL LV2 "+functionManager.FMname+"] Failed to haltTCDS controllers";
       //TODO: throw an exception to stop LV2's initAction to continue

@@ -441,7 +441,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         if (!containerTCDSControllers.isEmpty()){
           try{
             logger.info("[HCAL LVL2 " + FMname + "] Trying to halt TCDS on destroy.");
-            haltTCDSControllers();
+            haltTCDSControllers(false);
           }
           catch (UserActionException e) {
             String errMessage = "[HCAL LVL2 " + FMname + "] DestroyAction: "+e.getMessage();
@@ -875,7 +875,7 @@ public class HCALFunctionManager extends UserFunctionManager {
   /**----------------------------------------------------------------------
    * halt the TCDS controllers 
    */
-  public void haltTCDSControllers(bool isServiceApp) throws UserActionException{
+  public void haltTCDSControllers(boolean isServiceApp) throws UserActionException{
     try{
       int sessionId       = ((IntegerT)getParameterSet().get("SID").getValue()).getInteger();
       //logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Halting with SID= "+sessionId+" and RCMSURL = "+rcmsStateListenerURL);
