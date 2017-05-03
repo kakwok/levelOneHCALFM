@@ -838,10 +838,7 @@ public class HCALEventHandler extends UserEventHandler {
             if (pamNames.contains("RUinstance")) {              pamNamesToSet.add("RUinstance")              ;}
             if (pamNames.contains("BUInstance")) {              pamNamesToSet.add("BUInstance")              ;}
             if (pamNames.contains("EVMinstance")){              pamNamesToSet.add("EVMinstance")             ;}
-            if (pamNames.contains("HandleLPM"))  {              pamNamesToSet.add("HandleLPM")               ;}
-            if (pamNames.contains("SessionID"))  {              pamNamesToSet.add("SessionID")               ;}
             //KKH: These are for local DAQ
-            //if (pamNames.contains("HandleTCDS")) {              pamNamesToSet.add("HandleTCDS")              ;}
             //if (pamNames.contains("EnableDisableTTCOrTCDS")) {  pamNamesToSet.add("EnableDisableTTCOrTCDS")  ;}
             
             // WARNING: Cannot reuse pam for the same Xdaq, select the paramters needed in array and then send.
@@ -853,10 +850,7 @@ public class HCALEventHandler extends UserEventHandler {
               if (pamNamesToSet.contains("RUinstance")) {              pam.setValue("RUinstance", ruInstance.split("_")[1])              ;}
               if (pamNamesToSet.contains("BUInstance")) {              pam.setValue("BUInstance", ruInstance.split("_")[1])              ;}
               if (pamNamesToSet.contains("EVMinstance")){              pam.setValue("EVMinstance", ruInstance.split("_")[1])             ;}
-              if (pamNamesToSet.contains("HandleLPM"))  {              pam.setValue("HandleLPM"  ,"false")                               ;}
-              if (pamNamesToSet.contains("SessionID"))  {              pam.setValue("SessionID"  ,sid.toString())                        ;}
               // KKH: these are for local DAQ
-              //if (pamNamesToSet.contains("HandleTCDS")) {              pam.setValue("HandleTCDS","false")                                ;}
               //if (pamNamesToSet.contains("EnableDisableTTCOrTCDS")) {  pam.setValue("EnableDisableTTCOrTCDS","false")                    ;}
  
               logger.info("[HCAL LVL2 " + functionManager.FMname + "]: initXDAQinfospace(): Setting parameters:"+pamNamesToSet.toString()+" in infospace of "+qr.getName() );
@@ -873,7 +867,25 @@ public class HCALEventHandler extends UserEventHandler {
             functionManager.goToError(errMessage);
           }
         }
+        for(XdaqApplication xdaqApp : functionManager.containerhcalSupervisor.getApplications()){
+          try{
+            XDAQParameter pam = xdaqApp.getXDAQParameter();
+            pam.select(new String[] {"SessionID", "HandleLPM"});
+            pam.setValue("HandleLPM"  ,"false");
+            pam.setValue("SessionID"  ,sid.toString());
+            logger.info("[HCAL " + functionManager.FMname + "] Sent SID to supervisor: " + Sid);
 
+            pam.send();
+          }
+          catch (XDAQTimeoutException e) {
+            String errMessage = "[HCAL " + functionManager.FMname + "] Error! initXDAQinfospace(): XDAQTimeoutException: when trying init HCAL supervisor infospace";
+            functionManager.goToError(errMessage,e);
+          }
+          catch (XDAQException e) {
+            String errMessage = "[HCAL " + functionManager.FMname + "] Error! initXDAQinfospace(): XDAQException: when trying init HCAL supervisor infospace";
+            functionManager.goToError(errMessage,e);
+          }
+        }
   }
 
 
