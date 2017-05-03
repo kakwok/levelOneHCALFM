@@ -1857,8 +1857,12 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
               // Configured To Halted
               else if(functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())){
                 functionManager.firePriorityEvent(HCALInputs.SETHALT);
-              //} else if(functionManager.getState().getStateString().equals(HCALStates.HALTED.toString())){
-              } else 
+              }
+              // Halting to Halted
+              else if(functionManager.getState().getStateString().equals(HCALStates.HALTING.toString())){
+                functionManager.firePriorityEvent(HCALInputs.SETHALT);
+              }
+              else 
               {
                   //Sleep when we are in HALTED
                   try {
