@@ -77,6 +77,7 @@ import rcms.utilities.runinfo.RunInfoException;
 import rcms.utilities.runinfo.RunNumberData;
 import rcms.utilities.runinfo.RunSequenceNumber;
 import rcms.util.logsession.LogSessionConnector;
+import rcms.common.db.DBConnectorException;
 
 /**
  * Event Handler base class for HCAL Function Managers
@@ -673,6 +674,7 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager.containerICIController   = new XdaqApplicationContainer(XdaqAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
     functionManager.containerPIController    = new XdaqApplicationContainer(XdaqAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
     
+    seekQRfromFullConfig();
 
     // Halt TCDS apps
     try{
@@ -2719,4 +2721,17 @@ public class HCALEventHandler extends UserEventHandler {
       }
     }
   } 
+  void seekQRfromFullConfig(){
+    QualifiedGroup qg = functionManager.getQualifiedGroup();
+    //logger.info("[HCAL "+ functionManager.FMname +"] Printing QG:\n"+ qg.print());
+
+    try{
+      Group fullConfig = qg.rs.retrieveLightGroup(qg.getGroup().getThisResource());
+      //logger.info("[HCAL "+ functionManager.FMname +"] Printing full config info:\n"+ fullConfig.toString());
+    }
+    catch (DBConnectorException e){
+      String errMessage = "[HCAL " + functionManager.FMname + "]: seekQRfromFullConfig(): Got a DBConnectorException when trying to retrieve FM light group";
+      functionManager.goToError(errMessage,e);
+    }
+  }
 }
