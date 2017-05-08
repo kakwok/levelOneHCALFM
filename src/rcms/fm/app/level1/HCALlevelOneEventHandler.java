@@ -1707,4 +1707,35 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     }
   }
 
+  public List<FunctionManager> seekFMwithXdaq(String xdaqName){
+    QualifiedGroup qg = functionManager.getQualifiedGroup();
+    List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
+    List<FunctionManager>   FMlist = new ArrayList<FunctionManager>();
+    try{
+      for (QualifiedResource level2 : level2list) {
+        QualifiedGroup level2group = ((FunctionManager)level2).getQualifiedGroup();
+        Group Lv2Config = level2group.rs.retrieveLightGroup(level2.getResource());
+        List<Resource> level2Children = Lv2Config.getChildrenResources();
+        logger.info("[HCAL "+ functionManager.FMname +"] Printing Lv2 config info:\n"+ Lv2Config.toString());
+        boolean foundXdaq = false;
+        for(Resource rsc : level2Children){
+          //logger.info("[HCAL "+ functionManager.FMname +"] "+rsc.getName()+" has QRtype of :"+ rsc.getQualifiedResourceType());
+          if(rsc.getQualifiedResourceType().contains("XdaqApplication")){
+            if(rsc.getName().contains(xdaqName)){
+              foundXdaq = true;
+            }
+          }
+        }
+        if(foundXdaq){
+          FMlist.add((FunctionManager)level2);
+        }
+      }
+    }
+    catch (DBConnectorException e){
+      String errMessage = "[HCAL " + functionManager.FMname + "]: seekFMwithXdaq(): Got a DBConnectorException when trying to retrieve FM light group";
+      functionManager.goToError(errMessage,e);
+    }
+    return FMlist;
+  }
+
 }
