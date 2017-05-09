@@ -328,6 +328,11 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       VectorT<StringT> EmptyFMs = new VectorT<StringT>();
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("EMPTY_FMS",EmptyFMs));
 
+      if (functionManager.FMrole.equals("EvmTrig")) {
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Going to ask the HCAL supervisor fo the TriggerAdapter name.");
+        getTriggerAdapter();
+      }
+
       // go to Halted
       if (!functionManager.ErrorState && !functionManager.FMrole.equals("Level2_TCDSLPM")) {
         functionManager.fireEvent( HCALInputs.SETHALT );
