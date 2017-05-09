@@ -909,7 +909,7 @@ public class HCALFunctionManager extends UserFunctionManager {
           containerICIController.execute(HCALInputs.HALT);
         }else{
           for(XdaqApplication ICIapp : containerICIController.getApplications()){
-            logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to PI with SID="+sessionId+" and RCMSURL = "+rcmsStateListenerURL);
+            logger.info("[HCAL LVL2 " + FMname + "] haltTCDSControllers: Sending halt to ICI with SID="+sessionId+" and RCMSURL = "+rcmsStateListenerURL);
             ICIapp.execute(HCALInputs.HALT,Integer.toString(sessionId),rcmsStateListenerURL);
           }
         }
