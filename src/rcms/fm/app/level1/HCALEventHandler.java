@@ -135,7 +135,6 @@ public class HCALEventHandler extends UserEventHandler {
   public DocumentBuilder docBuilder;
 
   protected boolean SpecialFMsAreControlled    =  false;  // Switch for saying whether "special" FMs are controlled. TODO: is this needed any more?
-  protected boolean LocalMultiPartitionReadOut =  false;  // Switch for enabling multipartition runs
 
   protected String WSE_FILTER                        =  "empty";                         // for XMAS -- TODO: is this needed?
 
@@ -466,13 +465,7 @@ public class HCALEventHandler extends UserEventHandler {
             pam.select("TriggerAdapterName");
             pam.get();
 
-            if (!LocalMultiPartitionReadOut) {
-              TriggerAdapter = pam.getValue("TriggerAdapterName");
-            }
-            if (TriggerAdapter.equals("DummyTriggerAdapter") ) {
-              LocalMultiPartitionReadOut = true;
-              logger.warn("[HCAL " + functionManager.FMname + "] TriggerAdapter named: " + TriggerAdapter + " found.\nWill switch to LocalMultiPartitionReadOut, which means only one TriggerAdapter is accepted.");
-            }
+            TriggerAdapter = pam.getValue("TriggerAdapterName");
             if (!TriggerAdapter.equals("")) {
               logger.info("[HCAL " + functionManager.FMname + "] TriggerAdapter named: " + TriggerAdapter + " found.");
             }
