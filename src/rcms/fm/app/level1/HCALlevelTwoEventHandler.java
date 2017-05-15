@@ -214,10 +214,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         System.out.println("[HCAL LVL2 System] " +qr.getName() + " has final executive xml: " +  configRetrieved.getXml());
       }
 
-      // initialize all XDAQ executives
-      // we also halt the LPM applications inside here
-      initXDAQ();
-
       String ruInstance = "";
       if (parameterSet.get("RU_INSTANCE") != null) {
         ruInstance = ((StringT)parameterSet.get("RU_INSTANCE").getValue()).getString();
@@ -228,6 +224,18 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         lpmSupervisor = ((StringT)parameterSet.get("LPM_SUPERVISOR").getValue()).getString();
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("LPM_SUPERVISOR",new StringT(lpmSupervisor)));
       }
+
+      // initialize all XDAQ executives
+      // we also halt the LPM applications inside here
+      try{
+        initXDAQ();
+      }catch(UserActionException e){
+        String errMessage ="[HCAL LV2 "+functionManager.FMname+"] Failed to haltTCDS controllers";
+        functionManager.goToError(errMessage,e);
+        return;
+      }
+
+
       //Set instance numbers and HandleLPM in the infospace
       initXDAQinfospace();
 
@@ -316,7 +324,13 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       // init all XDAQ executives
       // also halt all TCDS applications inside here
-      initXDAQ();
+      try{
+        initXDAQ();
+      }catch(UserActionException e){
+        String errMessage ="[HCAL LV2 "+functionManager.FMname+"] Failed to haltTCDS controllers";
+        functionManager.goToError(errMessage,e);
+        return;
+      }
       
       //Set instance numbers and HandleLPM in the infospace
       initXDAQinfospace();
@@ -1201,7 +1215,13 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       if (EmptyFMs.contains(new StringT(functionManager.FMname))){
         // Bring back the destroyed XDAQ
         logger.info("[HCAL LV2 " + functionManager.FMname + "] Bringing back the XDAQs");
-        initXDAQ();
+        try{
+          initXDAQ();
+        }catch(UserActionException e){
+          String errMessage ="[HCAL LV2 "+functionManager.FMname+"] Failed to haltTCDS controllers";
+          functionManager.goToError(errMessage,e);
+          return;
+        }
         initXDAQinfospace();
         if (stopHCALSupervisorWatchThread){
             logger.info("[HCAL LV2 " + functionManager.FMname + "] Restarting supervisor watchthread");

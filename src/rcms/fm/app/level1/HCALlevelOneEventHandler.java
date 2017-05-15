@@ -384,7 +384,13 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Initializing")));
 
       // initialize all XDAQ executives
-      initXDAQ();
+      try{
+        initXDAQ();
+      }catch(UserActionException e){
+        String errMessage ="[HCAL LV1 "+functionManager.FMname+"] Failed to init LV1 containers";
+        functionManager.goToError(errMessage,e);
+        return;
+      }
       functionManager.parameterSender.start();
 
       // start the monitor thread

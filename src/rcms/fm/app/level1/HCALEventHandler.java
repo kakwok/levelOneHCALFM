@@ -643,7 +643,7 @@ public class HCALEventHandler extends UserEventHandler {
   }
 
   // initialize qualified group, i.e. all XDAQ executives
-  protected void initXDAQ() {
+  protected void initXDAQ() throws UserActionException{
 
     //Get the updated FM qg
     QualifiedGroup qg = functionManager.getQualifiedGroup();
@@ -673,9 +673,8 @@ public class HCALEventHandler extends UserEventHandler {
     }catch(UserActionException e){
       String errMessage ="[HCAL LV2 "+functionManager.FMname+"] Failed to haltTCDS controllers";
       //TODO: throw an exception to stop LV2's initAction to continue
-      //throw e;
-      functionManager.goToError(errMessage,e);
-      return;
+      throw e;
+      //functionManager.goToError(errMessage,e);
     }
 
     try {
@@ -1093,7 +1092,7 @@ public class HCALEventHandler extends UserEventHandler {
         logger.debug("[HCAL " + functionManager.FMname + "]: publishRunInfoSummaryfromXDAQ: attempting to publish runinfo from xdaq after checking userXML...");
 
         // prepare and set for all HCAL supervisors the RunType
-        if (!functionManager.containerhcalRunInfoServer.isEmpty()) {
+        if (functionManager.containerhcalRunInfoServer!=null && !functionManager.containerhcalRunInfoServer.isEmpty()) {
           logger.debug("[HCAL " + functionManager.FMname + "]: [HCAL " + functionManager.FMname + "] Start of publishing to the RunInfo DB the info from the hcalRunInfoServer ...");
 
           RunInfoServerReader RISR = new RunInfoServerReader();
