@@ -672,9 +672,7 @@ public class HCALEventHandler extends UserEventHandler {
       functionManager.haltTCDSControllers(false);
     }catch(UserActionException e){
       String errMessage ="[HCAL LV2 "+functionManager.FMname+"] Failed to haltTCDS controllers";
-      //TODO: throw an exception to stop LV2's initAction to continue
       throw e;
-      //functionManager.goToError(errMessage,e);
     }
 
     try {
@@ -686,8 +684,7 @@ public class HCALEventHandler extends UserEventHandler {
       e.printStackTrace( new PrintWriter(sw) );
       System.out.println(sw.toString());
       //String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to initialize resources. Printing stacktrace: "+ sw.toString();
-      String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to initialize resources. "; 
-      functionManager.goToError(errMessage,e);
+      throw new UserActionException(e.getMessage());
     }
 
     ////////////////////////////////////////

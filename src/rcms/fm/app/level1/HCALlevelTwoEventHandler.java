@@ -230,7 +230,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       try{
         initXDAQ();
       }catch(UserActionException e){
-        String errMessage ="[HCAL LV2 "+functionManager.FMname+"] Failed to haltTCDS controllers";
+        String errMessage ="[HCAL LV2 "+functionManager.FMname+"] initXDAQ(): ";
         functionManager.goToError(errMessage,e);
         return;
       }
@@ -327,7 +327,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       try{
         initXDAQ();
       }catch(UserActionException e){
-        String errMessage ="[HCAL LV2 "+functionManager.FMname+"] Failed to haltTCDS controllers";
+        String errMessage ="[HCAL LV2 "+functionManager.FMname+"] initXDAQ():";
         functionManager.goToError(errMessage,e);
         return;
       }
@@ -1218,7 +1218,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         try{
           initXDAQ();
         }catch(UserActionException e){
-          String errMessage ="[HCAL LV2 "+functionManager.FMname+"] Failed to haltTCDS controllers";
+          String errMessage ="[HCAL LV2 "+functionManager.FMname+"] initXDAQ():";
           functionManager.goToError(errMessage,e);
           return;
         }
