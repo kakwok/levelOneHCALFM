@@ -46,12 +46,12 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
     public void processNotice( Object notice ) throws UserActionException {
 
       StateNotification notification = (StateNotification)notice;
-      //logger.warn("["+fm.FMname+"]: State notification received "+
-      //    "from: " + notification.getFromState()
-      //    +" to: " + notification.getToState());
+      logger.warn("["+fm.FMname+"]: State notification received "+
+          "from: " + notification.getFromState()
+          +" to: " + notification.getToState());
       
       String actualState = fm.getState().getStateString();
-      //logger.warn("["+fm.FMname+"]: FM is in state: "+actualState);
+      logger.warn("["+fm.FMname+"]: FM is in state: "+actualState);
 
       if ( fm.getState().equals(HCALStates.ERROR) ) {
         return;

@@ -864,7 +864,7 @@ public class HCALEventHandler extends UserEventHandler {
           try{
             XDAQParameter pam = xdaqApp.getXDAQParameter();
             pam.select(new String[] {"SessionID", "HandleLPM"});
-            pam.setValue("HandleLPM"  ,"false");
+            pam.setValue("HandleLPM"  ,"true");
             pam.setValue("SessionID"  ,sid.toString());
             logger.info("[HCAL " + functionManager.FMname + "] Sent SID to supervisor: " + Sid);
 
