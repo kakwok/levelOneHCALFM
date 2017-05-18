@@ -1672,8 +1672,10 @@ public class HCALEventHandler extends UserEventHandler {
         logger.warn("[HCAL " + functionManager.FMname + "] Warning! FED " + fedId + " was not found in the FED_ENABLE_MASK. I will consider it enabled, but you might want to investigate.");
         fedStatusMap.put(fedId, true);
       } else {
-        // See comment for function parseFedEnableMask for information about the fedMaskWord. In short, fedMaskWord==3 means enabled.
-        fedStatusMap.put(fedId, (fedMaskWord.testBit(0) && fedMaskWord.testBit(1) && !fedMaskWord.testBit(2) && !fedMaskWord.testBit(3)));
+        boolean isMaskWord3  = (fedMaskWord.testBit(0) && fedMaskWord.testBit(1) && !fedMaskWord.testBit(2) && !fedMaskWord.testBit(3));
+        boolean isMaskWord11 = (fedMaskWord.testBit(0) && fedMaskWord.testBit(1) && !fedMaskWord.testBit(2) && fedMaskWord.testBit(3));
+        // See comment for function parseFedEnableMask for information about the fedMaskWord. In short, fedMaskWord==11 means enabled for a FED with SLINK but no TTS output
+        fedStatusMap.put(fedId, isMaskWord3||isMaskWord11);
       }
     }
 
