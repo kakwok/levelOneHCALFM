@@ -665,15 +665,6 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager.containerlpmController   = new XdaqApplicationContainer(XdaqAppContainer.getApplicationsOfClass("tcds::lpm::LPMController"));
     functionManager.containerICIController   = new XdaqApplicationContainer(XdaqAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
     functionManager.containerPIController    = new XdaqApplicationContainer(XdaqAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
-    
-
-    // Halt TCDS apps
-    try{
-      functionManager.haltTCDSControllers(false);
-    }catch(UserActionException e){
-      String errMessage ="[HCAL LV2 "+functionManager.FMname+"] Failed to haltTCDS controllers";
-      throw e;
-    }
 
     try {
       qg.init();
@@ -802,6 +793,11 @@ public class HCALEventHandler extends UserEventHandler {
     }
     else {
       logger.info("[HCAL " + functionManager.FMname + "] Warning! No HCAL supervisor found in initXDAQ().\nThis happened when checking the async SOAP capabilities.\nThis is OK for a level1 FM.");
+    }
+
+    // Halt LPM controllers with LPM FM
+    if( functionManager.FMrole.equals("Level2_TCDSLPM")){
+      functionManager.haltTCDSControllers(false);
     }
 
     // define the condition state vectors only here since the group must have been qualified before and all containers are filled
