@@ -186,8 +186,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       if(MasterSnippetList!=""){
         NodeList nodes = xmlHandler.getHCALuserXML(CfgCVSBasePath,MasterSnippetList).getElementsByTagName("RunConfig");
         for (int i=0; i < nodes.getLength(); i++) {
-          logger.debug("[HCAL " + functionManager.FMname + "]: Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
-              + ", snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue()+ ", and maskedapps: " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
+          //logger.debug("[HCAL " + functionManager.FMname + "]: Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
+          //    + ", snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue()+ ", and maskedapps: " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
           
           MapT<StringT> RunKeySetting = new MapT<StringT>();
           StringT runkeyName =new StringT(nodes.item(i).getAttributes().getNamedItem("name").getNodeValue());
@@ -247,6 +247,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       if (parameterSet.size()==0 || parameterSet.get("SID") == null )  {
 
         RunType = "local";
+        functionManager.RunType = RunType;
         // below: this is a hack for testing
         // RunType = "global";
 
@@ -276,6 +277,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       else {
 
         RunType = "global";
+        functionManager.RunType = RunType;
 
         // set the run type in the function manager parameters
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_RUN_TYPE",new StringT(RunType)));
@@ -390,7 +392,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       thread3.start();
 
       // give the RunType to the controlling FM
-      functionManager.RunType = RunType;
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] initAction: We are in " + RunType + " mode ...");
 
       // prepare run number to be passed to level 2

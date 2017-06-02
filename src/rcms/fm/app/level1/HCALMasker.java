@@ -233,8 +233,14 @@ public class HCALMasker {
         }
         for (Resource level2resource : fullconfigList) {
           if (level2resource.getName().contains("FanoutTTCciTA") || level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("hcalTrivialFU") || level2resource.getName().contains("hcalEventBuilder")) {
-            if (!level2resource.getName().equals(eventBuilder) && !level2resource.getName().equals(trivialFU) && !level2resource.getName().equals(triggerAdapter)) { 
-              allMaskedResources.add(new StringT(level2resource.getName()));
+            if(functionManager.RunType.equals("local")){
+              if (!level2resource.getName().equals(eventBuilder) && !level2resource.getName().equals(trivialFU) && !level2resource.getName().equals(triggerAdapter)) { 
+                allMaskedResources.add(new StringT(level2resource.getName()));
+              }
+            }
+            // Auto-mask all the EvmTrig apps if we are in global mode
+            if(functionManager.RunType.equals("global")){
+                allMaskedResources.add(new StringT(level2resource.getName()));
             }
           }
         }
