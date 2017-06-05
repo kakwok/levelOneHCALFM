@@ -331,7 +331,7 @@ body {
 }
 .control_wrapper {
   position: relative;
-  left: -13px;
+  left: -15px;
   display: inline;
   pointer-events: none;
 }
@@ -347,15 +347,17 @@ body {
   top: 2px;
   left: -1px;
 }
-.control__indicator > span::after {
-  content: "\2705";
+.control__indicator > span {
   position: relative;
   left: -1px;
   top: -3px;
 }
+.control__indicator img {
+  width: 14px;
+}
 .radio_wrapper {
   position: relative;
-  left: -13px;
+  left: -15px;
   display: inline;
   pointer-events: none;
 }
@@ -371,23 +373,19 @@ body {
   top: 2px;
   left: -1px;
 }
-.radio__indicator > span::after {
-  content: "\274c";
+.radio__indicator > span {
   position: relative;
   left: -1px;
   top: -3px;
+}
+.radio__indicator img {
+  width: 14px;
 }
 #multiPartitionSelection input{
   z-index: 11;
   opacity: 0;
 }
-#multiPartitionSelection input:checked ~ .control_wrapper > .control__indicator > span::after{
-  content: "\274c";
-}
 #singlePartitionSelection input{
   z-index: 11;
   opacity: 0;
-}
-#singlePartitionSelection input:checked ~ .radio_wrapper > .radio__indicator > span::after{
-  content: "\2705";
 }
