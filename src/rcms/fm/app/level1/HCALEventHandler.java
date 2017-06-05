@@ -135,7 +135,6 @@ public class HCALEventHandler extends UserEventHandler {
   public DocumentBuilder docBuilder;
 
   protected boolean SpecialFMsAreControlled    =  false;  // Switch for saying whether "special" FMs are controlled. TODO: is this needed any more?
-  protected boolean LocalMultiPartitionReadOut =  false;  // Switch for enabling multipartition runs
 
   protected String WSE_FILTER                        =  "empty";                         // for XMAS -- TODO: is this needed?
 
@@ -466,13 +465,7 @@ public class HCALEventHandler extends UserEventHandler {
             pam.select("TriggerAdapterName");
             pam.get();
 
-            if (!LocalMultiPartitionReadOut) {
-              TriggerAdapter = pam.getValue("TriggerAdapterName");
-            }
-            if (TriggerAdapter.equals("DummyTriggerAdapter") ) {
-              LocalMultiPartitionReadOut = true;
-              logger.warn("[HCAL " + functionManager.FMname + "] TriggerAdapter named: " + TriggerAdapter + " found.\nWill switch to LocalMultiPartitionReadOut, which means only one TriggerAdapter is accepted.");
-            }
+            TriggerAdapter = pam.getValue("TriggerAdapterName");
             if (!TriggerAdapter.equals("")) {
               logger.info("[HCAL " + functionManager.FMname + "] TriggerAdapter named: " + TriggerAdapter + " found.");
             }
@@ -650,7 +643,7 @@ public class HCALEventHandler extends UserEventHandler {
   }
 
   // initialize qualified group, i.e. all XDAQ executives
-  protected void initXDAQ() {
+  protected void initXDAQ() throws UserActionException{
 
     //Get the updated FM qg
     QualifiedGroup qg = functionManager.getQualifiedGroup();
@@ -659,29 +652,19 @@ public class HCALEventHandler extends UserEventHandler {
     maskTCDSExecAndJC(qg);
 
     // Fill containers of TCDS apps
-    functionManager.containerXdaqServiceApplication = new XdaqApplicationContainer(qg.seekQualifiedResourcesOfType(new XdaqServiceApplication()));
-    XdaqApplicationContainer XdaqServiceAppContainer    = functionManager.containerXdaqServiceApplication ;
-
-    List<XdaqApplication> tcdsList = new ArrayList<XdaqApplication>();
-    tcdsList.addAll(XdaqServiceAppContainer.getApplicationsOfClass("tcds::lpm::LPMController"));
-    tcdsList.addAll(XdaqServiceAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
-    tcdsList.addAll(XdaqServiceAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
-    functionManager.containerTCDSControllers = new XdaqApplicationContainer(tcdsList);
-    functionManager.containerlpmController   = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::lpm::LPMController"));
-    functionManager.containerICIController   = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
-    functionManager.containerPIController    = new XdaqApplicationContainer(XdaqServiceAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
+    //functionManager.containerXdaqServiceApplication = new XdaqApplicationContainer(qg.seekQualifiedResourcesOfType(new XdaqServiceApplication()));
+    //XdaqApplicationContainer XdaqServiceAppContainer    = functionManager.containerXdaqServiceApplication ;
+    functionManager.containerXdaqApplication = new XdaqApplicationContainer(qg.seekQualifiedResourcesOfType(new XdaqApplication()));
+    XdaqApplicationContainer XdaqAppContainer    = functionManager.containerXdaqApplication ;
     
-
-    // Halt TCDS apps
-    try{
-      functionManager.haltTCDSControllers();
-    }catch(UserActionException e){
-      String errMessage ="[HCAL LV2 "+functionManager.FMname+"] Failed to haltTCDS controllers";
-      //TODO: throw an exception to stop LV2's initAction to continue
-      //throw e;
-      functionManager.goToError(errMessage,e);
-      return;
-    }
+    List<XdaqApplication> tcdsList = new ArrayList<XdaqApplication>();
+    tcdsList.addAll(XdaqAppContainer.getApplicationsOfClass("tcds::lpm::LPMController"));
+    tcdsList.addAll(XdaqAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
+    tcdsList.addAll(XdaqAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
+    functionManager.containerTCDSControllers = new XdaqApplicationContainer(tcdsList);
+    functionManager.containerlpmController   = new XdaqApplicationContainer(XdaqAppContainer.getApplicationsOfClass("tcds::lpm::LPMController"));
+    functionManager.containerICIController   = new XdaqApplicationContainer(XdaqAppContainer.getApplicationsOfClass("tcds::ici::ICIController"));
+    functionManager.containerPIController    = new XdaqApplicationContainer(XdaqAppContainer.getApplicationsOfClass("tcds::pi::PIController"));
 
     try {
       qg.init();
@@ -692,8 +675,7 @@ public class HCALEventHandler extends UserEventHandler {
       e.printStackTrace( new PrintWriter(sw) );
       System.out.println(sw.toString());
       //String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to initialize resources. Printing stacktrace: "+ sw.toString();
-      String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to initialize resources. "; 
-      functionManager.goToError(errMessage,e);
+      throw new UserActionException(e.getMessage());
     }
 
     ////////////////////////////////////////
@@ -813,6 +795,11 @@ public class HCALEventHandler extends UserEventHandler {
       logger.info("[HCAL " + functionManager.FMname + "] Warning! No HCAL supervisor found in initXDAQ().\nThis happened when checking the async SOAP capabilities.\nThis is OK for a level1 FM.");
     }
 
+    // Halt LPM controllers with LPM FM
+    if( functionManager.FMrole.equals("Level2_TCDSLPM")){
+      functionManager.haltTCDSControllers(false);
+    }
+
     // define the condition state vectors only here since the group must have been qualified before and all containers are filled
     functionManager.defineConditionState();
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("")));
@@ -820,6 +807,7 @@ public class HCALEventHandler extends UserEventHandler {
 
   //Set instance numbers and HandleLPM after initXDAQ()
   protected void initXDAQinfospace() {
+      Integer sid = ((IntegerT)functionManager.getHCALparameterSet().get("SID").getValue()).getInteger();
       List<QualifiedResource> xdaqApplicationList = functionManager.getQualifiedGroup().seekQualifiedResourcesOfType(new XdaqApplication());
       QualifiedResourceContainer qrc = new QualifiedResourceContainer(xdaqApplicationList);
       for (QualifiedResource qr : qrc.getActiveQRList()) {
@@ -835,9 +823,7 @@ public class HCALEventHandler extends UserEventHandler {
             if (pamNames.contains("RUinstance")) {              pamNamesToSet.add("RUinstance")              ;}
             if (pamNames.contains("BUInstance")) {              pamNamesToSet.add("BUInstance")              ;}
             if (pamNames.contains("EVMinstance")){              pamNamesToSet.add("EVMinstance")             ;}
-            if (pamNames.contains("HandleLPM"))  {              pamNamesToSet.add("HandleLPM")               ;}
             //KKH: These are for local DAQ
-            //if (pamNames.contains("HandleTCDS")) {              pamNamesToSet.add("HandleTCDS")              ;}
             //if (pamNames.contains("EnableDisableTTCOrTCDS")) {  pamNamesToSet.add("EnableDisableTTCOrTCDS")  ;}
             
             // WARNING: Cannot reuse pam for the same Xdaq, select the paramters needed in array and then send.
@@ -849,9 +835,7 @@ public class HCALEventHandler extends UserEventHandler {
               if (pamNamesToSet.contains("RUinstance")) {              pam.setValue("RUinstance", ruInstance.split("_")[1])              ;}
               if (pamNamesToSet.contains("BUInstance")) {              pam.setValue("BUInstance", ruInstance.split("_")[1])              ;}
               if (pamNamesToSet.contains("EVMinstance")){              pam.setValue("EVMinstance", ruInstance.split("_")[1])             ;}
-              if (pamNamesToSet.contains("HandleLPM"))  {              pam.setValue("HandleLPM"  ,"false")                                ;}
               // KKH: these are for local DAQ
-              //if (pamNamesToSet.contains("HandleTCDS")) {              pam.setValue("HandleTCDS","false")                                ;}
               //if (pamNamesToSet.contains("EnableDisableTTCOrTCDS")) {  pam.setValue("EnableDisableTTCOrTCDS","false")                    ;}
  
               logger.info("[HCAL LVL2 " + functionManager.FMname + "]: initXDAQinfospace(): Setting parameters:"+pamNamesToSet.toString()+" in infospace of "+qr.getName() );
@@ -866,6 +850,25 @@ public class HCALEventHandler extends UserEventHandler {
           catch (XDAQException e) {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException while querying the XDAQParameter names for " + qr.getName() + ". Message: " + e.getMessage();
             functionManager.goToError(errMessage);
+          }
+        }
+        for(XdaqApplication xdaqApp : functionManager.containerhcalSupervisor.getApplications()){
+          try{
+            XDAQParameter pam = xdaqApp.getXDAQParameter();
+            pam.select(new String[] {"SessionID", "HandleLPM"});
+            pam.setValue("HandleLPM"  ,"true");
+            pam.setValue("SessionID"  ,sid.toString());
+            logger.info("[HCAL " + functionManager.FMname + "] Sent SID to supervisor: " + Sid);
+
+            pam.send();
+          }
+          catch (XDAQTimeoutException e) {
+            String errMessage = "[HCAL " + functionManager.FMname + "] Error! initXDAQinfospace(): XDAQTimeoutException: when trying init HCAL supervisor infospace";
+            functionManager.goToError(errMessage,e);
+          }
+          catch (XDAQException e) {
+            String errMessage = "[HCAL " + functionManager.FMname + "] Error! initXDAQinfospace(): XDAQException: when trying init HCAL supervisor infospace";
+            functionManager.goToError(errMessage,e);
           }
         }
   }
@@ -1082,7 +1085,7 @@ public class HCALEventHandler extends UserEventHandler {
         logger.debug("[HCAL " + functionManager.FMname + "]: publishRunInfoSummaryfromXDAQ: attempting to publish runinfo from xdaq after checking userXML...");
 
         // prepare and set for all HCAL supervisors the RunType
-        if (!functionManager.containerhcalRunInfoServer.isEmpty()) {
+        if (functionManager.containerhcalRunInfoServer!=null && !functionManager.containerhcalRunInfoServer.isEmpty()) {
           logger.debug("[HCAL " + functionManager.FMname + "]: [HCAL " + functionManager.FMname + "] Start of publishing to the RunInfo DB the info from the hcalRunInfoServer ...");
 
           RunInfoServerReader RISR = new RunInfoServerReader();
@@ -1154,11 +1157,7 @@ public class HCALEventHandler extends UserEventHandler {
     }
     catch (URISyntaxException e) {
       String errMessage = "[HCAL " + functionManager.FMname + "] Error! computeNewState() for FM\n@ URI: " + functionManager.getURI() + "\nthe Resource: " + newState.getIdentifier() + " reports an URI exception!";
-      logger.error(errMessage,e);
-      functionManager.sendCMSError(errMessage);
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-      if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+      functionManager.goToError(errMessage,e);
     }
 
     // check if the resource was a FM or xdaq app
@@ -1177,11 +1176,7 @@ public class HCALEventHandler extends UserEventHandler {
       }
       if (newState.getToState().equals(HCALStates.ERROR.getStateString()) || newState.getToState().equals(HCALStates.FAILED.getStateString())) {
         String errMessage = "[HCAL " + functionManager.FMname + "] Error! computeNewState() for FM\n@ URI: " + functionManager.getURI() + "\nthe Resource: " + newState.getIdentifier() + " reports an error state!";
-        logger.error(errMessage);
-        functionManager.sendCMSError(errMessage);
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+        functionManager.goToError(errMessage);
       }
       else {
         functionManager.calcState = functionManager.getUpdatedState();
@@ -1201,21 +1196,13 @@ public class HCALEventHandler extends UserEventHandler {
               if (actualState.equals(HCALStates.PREPARING_TTSTEST_MODE.getStateString())) { functionManager.fireEvent(HCALInputs.SETTTSTEST_MODE); }
               else if (actualState.equals(HCALStates.TESTING_TTS.getStateString()))       { functionManager.fireEvent(HCALInputs.SETTTSTEST_MODE); }
               else {
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                functionManager.goToError(errMessage);
               }
             }
             else if (toState.equals(HCALStates.INITIAL.getStateString())) {
               if (actualState.equals(HCALStates.RECOVERING.getStateString())) { functionManager.fireEvent(HCALInputs.SETINITIAL); }
               else {
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                functionManager.goToError(errMessage);
               }
             }
             else if (toState.equals(HCALStates.HALTED.getStateString())) {
@@ -1239,11 +1226,7 @@ public class HCALEventHandler extends UserEventHandler {
               else if (actualState.equals(HCALStates.CONFIGURING.getStateString()))   { /* do nothing */ }
               else if (actualState.equals(HCALStates.COLDRESETTING.getStateString())) { functionManager.fireEvent(HCALInputs.SETCOLDRESET); }
               else {
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                functionManager.goToError(errMessage);
               }
             }
             else if (toState.equals(HCALStates.CONFIGURED.getStateString())) {
@@ -1255,11 +1238,7 @@ public class HCALEventHandler extends UserEventHandler {
               }
               else if (actualState.equals(HCALStates.STARTING.getStateString())) { /* do nothing */ }
               else {
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                functionManager.goToError(errMessage);
               }
             }
             else if (toState.equals(HCALStates.RUNNING.getStateString())) {
@@ -1279,42 +1258,26 @@ public class HCALEventHandler extends UserEventHandler {
               else if (actualState.equals(HCALStates.RESUMING.getStateString()))   { functionManager.fireEvent(HCALInputs.SETRESUME); }
               else if (actualState.equals(HCALStates.HALTING.getStateString()))    { /* do nothing */ }
               else {
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                functionManager.goToError(errMessage);
               }
             }
             else if (toState.equals(HCALStates.PAUSED.getStateString())) {
               if (actualState.equals(HCALStates.PAUSING.getStateString()))         { functionManager.fireEvent(HCALInputs.SETPAUSE); }
               else if (actualState.equals(HCALStates.RECOVERING.getStateString())) { functionManager.fireEvent(HCALInputs.SETPAUSE); }
               else {
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                functionManager.goToError(errMessage);
               }
             }
             else if (toState.equals(HCALStates.STOPPING.getStateString())) {
               if (actualState.equals(HCALStates.RUNNING.getStateString()) || actualState.equals(HCALStates.RUNNINGDEGRADED.getStateString()))       { functionManager.fireEvent(HCALInputs.STOP); }
               else if (actualState.equals(HCALStates.STARTING.getStateString())) { /* do nothing */ }
               else {
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                functionManager.goToError(errMessage);
               }
             }
             else {
               String errMessage2 = "[HCAL " + functionManager.FMname + "] Error! transitional state not found in computeNewState() for FM\n@ URI: " + functionManager.getURI() + "\nthe Resource: " + newState.getIdentifier() + " reports an error state!\nFrom state: " + functionManager.getState().getStateString() + " \nstate: " + functionManager.calcState.getStateString();
-              logger.error(errMessage2);
-              functionManager.sendCMSError(errMessage2);
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+              functionManager.goToError(errMessage2);
             }
           }
         }
@@ -1637,8 +1600,10 @@ public class HCALEventHandler extends UserEventHandler {
         logger.warn("[HCAL " + functionManager.FMname + "] Warning! FED " + fedId + " was not found in the FED_ENABLE_MASK. I will consider it enabled, but you might want to investigate.");
         fedStatusMap.put(fedId, true);
       } else {
-        // See comment for function parseFedEnableMask for information about the fedMaskWord. In short, fedMaskWord==3 means enabled.
-        fedStatusMap.put(fedId, (fedMaskWord.testBit(0) && fedMaskWord.testBit(1) && !fedMaskWord.testBit(2) && !fedMaskWord.testBit(3)));
+        boolean isMaskWord3  = (fedMaskWord.testBit(0) && fedMaskWord.testBit(1) && !fedMaskWord.testBit(2) && !fedMaskWord.testBit(3));
+        boolean isMaskWord11 = (fedMaskWord.testBit(0) && fedMaskWord.testBit(1) && !fedMaskWord.testBit(2) && fedMaskWord.testBit(3));
+        // See comment for function parseFedEnableMask for information about the fedMaskWord. In short, fedMaskWord==11 means enabled for a FED with SLINK but no TTS output
+        fedStatusMap.put(fedId, isMaskWord3||isMaskWord11);
       }
     }
 

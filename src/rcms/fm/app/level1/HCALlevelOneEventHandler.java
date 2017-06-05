@@ -333,7 +333,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       masker.setMaskedFMs();
 
       // convert TCDS apps to service apps
-      QualifiedGroup qg = ConvertTCDSAppsToServiceApps(functionManager.getQualifiedGroup());
+      //QualifiedGroup qg = ConvertTCDSAppsToServiceApps(functionManager.getQualifiedGroup());
+      // Use normal QG for now
+      QualifiedGroup qg = functionManager.getQualifiedGroup();
+
       // reset QG to modified one
       functionManager.setQualifiedGroup(qg);
       qg = functionManager.getQualifiedGroup();
@@ -381,7 +384,13 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Initializing")));
 
       // initialize all XDAQ executives
-      initXDAQ();
+      try{
+        initXDAQ();
+      }catch(UserActionException e){
+        String errMessage ="[HCAL LV1 "+functionManager.FMname+"] Failed to init LV1 containers";
+        functionManager.goToError(errMessage,e);
+        return;
+      }
       functionManager.parameterSender.start();
 
       // start the monitor thread
@@ -937,30 +946,33 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       configureInput.setParameters( pSet );
 
       if (!functionManager.containerFMChildren.isEmpty()) {
+        logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM childs - good! fireEvent: " + configureInput);
+
+
+        Boolean needtowait = false;
 
         // include scheduling
         TaskSequence configureTaskSeq = new TaskSequence(HCALStates.CONFIGURING,HCALInputs.SETCONFIGURE);
-       
-        // 1) Configure TCDSLPM FM
-        if (!functionManager.containerFMTCDSLPM.isEmpty()){
-          SimpleTask LPMTask   = new SimpleTask(functionManager.containerFMTCDSLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring TCDSLPMFM first");
-          logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring LPM FM first: ");
-          PrintQRnames(functionManager.containerFMTCDSLPM);
-          configureTaskSeq.addLast(LPMTask);
-        } 
-        // 2) Normal FMs
+
+        // now configure the rest in parallel
+        List<QualifiedResource> EvmAndLPMfmList = new ArrayList<QualifiedResource>();
+        EvmAndLPMfmList.addAll(functionManager.containerFMEvmTrig.getActiveQRList());
+        EvmAndLPMfmList.addAll(functionManager.containerFMTCDSLPM.getActiveQRList());
+        QualifiedResourceContainer containerEvmAndLPM = new QualifiedResourceContainer(EvmAndLPMfmList);
+        
+        // 1) Normal FMs
         if (!functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM.isEmpty()){
           SimpleTask fmChildrenTask   = new SimpleTask(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring regular priority FM children");
           logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring these regular LV2 FMs: ");
           PrintQRnames(functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM);
           configureTaskSeq.addLast(fmChildrenTask);
         }
-        // 3) Configure EvmTrig FM  
+        // 2) Need to configure LPM and EvmTrig FM in parallel 
         // NOTE: Emptyness check is important to support global run
-        if (!functionManager.containerFMEvmTrig.isEmpty()){
-          SimpleTask EvmTrigConfigureTask = new SimpleTask(functionManager.containerFMEvmTrig,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring EvmTrig FM");  
-          logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring the EvmTrig: ");
-          PrintQRnames(functionManager.containerFMEvmTrig);
+        if (!containerEvmAndLPM.isEmpty()){
+          SimpleTask EvmTrigConfigureTask = new SimpleTask(containerEvmAndLPM,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"LV1: Configuring EvmTrig FM");  
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring the EvmTrig and TCDS LPM FM together: ");
+          PrintQRnames(containerEvmAndLPM);
           configureTaskSeq.addLast(EvmTrigConfigureTask);
         }
         if(nEmptyFM>0){

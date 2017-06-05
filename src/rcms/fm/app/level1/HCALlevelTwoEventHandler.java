@@ -3,7 +3,6 @@ package rcms.fm.app.level1;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import net.hep.cms.xdaqctl.XDAQException;
 import net.hep.cms.xdaqctl.XDAQTimeoutException;
@@ -29,12 +28,10 @@ import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.fm.resource.qualifiedresource.XdaqApplication;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
 import rcms.fm.resource.qualifiedresource.XdaqExecutiveConfiguration;
-import rcms.fm.resource.CommandException;
 import rcms.util.logger.RCMSLogger;
 import rcms.xdaqctl.XDAQParameter;
 import rcms.utilities.runinfo.RunNumberData;
 
-import rcms.statemachine.definition.Input;
 import rcms.utilities.fm.task.TaskSequence;
 import rcms.utilities.fm.task.SimpleTask;
 
@@ -85,7 +82,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       // convert TCDS apps to service apps and reset QG to modified one
-      QualifiedGroup qg = ConvertTCDSAppsToServiceApps(functionManager.getQualifiedGroup());
+      //QualifiedGroup qg = ConvertTCDSAppsToServiceApps(functionManager.getQualifiedGroup());
+      // use normal QG for now
+      QualifiedGroup qg = functionManager.getQualifiedGroup();
       // reset QG to modified one
       functionManager.setQualifiedGroup(qg);
 
@@ -215,10 +214,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         System.out.println("[HCAL LVL2 System] " +qr.getName() + " has final executive xml: " +  configRetrieved.getXml());
       }
 
-      // initialize all XDAQ executives
-      // we also halt the LPM applications inside here
-      initXDAQ();
-
       String ruInstance = "";
       if (parameterSet.get("RU_INSTANCE") != null) {
         ruInstance = ((StringT)parameterSet.get("RU_INSTANCE").getValue()).getString();
@@ -229,31 +224,21 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         lpmSupervisor = ((StringT)parameterSet.get("LPM_SUPERVISOR").getValue()).getString();
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("LPM_SUPERVISOR",new StringT(lpmSupervisor)));
       }
+
+      // initialize all XDAQ executives
+      // we also halt the LPM applications inside here
+      try{
+        initXDAQ();
+      }catch(UserActionException e){
+        String errMessage ="[HCAL LV2 "+functionManager.FMname+"] initXDAQ(): ";
+        functionManager.goToError(errMessage,e);
+        return;
+      }
+
+
       //Set instance numbers and HandleLPM in the infospace
       initXDAQinfospace();
 
-      //Send SID to supervisor
-      for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
-        try {
-          XDAQParameter pam = null;
-          pam =((XdaqApplication)qr).getXDAQParameter();
-     
-          // "Sid" was received from LV1
-          pam.select(new String[] {"SessionID"});
-          pam.setValue("SessionID", Sid.toString());
-          logger.info("[HCAL " + functionManager.FMname + "] Sent SID to supervisor: " + Sid);
-      
-          pam.send();
-        }
-        catch (XDAQTimeoutException  e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: initAction() when trying to send SID to the HCAL supervisor.";
-          functionManager.goToError(errMessage,e);
-        }
-        catch (XDAQException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: initAction() when trying to send SID to the HCAL supervisor.";
-          functionManager.goToError(errMessage,e);
-        }
-      }
       // start the monitor thread
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting Monitor thread ...");
       logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting Monitor thread ...");
@@ -338,17 +323,15 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.destroyXDAQ();
 
       // init all XDAQ executives
-      // also halt all LPM applications inside here
-      initXDAQ();
-      
-      // Halt TCDS controllers to release the lease
+      // also halt all LPM Controller inside here
       try{
-        functionManager.haltTCDSControllers();
-      }catch (UserActionException e){
-        String errMessage = "[HCAL LVL2 "+ functionManager.FMname +"] resetAction: Failed to haltTCDS controllers";
+        initXDAQ();
+      }catch(UserActionException e){
+        String errMessage ="[HCAL LV2 "+functionManager.FMname+"] initXDAQ():";
         functionManager.goToError(errMessage,e);
+        return;
       }
-
+      
       //Set instance numbers and HandleLPM in the infospace
       initXDAQinfospace();
 
@@ -356,8 +339,13 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       VectorT<StringT> EmptyFMs = new VectorT<StringT>();
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("EMPTY_FMS",EmptyFMs));
 
+      if (functionManager.FMrole.equals("EvmTrig")) {
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Going to ask the HCAL supervisor fo the TriggerAdapter name.");
+        getTriggerAdapter();
+      }
+
       // go to Halted
-      if (!functionManager.ErrorState) {
+      if (!functionManager.ErrorState && !functionManager.FMrole.equals("Level2_TCDSLPM")) {
         functionManager.fireEvent( HCALInputs.SETHALT );
       }
 
@@ -406,7 +394,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
       // halt TCDS Controllers
       try{
-        functionManager.haltTCDSControllers();
+        functionManager.haltTCDSControllers(false);
       }catch(UserActionException e){
         String errMessage = "[HCAL LVL2 "+functionManager.FMname +"] RecoverAction: failed to haltTCDSControllers";
         functionManager.goToError(errMessage,e);
@@ -760,32 +748,10 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
               functionManager.goToError(errMessage,e);
             }
           }
-          if (!functionManager.containerhcalSupervisor.isEmpty()){
-            // configuring all created HCAL applications by means of sending the RunType to the HCAL supervisor
-            if (!functionManager.ErrorState) {
-              sendRunTypeConfiguration(FullCfgScript,TTCciControlSequence,LTCControlSequence,ICIControlSequence,LPMControlSequence,PIControlSequence, FedEnableMask, UsePrimaryTCDS);
-            }
-          }
-          else if(!functionManager.containerlpmController.isEmpty()){
-            // Configure LPMController for TCDSLPM FM
-            Input LPMconfigureInput= new Input(HCALInputs.CONFIGURE.toString());
-            ParameterSet<CommandParameter> LPMpSet = new ParameterSet<CommandParameter>();
-            LPMpSet.put( new CommandParameter<StringT> ("hardwareConfigurationString", new StringT(LPMControlSequence))                 );
-            LPMpSet.put( new CommandParameter<StringT> ("fedEnableMask"              , new StringT(FedEnableMask))                      );
-            LPMconfigureInput.setParameters( LPMpSet );
 
-            logger.info("[HCAL LVL2 " + functionManager.FMname+ "] Configuring LPMController.");
-            try{
-              functionManager.containerlpmController.execute(LPMconfigureInput);
-            }
-            catch(QualifiedResourceContainerException e){
-              String errMessage = " Configure LPMController: ";
-              Map<QualifiedResource, CommandException> CommandExceptionMap = e.getCommandExceptionMap();
-              for (QualifiedResource qr : CommandExceptionMap.keySet()){
-                errMessage += " Failed to configure "+ qr.getName() + " with reason: " +  CommandExceptionMap.get(qr).getFaultString() +"\n";
-              }
-              functionManager.goToError(errMessage);
-            }
+          // configuring all created HCAL applications by means of sending the RunType to the HCAL supervisor
+          if (!functionManager.ErrorState) {
+            sendRunTypeConfiguration(FullCfgScript,TTCciControlSequence,LTCControlSequence,ICIControlSequence,LPMControlSequence,PIControlSequence, FedEnableMask, UsePrimaryTCDS);
           }
         }
         else{
@@ -1249,7 +1215,13 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       if (EmptyFMs.contains(new StringT(functionManager.FMname))){
         // Bring back the destroyed XDAQ
         logger.info("[HCAL LV2 " + functionManager.FMname + "] Bringing back the XDAQs");
-        initXDAQ();
+        try{
+          initXDAQ();
+        }catch(UserActionException e){
+          String errMessage ="[HCAL LV2 "+functionManager.FMname+"] initXDAQ():";
+          functionManager.goToError(errMessage,e);
+          return;
+        }
         initXDAQinfospace();
         if (stopHCALSupervisorWatchThread){
             logger.info("[HCAL LV2 " + functionManager.FMname + "] Restarting supervisor watchthread");
@@ -1329,7 +1301,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
       //  Halt LPM with LPM FM. 
       if( functionManager.FMrole.equals("Level2_TCDSLPM")){
-        functionManager.haltTCDSControllers();
+        functionManager.haltTCDSControllers(false);
       }
 
       // check from which state we came, i.e. if we were in sTTS test mode disable this DCC special mode
