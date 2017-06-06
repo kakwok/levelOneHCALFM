@@ -306,11 +306,15 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
             CfgSnippetKeySelected = "global_HCAL";
             RunConfigSelected = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", CfgSnippetKeySelected, "snippet",true);
             logger.warn("[JohnLog3] " + functionManager.FMname + ": This level1 with role " + functionManager.FMrole + " thinks we are in global mode and thus picked the RunConfigSelected = " + RunConfigSelected );
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("RUN_CONFIG_SELECTED",new StringT(RunConfigSelected)));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("CFGSNIPPET_KEY_SELECTED",new StringT(CfgSnippetKeySelected)));
           }
           else if (functionManager.FMrole.equals("HF")) {
             CfgSnippetKeySelected = "global_HF";
             RunConfigSelected = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", CfgSnippetKeySelected, "snippet",true);
             logger.warn("[JohnLog3] " + functionManager.FMname + ": This level1 with role " + functionManager.FMrole + " thinks we are in global mode and thus picked the RunConfigSelected = " + RunConfigSelected );
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("RUN_CONFIG_SELECTED",new StringT(RunConfigSelected)));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("CFGSNIPPET_KEY_SELECTED",new StringT(CfgSnippetKeySelected)));
           }
           else {
             String errMessage = "[JohnLog3] " + functionManager.FMname + ": This FM is a level1 in global but it has neither the role 'HCAL' nor 'HF'. This is probably bad. Make sure the role is correctly assigned in the configuration.";  
@@ -329,6 +333,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         logger.warn("[Martin log] "+functionManager.FMname + ": Did not get mastersnippet info from GUI (for local run) or from LV0(for global).");
       }
 
+      //Fill MASKED_RESOURCES from runkey if not already set by GUI, i.e. global or minidaq run
+      FillMaskedResources();
       masker.pickEvmTrig();
       masker.setMaskedFMs();
 
@@ -1716,4 +1722,28 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     }
   }
 
+  public void FillMaskedResources(){
+    StringT runkeyName                  = (StringT) functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue();
+    VectorT<StringT> MaskedResources    = (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
+    MapT<MapT<StringT>> LocalRunKeyMap  = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("AVAILABLE_RUN_CONFIGS").getValue();
+
+    if (MaskedResources.isEmpty()){
+      if(LocalRunKeyMap.get(runkeyName)!= null){
+        if(LocalRunKeyMap.get(runkeyName).get(new StringT("maskedFM"))!=null){
+          String[] maskedFMs       = LocalRunKeyMap.get(runkeyName).get(new StringT("maskedFM")).getString().split(";");
+          for (String fm:maskedFMs){
+            MaskedResources.add(new StringT(fm));
+          }
+        }
+        if(LocalRunKeyMap.get(runkeyName).get(new StringT("maskedapps"))!=null){
+          String[] maskedapps      = LocalRunKeyMap.get(runkeyName).get(new StringT("maskedapps")).getString().split("\\|");
+          for (String app:maskedapps){
+            MaskedResources.add(new StringT(app));
+          }
+        }
+        logger.info("[HCAL "+functionManager.FMname+" FillMaskedResources: Filled MASKED_RESOURCES from runkey:" + MaskedResources.toString());
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES",MaskedResources));
+      }
+    }
+  }
 }
