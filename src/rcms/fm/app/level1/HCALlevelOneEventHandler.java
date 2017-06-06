@@ -185,8 +185,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       if(MasterSnippetList!=""){
         NodeList nodes = xmlHandler.getHCALuserXML(CfgCVSBasePath,MasterSnippetList).getElementsByTagName("RunConfig");
         for (int i=0; i < nodes.getLength(); i++) {
-          logger.debug("[HCAL " + functionManager.FMname + "]: Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
-              + ", snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue()+ ", and maskedapps: " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
+          //logger.debug("[HCAL " + functionManager.FMname + "]: Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
+          //    + ", snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue()+ ", and maskedapps: " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
           
           MapT<StringT> RunKeySetting = new MapT<StringT>();
           StringT runkeyName =new StringT(nodes.item(i).getAttributes().getNamedItem("name").getNodeValue());
@@ -1727,14 +1727,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     VectorT<StringT> MaskedResources    = (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
     MapT<MapT<StringT>> LocalRunKeyMap  = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("AVAILABLE_RUN_CONFIGS").getValue();
 
-    if (MaskedResources.isEmpty()){
+    if (RunType.equals("global") && MaskedResources.isEmpty()){
       if(LocalRunKeyMap.get(runkeyName)!= null){
-        if(LocalRunKeyMap.get(runkeyName).get(new StringT("maskedFM"))!=null){
-          String[] maskedFMs       = LocalRunKeyMap.get(runkeyName).get(new StringT("maskedFM")).getString().split(";");
-          for (String fm:maskedFMs){
-            MaskedResources.add(new StringT(fm));
-          }
-        }
+        // Note: Unlike maskedapps here, maskedFM is not to be used in global
         if(LocalRunKeyMap.get(runkeyName).get(new StringT("maskedapps"))!=null){
           String[] maskedapps      = LocalRunKeyMap.get(runkeyName).get(new StringT("maskedapps")).getString().split("\\|");
           for (String app:maskedapps){
