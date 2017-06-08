@@ -542,6 +542,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           CheckAndSetParameter( parameterSet , "HCAL_TTCCICONTROL"   ,false);
           CheckAndSetParameter( parameterSet , "HCAL_LTCCONTROL"     ,false);
           CheckAndSetParameter( parameterSet , "SINGLEPARTITION_MODE");
+          CheckAndSetParameter( parameterSet , "DQM_TASK");
           isSinglePartition   = ((BooleanT)functionManager.getHCALparameterSet().get("SINGLEPARTITION_MODE").getValue()).getBoolean();
           // Only set the parameter being used so that RunInfo will be clear
           if(isSinglePartition){

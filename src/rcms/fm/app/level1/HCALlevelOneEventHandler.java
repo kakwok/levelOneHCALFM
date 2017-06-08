@@ -808,6 +808,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       String TTCciControlSequence = ((StringT)functionManager.getHCALparameterSet().get("HCAL_TTCCICONTROL").getValue()).getString();
       String LTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LTCCONTROL"  ).getValue()).getString();
       FedEnableMask            = ((StringT)functionManager.getHCALparameterSet().get("FED_ENABLE_MASK" ).getValue()).getString();
+      String DQMtask           = ((StringT)functionManager.getHCALparameterSet().get("DQM_TASK").getValue()).getString();
       // Get the value of runinfopublish from the results of parseMasterSnippet
       RunInfoPublish           = ((BooleanT)functionManager.getHCALparameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
       OfficialRunNumbers       = ((BooleanT)functionManager.getHCALparameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
@@ -838,6 +839,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The RunInfoPublish value is : "                  +RunInfoPublish                      );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The OfficialRunNumbers value is : "              +OfficialRunNumbers                  );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The NumberOfEvents is : "                        +TriggersToTake                      );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The DQM_TASK is : "                              +DQMtask                      );
 
       // start the alarmer watch thread here, now that we have the alarmerURL
       if (alarmerthread!=null){
@@ -946,6 +948,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       pSet.put(new CommandParameter<BooleanT>("HCAL_RUNINFOPUBLISH"   , new BooleanT(RunInfoPublish)));
       pSet.put(new CommandParameter<BooleanT>("OFFICIAL_RUN_NUMBERS"  , new BooleanT(OfficialRunNumbers)));
       pSet.put(new CommandParameter<VectorT<StringT>>("EMPTY_FMS"              , EmptyFMs));
+      pSet.put(new CommandParameter<StringT>("DQM_TASK"               , new StringT(DQMtask)));
 
       // prepare command plus the parameters to send
       Input configureInput= new Input(HCALInputs.CONFIGURE.toString());
