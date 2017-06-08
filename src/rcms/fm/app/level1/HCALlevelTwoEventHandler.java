@@ -1809,7 +1809,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   public class TTCciWatchThread extends Thread {
     protected HCALFunctionManager functionManager = null;
     RCMSLogger logger = null;
-    Boolean stopTTCciWatchThread = false;
 
     public TTCciWatchThread(HCALFunctionManager parentFunctionManager) {
       this.logger = new RCMSLogger(HCALFunctionManager.class);
