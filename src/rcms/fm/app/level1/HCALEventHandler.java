@@ -1024,7 +1024,7 @@ public class HCALEventHandler extends UserEventHandler {
       parameter = new Parameter<StringT>(nameForDB,new StringT("empty string"));
     }
     try {
-      logger.info("[HCAL " + functionManager.FMname + "] Publishing global parameter  '" + nameForDB + "' to the RunInfo DB; value = " + parameter.getValue().toString());
+      logger.debug("[HCAL " + functionManager.FMname + "] Publishing global parameter  '" + nameForDB + "' to the RunInfo DB; value = " + parameter.getValue().toString());
       if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(parameter); }
     }
     catch (RunInfoException e) {
