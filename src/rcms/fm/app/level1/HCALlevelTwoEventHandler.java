@@ -1886,6 +1886,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             }
         } 
       }
+      logger.warn("[HCAL " + functionManager.FMname + "] ... stopping TTCci watchdog thread done.");
     }
   }
 }
