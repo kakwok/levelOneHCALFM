@@ -332,7 +332,15 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       }else{
         logger.warn("[Martin log] "+functionManager.FMname + ": Did not get mastersnippet info from GUI (for local run) or from LV0(for global).");
       }
-
+    
+      //Check to see if maskedapps has an instance number
+      try{
+        checkMaskedappsInstanceNumber();
+      }catch(UserActionException e){
+        functionManager.goToError("[HCAL "+ functionManager.FMname+"] " + e.getMessage());
+        return;
+      }
+      
       //Fill MASKED_RESOURCES from runkey if not already set by GUI, i.e. global or minidaq run
       FillMaskedResources();
       masker.pickEvmTrig();
@@ -1741,4 +1749,24 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       }
     }
   }
+
+  public void checkMaskedappsInstanceNumber() throws UserActionException{
+    StringT runkeyName                 = (StringT) functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue();
+    MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("AVAILABLE_RUN_CONFIGS").getValue();
+
+    if (LocalRunKeyMap.get(runkeyName).get(new StringT("maskedapps"))!=null){
+      String[] maskedapps         = LocalRunKeyMap.get(runkeyName).get(new StringT("maskedapps")).getString().split("\\|");
+      String errorMessage         = "";
+      for (String app:maskedapps){
+        if (!(app.contains("_"))){
+          errorMessage = errorMessage + " " + app;
+        }
+      }
+      if (errorMessage != ""){
+        throw new UserActionException("Runkey " + runkeyName +" missing instance number(s):" + errorMessage); 
+      }
+    }
+  }
 }
+
+
