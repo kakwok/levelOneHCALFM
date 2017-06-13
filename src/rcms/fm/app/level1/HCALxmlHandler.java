@@ -224,8 +224,8 @@ public class HCALxmlHandler {
         //logger.info("[JohnLogVector] " + functionManager.FMname + ": about to start masking " + maskedApp.getString());
         String[] maskedAppParts = maskedApp.getString().split("_");
         if (maskedAppParts.length == 1){
-          functionManager.goToError("Runkey Maskedapps: "+maskedApp+"  missing instance number at split");
-          throw new UserActionException("Runkey Maskedapps: "+maskedApp+"  missing instance number at split");
+          functionManager.goToError("[HCAL " + functionManager.FMname + "]: Maskedapps: "+maskedApp+" in runkey missing instance number");
+          throw new UserActionException("[HCAL " + functionManager.FMname + "]: Maskedapps: "+maskedApp+" in runkey missing instance number");
         }
 
         //Remove masked applications from xc:Context nodes
@@ -261,8 +261,8 @@ public class HCALxmlHandler {
           if (i2oTargetNode.getAttributes().getNamedItem("class").getNodeValue().equals(maskedAppParts[0]) && i2oTargetNode.getAttributes().getNamedItem("instance").getNodeValue().equals(maskedAppParts[1])){
             i2oTargetNode.getParentNode().removeChild(i2oTargetNode);
             removedi2oTargets+=1;
-            }
           }
+        }
         
         //Remove masked applications' i2o connections from i2o:unicasts node
         NodeList xcUnicastNodes = execXML.getDocumentElement().getElementsByTagName("xc:Unicast");
