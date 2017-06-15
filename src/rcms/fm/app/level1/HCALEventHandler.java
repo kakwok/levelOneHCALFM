@@ -108,6 +108,7 @@ public class HCALEventHandler extends UserEventHandler {
   public boolean stopHCALSupervisorWatchThread =  false;  // For turning off the supervisor watch thread
   public boolean stopTriggerAdapterWatchThread =  false;  // For turning off the TA thread
   public boolean stopAlarmerWatchThread        =  false;  // For turning off the alarmer thread
+  public boolean stopTTCciWatchThread          =  false;  // For turning off the TTCci thread
   public boolean delayAlarmerWatchThread       =  false;  // For delaying the alarmer thread at the start
   public boolean NotifiedControlledFMs         =  false;  // For notifications to level2s
   public boolean ClockChanged                  =  false;  // Flag for whether the clock source has changed
