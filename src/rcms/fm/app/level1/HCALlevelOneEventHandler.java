@@ -668,7 +668,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         if (parameterSet.get("FED_ENABLE_MASK") != null) {
           FedEnableMask = ((StringT)parameterSet.get("FED_ENABLE_MASK").getValue()).getString();
           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("FED_ENABLE_MASK",new StringT(FedEnableMask)));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("CONFIGURED_WITH_FED_ENABLE_MASK",new StringT(TpgKey)));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("CONFIGURED_WITH_FED_ENABLE_MASK",new StringT(FedEnableMask)));
 
           functionManager.HCALFedList = getEnabledHCALFeds(FedEnableMask);
 
