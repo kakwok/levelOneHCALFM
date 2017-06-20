@@ -48,7 +48,8 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
       StateNotification notification = (StateNotification)notice;
       //logger.warn("["+fm.FMname+"]: State notification received "+
       //    "from: " + notification.getFromState()
-      //    +" to: " + notification.getToState());
+      //    +" to: " + notification.getToState()
+      //    +" with Reason: " + notification.getReason());
       
       String actualState = fm.getState().getStateString();
       //logger.warn("["+fm.FMname+"]: FM is in state: "+actualState);
@@ -65,8 +66,16 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
         String actionMsg = appName+"["+notification.getIdentifier()+"] is in ERROR";
         String errMsg =  actionMsg;
         if (!fm.containerhcalSupervisor.isEmpty()) {
-          ((HCALlevelTwoFunctionManager)fm).getSupervisorErrorMessage();
-          errMsg = "[HCAL Level2 " + fm.getName().toString() + "] got an error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get("SUPERVISOR_ERROR").getValue()).getString();
+          if(notification.getReason().equals("Global HCAL State Change")){
+            //TODO: remove this block when supervisor with notification reason is deployed
+            ((HCALlevelTwoFunctionManager)fm).getSupervisorErrorMessage();
+            errMsg = "[HCAL Level2 " + fm.getName().toString() + "] got an error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get("SUPERVISOR_ERROR").getValue()).getString();
+          }
+          else{
+            String supervisorError = notification.getReason();
+            errMsg = "[HCAL Level2 " + fm.getName().toString() + "] got an error from the hcalSupervisor with reason: " + supervisorError;
+            fm.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR", new StringT(supervisorError)));
+          }
         }
         // Handles error from TCDS
         else if (!fm.containerTCDSControllers.isEmpty()){
@@ -159,8 +168,16 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
           String actionMsg = appName+"["+notification.getIdentifier()+"] is in Error";
           String errMsg =  actionMsg;
           if (!fm.containerhcalSupervisor.isEmpty()) {
-            ((HCALlevelTwoFunctionManager)fm).getSupervisorErrorMessage();
-            errMsg = "[HCAL Level 2 FM with name " + fm.getName().toString() + " reports error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get("SUPERVISOR_ERROR").getValue()).getString();
+            if(notification.getReason().equals("Global HCAL State Change")){
+              //TODO: remove this block when supervisor with notification reason is deployed
+              ((HCALlevelTwoFunctionManager)fm).getSupervisorErrorMessage();
+              errMsg = "[HCAL Level 2 FM with name " + fm.getName().toString() + " reports error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get("SUPERVISOR_ERROR").getValue()).getString();
+            }
+            else{
+              String supervisorError = notification.getReason();
+              errMsg = "[HCAL Level2 " + fm.getName().toString() + "] got an error from the hcalSupervisor with reason: " + supervisorError;
+              fm.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR", new StringT(supervisorError)));
+            }
           }
           handleError(errMsg,actionMsg);
           return;
@@ -196,8 +213,16 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
           String actionMsg = appName+"["+notification.getIdentifier()+"] is in Error";
           String errMsg =  actionMsg;
           if (!fm.containerhcalSupervisor.isEmpty()) {
-            ((HCALlevelTwoFunctionManager)fm).getSupervisorErrorMessage();
-            errMsg = "[HCAL Level 2 FM with name " + fm.getName().toString() + " reports error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get("SUPERVISOR_ERROR").getValue()).getString();
+            if(notification.getReason().equals("Global HCAL State Change")){
+              //TODO: remove this block when supervisor with notification reason is deployed
+              ((HCALlevelTwoFunctionManager)fm).getSupervisorErrorMessage();
+              errMsg = "[HCAL Level 2 FM with name " + fm.getName().toString() + " reports error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get("SUPERVISOR_ERROR").getValue()).getString();
+            }
+            else{
+              String supervisorError = notification.getReason();
+              errMsg = "[HCAL Level2 " + fm.getName().toString() + "] got an error from the hcalSupervisor with reason: " + supervisorError;
+              fm.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR", new StringT(supervisorError)));
+            }
           }
           handleError(errMsg,actionMsg);
           return;
