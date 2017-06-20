@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.HashMap;
 import java.lang.Math;
+import java.lang.Integer;
 
 import java.io.StringReader; 
 import java.io.IOException;
@@ -335,7 +336,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     
       //Check to see if maskedapps has an instance number
       try{
-        checkMaskedappsInstanceNumber();
+        checkMaskedappsFormat();
       }catch(UserActionException e){
         functionManager.goToError("[HCAL "+ functionManager.FMname+"] " + e.getMessage());
         return;
@@ -1750,7 +1751,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     }
   }
 
-  public void checkMaskedappsInstanceNumber() throws UserActionException{
+  public void checkMaskedappsFormat() throws UserActionException{
     StringT runkeyName                 = (StringT) functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue();
     MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("AVAILABLE_RUN_CONFIGS").getValue();
 
@@ -1758,15 +1759,26 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       String[] maskedapps         = LocalRunKeyMap.get(runkeyName).get(new StringT("maskedapps")).getString().split("\\|");
       String errorMessage         = "";
       for (String app:maskedapps){
-        if (!(app.contains("_"))){
+        String[] appArray = app.split("\\_");
+        if (appArray.length != 2 || stringToInt(appArray[0]) || !(stringToInt(appArray[1]))){
           errorMessage = errorMessage + " " + app;
         }
       }
       if (errorMessage != ""){
-        throw new UserActionException("Runkey " + runkeyName +" missing instance number(s):" + errorMessage); 
+        throw new UserActionException("Runkey " + runkeyName +" maskedapps incorrectly formated:" + errorMessage); 
       }
     }
   }
+
+ public static boolean stringToInt(String s){
+  try{
+    Integer.parseInt(s);
+    return true;
+  }
+  catch(NumberFormatException e){
+    return false;
+  }
+ }
 }
 
 
