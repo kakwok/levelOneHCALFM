@@ -77,6 +77,7 @@ import rcms.utilities.runinfo.RunInfoException;
 import rcms.utilities.runinfo.RunNumberData;
 import rcms.utilities.runinfo.RunSequenceNumber;
 import rcms.util.logsession.LogSessionConnector;
+import rcms.statemachine.definition.Input;
 
 /**
  * Event Handler base class for HCAL Function Managers
@@ -2380,6 +2381,7 @@ public class HCALEventHandler extends UserEventHandler {
           // Get FM_PARTITION from the LV2 parameterSet 
           String partition = ((StringT)(((FunctionManager)qr).getParameter().get("FM_PARTITION").getValue())).getString();
           if (!partition.equals("not set")){
+             watchedAlarms.add(partition+"_Message"); //e.g. HO_Message
             watchedAlarms.add(partition+"_Status"); //e.g. HO_Status
             watchedPartitions.add(partition);       //e.g. HO
           }
@@ -2530,7 +2532,20 @@ public class HCALEventHandler extends UserEventHandler {
                 // total status not OK and FMstate != RunningDegraded => go to degraded state 
                 if(!FMstate.equals(HCALStates.RUNNINGDEGRADED.toString())) {
                   logger.warn("[HCAL " + functionManager.FMname + "] AlarmerWatchThread: due to bad alarmer status (see previous messages), going to RUNNINGDEGRADED state");
-                  functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
+                  String errMessage = "Running degraded due to";
+                  for (String partitionName : badAlarmerPartitions){
+                    if (ignoredPartitions.contains(partitionName)){
+                      continue;
+                    }
+                    String partitionMessage  = pam.getValue(partitionName+"_Message");
+                    if (partitionMessage!=null){
+                      errMessage += " " + partitionName + ":" + partitionMessage;
+                    }
+                  }
+                  logger.warn(errMessage);
+                  Input degradeInput = new Input(HCALInputs.SETRUNNINGDEGRADED);
+                  degradeInput.setReason(errMessage);
+                  functionManager.fireEvent(degradeInput);
                   functionManager.setAction(badAlarmerMessage);
                 }
                 else {
