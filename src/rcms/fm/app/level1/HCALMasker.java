@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.regex.Pattern;
 
 import rcms.util.logger.RCMSLogger;
@@ -231,16 +232,53 @@ public class HCALMasker {
             }
           }
         }
+        ArrayList<String> EvmTrigList    = new ArrayList<String>();   //List of resource names of EvmTrig apps
+        ArrayList<String> ReadoutAppList = new ArrayList<String>();   //List of resource names of Readout apps
+        EvmTrigList.add("FanoutTTCciTA");
+        EvmTrigList.add("TriggerAdapter");
+        EvmTrigList.add("hcalTrivialFU");
+        EvmTrigList.add("hcalEventBuilder");
+
+        // Obtained from hcalBase/src/common/Release.cc
+        ReadoutAppList.add("hcalSlowDataReadout");
+        ReadoutAppList.add("hcalQDCTDCReadout");
+        ReadoutAppList.add("hcalVLSBReadout");
+        ReadoutAppList.add("hcalCalDACReadout");
+        ReadoutAppList.add("hcalDCCVMEReadout");
+        ReadoutAppList.add("hcalSrcPosReadout");
+        ReadoutAppList.add("hcalSiPMCalManager");
+        ReadoutAppList.add("hcalHFCalManager");
+        ReadoutAppList.add("hcalSrcCoordinator");
+        ReadoutAppList.add("hcal::ngRBXSequencer");
+        ReadoutAppList.add("hcal::DTCReadout");
+        ReadoutAppList.add("hcal::uHTRSource");
+
         for (Resource level2resource : fullconfigList) {
-          if (level2resource.getName().contains("FanoutTTCciTA") || level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("hcalTrivialFU") || level2resource.getName().contains("hcalEventBuilder")) {
-            if(functionManager.RunType.equals("local")){
-              if (!level2resource.getName().equals(eventBuilder) && !level2resource.getName().equals(trivialFU) && !level2resource.getName().equals(triggerAdapter)) { 
-                allMaskedResources.add(new StringT(level2resource.getName()));
+          String resourceName = level2resource.getName();
+          if(functionManager.RunType.equals("local")){
+            //Mask all redundant EvmTrig apps 
+            for(String EvmTrigName : EvmTrigList){ 
+              if (resourceName.contains(EvmTrigName)) {
+                //Mask all EvmTrig apps except for the ones we picked
+                if (!level2resource.getName().equals(eventBuilder) && !level2resource.getName().equals(trivialFU) && !level2resource.getName().equals(triggerAdapter)) { 
+                  allMaskedResources.add(new StringT(resourceName));
+                }
               }
             }
-            // Auto-mask all the EvmTrig apps if we are in global mode
-            if(functionManager.RunType.equals("global")){
-                allMaskedResources.add(new StringT(level2resource.getName()));
+          }
+          // Auto-mask all the EvmTrig + readout apps if we are in global mode
+          if(functionManager.RunType.equals("global")){
+            //Mask all EvmTrigApps
+            for(String EvmTrigName : EvmTrigList){ 
+              if (resourceName.contains(EvmTrigName)) {
+                allMaskedResources.add(new StringT(resourceName));
+              }
+            }
+            //Mask all Readout apps
+            for(String ReadoutAppName : ReadoutAppList){ 
+              if (resourceName.contains(ReadoutAppName)) {
+                allMaskedResources.add(new StringT(resourceName));
+              }
             }
           }
         }
