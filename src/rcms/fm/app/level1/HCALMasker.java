@@ -197,9 +197,11 @@ public class HCALMasker {
 
     VectorT<StringT> maskedFMsVector = new VectorT<StringT>();
     for (QualifiedResource qr : level2list) {
-      if (qr.getName().equals(EvmTrigFM)) { 
-         qr.getResource().setRole("EvmTrig");
-         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("EVM_TRIG_FM", new StringT(qr.getName())));
+      if (qr.getName().equals(EvmTrigFM)) {
+        if (functionManager.RunType.equals("local")){
+          qr.getResource().setRole("EvmTrig");
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("EVM_TRIG_FM", new StringT(qr.getName())));
+         }
       }
       try {
         QualifiedGroup level2group = ((FunctionManager)qr).getQualifiedGroup();
