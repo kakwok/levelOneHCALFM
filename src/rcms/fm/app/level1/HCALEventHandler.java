@@ -808,16 +808,14 @@ public class HCALEventHandler extends UserEventHandler {
   //Set instance numbers and HandleLPM after initXDAQ()
   protected void initXDAQinfospace() {
       Integer sid = ((IntegerT)functionManager.getHCALparameterSet().get("SID").getValue()).getInteger();
+      String ruInstance = ((StringT)functionManager.getHCALparameterSet().get("RU_INSTANCE").getValue()).getString();
       List<QualifiedResource> xdaqApplicationList = functionManager.getQualifiedGroup().seekQualifiedResourcesOfType(new XdaqApplication());
       QualifiedResourceContainer qrc = new QualifiedResourceContainer(xdaqApplicationList);
       for (QualifiedResource qr : qrc.getActiveQRList()) {
           try {
             XDAQParameter pam = null;
             pam = ((XdaqApplication)qr).getXDAQParameter();
-            String ruInstance = ((StringT)functionManager.getHCALparameterSet().get("RU_INSTANCE").getValue()).getString();
-            if (ruInstance==""){
-              logger.warn("HCAL LVL2 " + functionManager.FMname + "]: HCALparameter RU_INSTANCE is not set before calling initXDAQinfospace()"); 
-            }
+
             List<String> pamNames      = pam.getNames();
             List<String> pamNamesToSet = new ArrayList<String>();
             if (pamNames.contains("RUinstance")) {              pamNamesToSet.add("RUinstance")              ;}
@@ -842,6 +840,10 @@ public class HCALEventHandler extends UserEventHandler {
 
               pam.send();
             }
+          }
+          catch (ArrayIndexOutOfBoundsException e){
+            String errMessage = "[HCAL " + functionManager.FMname + "] initXDAQinfospace(): Cannot find RUinstance(e.g.hcalEventBuilder) for " + qr.getName()+" . FM parameter RU_INSTANCE is "+ruInstance;
+            functionManager.goToError(errMessage);
           }
           catch (XDAQTimeoutException e) {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException while querying the XDAQParameter names for " + qr.getName() + ". Message: " + e.getMessage();
