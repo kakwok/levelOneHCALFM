@@ -1760,7 +1760,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       String errorMessage         = "";
       for (String app:maskedapps){
         String[] appArray = app.split("\\_");
-        if (appArray.length != 2 || stringToInt(appArray[0]) || !(stringToInt(appArray[1]))){
+        if (appArray.length != 2 || isValidInstanceNumber(appArray[0]) || !(isValidInstanceNumber(appArray[1]))){
           errorMessage = errorMessage + " " + app;
         }
       }
@@ -1770,7 +1770,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     }
   }
 
- public static boolean stringToInt(String s){
+ public static boolean isValidInstanceNumber(String s){
   try{
     Integer.parseInt(s);
     return true;
