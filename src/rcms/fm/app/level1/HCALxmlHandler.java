@@ -223,11 +223,6 @@ public class HCALxmlHandler {
       for (StringT maskedApp: maskedAppArray) {
         //logger.info("[JohnLogVector] " + functionManager.FMname + ": about to start masking " + maskedApp.getString());
         String[] maskedAppParts = maskedApp.getString().split("_");
-        if (maskedAppParts.length != 2 || HCALlevelOneEventHandler.stringToInt(maskedAppParts[0]) || !(HCALlevelOneEventHandler.stringToInt(maskedAppParts[1]))){
-          functionManager.goToError("[HCAL " + functionManager.FMname + "]: Maskedapps: "+maskedApp+" is incorrectly formatted");
-          throw new UserActionException("[HCAL " + functionManager.FMname + "]: Maskedapps: "+maskedApp+" is incorrectly formatted");
-        }
-
         //Remove masked applications from xc:Context nodes
         NodeList xcContextNodes = execXML.getDocumentElement().getElementsByTagName("xc:Context");
         NxcContexts = xcContextNodes.getLength();
