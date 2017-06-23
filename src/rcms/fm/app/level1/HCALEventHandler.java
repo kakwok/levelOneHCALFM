@@ -2535,19 +2535,19 @@ public class HCALEventHandler extends UserEventHandler {
                 // total status not OK and FMstate != RunningDegraded => go to degraded state 
                 if(!FMstate.equals(HCALStates.RUNNINGDEGRADED.toString())) {
                   logger.warn("[HCAL " + functionManager.FMname + "] AlarmerWatchThread: due to bad alarmer status (see previous messages), going to RUNNINGDEGRADED state");
-                  String errMessage = "Running degraded due to";
+                  String runningDegradedReason = "Running degraded due to";
                   for (String partitionName : badAlarmerPartitions){
                     if (ignoredPartitions.contains(partitionName)){
                       continue;
                     }
-                    String partitionMessage  = pam.getValue(partitionName+"_Message");
-                    if (partitionMessage!=null){
-                      errMessage += " " + partitionName + ":" + partitionMessage;
+                    String alarmDetails  = pam.getValue(partitionName+"_Message");
+                    if (alarmDetails!=null){
+                      runningDegradedReason += " " + partitionName + ":" + alarmDetails " |";
                     }
                   }
-                  logger.warn(errMessage);
+                  logger.warn("[HCAL HCAL_LEVEL_1] AlarmerWatchThread(): Setting running degraded reason to" + runningDegradedReason);
                   Input degradeInput = new Input(HCALInputs.SETRUNNINGDEGRADED);
-                  degradeInput.setReason(errMessage);
+                  degradeInput.setReason(runningDegradedReason);
                   functionManager.fireEvent(degradeInput);
                   functionManager.setAction(badAlarmerMessage);
                 }
