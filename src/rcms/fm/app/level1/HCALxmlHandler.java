@@ -223,7 +223,6 @@ public class HCALxmlHandler {
       for (StringT maskedApp: maskedAppArray) {
         //logger.info("[JohnLogVector] " + functionManager.FMname + ": about to start masking " + maskedApp.getString());
         String[] maskedAppParts = maskedApp.getString().split("_");
-
         //Remove masked applications from xc:Context nodes
         NodeList xcContextNodes = execXML.getDocumentElement().getElementsByTagName("xc:Context");
         NxcContexts = xcContextNodes.getLength();

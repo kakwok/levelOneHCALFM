@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.HashMap;
 import java.lang.Math;
+import java.lang.Integer;
 
 import java.io.StringReader; 
 import java.io.IOException;
@@ -332,7 +333,15 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       }else{
         logger.warn("[Martin log] "+functionManager.FMname + ": Did not get mastersnippet info from GUI (for local run) or from LV0(for global).");
       }
-
+    
+      //Check to see if maskedapps has an instance number
+      try{
+        checkMaskedappsFormat();
+      }catch(UserActionException e){
+        functionManager.goToError("[HCAL "+ functionManager.FMname+"] " + e.getMessage());
+        return;
+      }
+      
       //Fill MASKED_RESOURCES from runkey if not already set by GUI, i.e. global or minidaq run
       FillMaskedResources();
       masker.pickEvmTrig();
@@ -1744,4 +1753,35 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       }
     }
   }
+
+  public void checkMaskedappsFormat() throws UserActionException{
+    StringT runkeyName                 = (StringT) functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue();
+    MapT<MapT<StringT>> LocalRunKeyMap = (MapT<MapT<StringT>>)functionManager.getHCALparameterSet().get("AVAILABLE_RUN_CONFIGS").getValue();
+
+    if (LocalRunKeyMap.get(runkeyName).get(new StringT("maskedapps"))!=null){
+      String[] maskedapps         = LocalRunKeyMap.get(runkeyName).get(new StringT("maskedapps")).getString().split("\\|");
+      String errorMessage         = "";
+      for (String app:maskedapps){
+        String[] appArray = app.split("\\_");
+        if (appArray.length != 2 || isValidInstanceNumber(appArray[0]) || !(isValidInstanceNumber(appArray[1]))){
+          errorMessage = errorMessage + " " + app;
+        }
+      }
+      if (errorMessage != ""){
+        throw new UserActionException("Runkey " + runkeyName +" maskedapps incorrectly formated:" + errorMessage); 
+      }
+    }
+  }
+
+ public static boolean isValidInstanceNumber(String s){
+  try{
+    Integer.parseInt(s);
+    return true;
+  }
+  catch(NumberFormatException e){
+    return false;
+  }
+ }
 }
+
+
