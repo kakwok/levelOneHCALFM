@@ -2571,7 +2571,9 @@ public class HCALEventHandler extends UserEventHandler {
             if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
               String errMessage = "[HCAL " + functionManager.FMname + "] Error! Got an exception: AlarmerWatchThread()\n...\nHere is the exception: " +e+"\n...going to change to RUNNINGDEGRADED state";
               logger.error(errMessage);
-              functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
+              Input degradeInput = new Input(HCALInputs.SETRUNNINGDEGRADED);
+              degradeInput.setReason("Cannot get monitoring data from alarmer due to XdaqException");
+              functionManager.fireEvent(degradeInput);
             }
             else {
               String errMessage = "[HCAL " + functionManager.FMname + "] Error! Got an exception: AlarmerWatchThread()\n...\nHere is the exception: " +e+"\n...going to stay in RUNNINGDEGRADED state";
