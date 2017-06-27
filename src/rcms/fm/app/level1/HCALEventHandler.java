@@ -2542,7 +2542,7 @@ public class HCALEventHandler extends UserEventHandler {
                     }
                     String alarmDetails  = pam.getValue(partitionName+"_Message");
                     if (alarmDetails!=null){
-                      runningDegradedReason += " " + partitionName + ":" + alarmDetails " |";
+                      runningDegradedReason += " " + partitionName + ":" + alarmDetails + " |";
                     }
                   }
                   logger.warn("[HCAL HCAL_LEVEL_1] AlarmerWatchThread(): Setting running degraded reason to" + runningDegradedReason);
@@ -2569,10 +2569,10 @@ public class HCALEventHandler extends UserEventHandler {
           catch (Exception e) {
             // on exceptions, we go to degraded, or stay there
             if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
-              String errMessage = "[HCAL " + functionManager.FMname + "] Error! Got an exception: AlarmerWatchThread()\n...\nHere is the exception: " +e+"\n...going to change to RUNNINGDEGRADED state";
+              String errMessage = "[HCAL " + functionManager.FMname + "] Error! Got an exception: AlarmerWatchThread()\n...\nHere is the exception: " +e.getMessage()+"\n...going to change to RUNNINGDEGRADED state";
               logger.error(errMessage);
               Input degradeInput = new Input(HCALInputs.SETRUNNINGDEGRADED);
-              degradeInput.setReason("Cannot get monitoring data from alarmer due to XdaqException");
+              degradeInput.setReason("Cannot get monitoring data from alarmer due to Exception: " + e.getMessage());
               functionManager.fireEvent(degradeInput);
             }
             else {
