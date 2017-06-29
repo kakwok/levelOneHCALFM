@@ -201,7 +201,10 @@ public class HCALMasker {
         if (functionManager.RunType.equals("local")){
           qr.getResource().setRole("EvmTrig");
           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("EVM_TRIG_FM", new StringT(qr.getName())));
-         }
+        }
+        else if (functionManager.RunType.equals("global")){
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("EVM_TRIG_FM", new StringT("")));
+        }
       }
       try {
         QualifiedGroup level2group = ((FunctionManager)qr).getQualifiedGroup();
