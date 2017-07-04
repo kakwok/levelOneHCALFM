@@ -59,7 +59,7 @@ public class HCALxmlHandler {
   protected HCALFunctionManager functionManager = null;
   static RCMSLogger logger = null;
   public DocumentBuilder docBuilder;
-  public String[] ValidMasterSnippetTags = new String[] {"CfgScript","ICIControlSingle","ICIControlMulti","TTCciControl","LPMControl","PIControlSingle","PIControlMulti","LTCControl","AlarmerURL","AlarmerStatus","FedEnableMask","FMSettings","FMParameter"};
+  public String[] ValidMasterSnippetTags = new String[] {"CfgScript","ICIControlSingle","ICIControlMulti","TTCciControl","LPMControl","PIControlSingle","PIControlMulti","LTCControl","AlarmerURL","AlarmerStatus","FedEnableMask","FMSettings","FMParameter","DQM_TASK"};
 
   public HCALxmlHandler(HCALFunctionManager parentFunctionManager) {
     this.logger = new RCMSLogger(HCALFunctionManager.class);
@@ -223,7 +223,6 @@ public class HCALxmlHandler {
       for (StringT maskedApp: maskedAppArray) {
         //logger.info("[JohnLogVector] " + functionManager.FMname + ": about to start masking " + maskedApp.getString());
         String[] maskedAppParts = maskedApp.getString().split("_");
-
         //Remove masked applications from xc:Context nodes
         NodeList xcContextNodes = execXML.getDocumentElement().getElementsByTagName("xc:Context");
         NxcContexts = xcContextNodes.getLength();
@@ -704,6 +703,10 @@ public class HCALxmlHandler {
           String tmpFedEnableMask = getTagTextContent( NodeListOfTagName, TagName);
           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("FED_ENABLE_MASK",new StringT(tmpFedEnableMask)));
         }
+      }
+      if(TagName.equals("DQM_TASK")){
+          String dqmtask = getTagTextContent( NodeListOfTagName, TagName);
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("DQM_TASK",new StringT(dqmtask)));
       }
     } catch (UserActionException e) {
       // Warn when found more than one tag name in mastersnippet
