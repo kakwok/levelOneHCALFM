@@ -17,7 +17,8 @@
 if [ "$1" = "release" ]; then
   git diff-index --quiet HEAD
   if [ "$?" = "0" ]; then
-    release=`git tag -l | tail -1`
+    #get the latest tag version
+    release=`git tag -l | sort --field-separator=. -k3 -n | sort --field-separator=. -k2 -n | tail -1`
     Year=`date  +%y`
     versionArr=(${release//./ })
     if [ "$2" = "major" ]; then
